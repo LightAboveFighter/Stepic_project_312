@@ -1,0 +1,38 @@
+
+Создать урок. На выходе получаем его id
+POST  https://stepik.org/api/lessons
+{
+  'lesson': {
+      'title': title
+  }
+}
+
+Связать урок с юнитом по их id и позиции урока в юните(секции)
+POST  https://stepik.org/api/units
+{
+  "unit": {
+      # "schedule_type": null,
+      # "begin_date": null,
+      # "begin_date_source": null,
+      # "end_date": null,
+      # "end_date_source": null,
+      # "grading_policy": null,
+      # "grading_policy_source": null,
+      # "hard_deadline": null,
+      # "hard_deadline_source": null,
+      # "soft_deadline": null,
+      # "soft_deadline_source": null,
+      # "has_progress": false,
+      # "progress_id": null,
+      # "is_active": false,
+      # "lesson_id": null,
+      "position": position,
+      # "progress": null,       
+      "lesson": lesson_id,
+      "section": section_id
+  }
+}
+
+Моя функция - create_lesson(section_id: int, position: int, title: str, check=False, get_json=False)
+check - выведет успех операции
+get_json - вернет json response(ответа)

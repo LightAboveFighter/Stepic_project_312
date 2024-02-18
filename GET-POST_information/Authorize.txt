@@ -1,0 +1,6 @@
+
+Возвращает токен по client_id и client_secret
+POST   https://stepik.org/oauth2/token/
+
+Моя функция - set_user_variables(client_id. client_secret)
+Также записывает все три переменные в файл Session_information.txt
