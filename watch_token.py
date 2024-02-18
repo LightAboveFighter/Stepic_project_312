@@ -4,14 +4,14 @@ import json
 import requests
 
 # 1. Get your keys at https://stepik.org/oauth2/applications/ (client type = confidential, authorization grant type = client credentials)
-client_id = "ww7VS0L0GPreHvbraHP8rLPLNsINvUKTLn5VW7pn"
-client_secret = "ZhFvh0gvdIVQtaQ7POySs4Y4QcE4tDgPk2Jych40TkxmC6ptCr4qrgGf1qvrc3e41QNHeU3KQXwxvhKLu1yq2BnGaSoQeie5clQ0OM0WdlJGsWYJlTePyoqMBESKgWEs"
+client_id = "..."
+client_secret = "..."
 
 # 2. Get a token
 auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
 resp = requests.post('https://stepik.org/oauth2/token/', data={'grant_type': 'client_credentials'}, auth=auth)
 token = json.loads(resp.text)['access_token']
-print(token)   # My token is tFwln8W6UxZjBvf2kzA4kZsKg1BvVX
+print(token) 
 
 # # 3. Call API (https://stepik.org/api/docs/) using this token.
 # # Example:

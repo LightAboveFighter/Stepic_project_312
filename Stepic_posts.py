@@ -35,9 +35,6 @@ def send_status(*r):
             return
     print("Succes")
 
-# client_id = "ww7VS0L0GPreHvbraHP8rLPLNsINvUKTLn5VW7pn"
-# client_secret = "ZhFvh0gvdIVQtaQ7POySs4Y4QcE4tDgPk2Jych40TkxmC6ptCr4qrgGf1qvrc3e41QNHeU3KQXwxvhKLu1yq2BnGaSoQeie5clQ0OM0WdlJGsWYJlTePyoqMBESKgWEs"
-
 # # 2. Get a token
 # auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
 # resp = requests.post('https://stepik.org/oauth2/token/', data={'grant_type': 'client_credentials'}, auth=auth)
@@ -121,8 +118,7 @@ def create_lesson(section_id: int, position: int, title: str, check=False, get_j
     if check: send_status(r, 201, r2, 0)     # r.status_code() should be 201 (HTTP Created)
     if get_json: return r.text + r2.text
     return lesson_id
-
-# set_user_variables("ww7VS0L0GPreHvbraHP8rLPLNsINvUKTLn5VW7pn", "ZhFvh0gvdIVQtaQ7POySs4Y4QcE4tDgPk2Jych40TkxmC6ptCr4qrgGf1qvrc3e41QNHeU3KQXwxvhKLu1yq2BnGaSoQeie5clQ0OM0WdlJGsWYJlTePyoqMBESKgWEs")
+# set_user_variables("", "")
 
 # create_step(1226398, 1, "text", "Это был Алекс2 из Питона", check=True)
 
