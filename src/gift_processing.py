@@ -21,7 +21,34 @@ def __get_question_data__(x: gifpars.gift.Question) -> dict:
 
 def get_gift_dicts(filename: str) -> list:
     """returns list if block dicts of question from GIFT file"""
-    pass
+    try:
+        giftfile = open(filename, "r").read()
+    except FileNotFoundError:
+        print(
+            CRED
+            + error_msg + 'File "' + str(filename) + '" not found' 
+            + CEND
+        )  # TODO change to stderr
+        raise FileNotFoundError
+    except PermissionError:
+        print(
+            CRED
+            + error_msg + "Can't open \"" + str(filename) + '" permission denied'
+            + CEND
+        )
+        raise PermissionError
+    try:
+        parse_result: gifpars.gift.Gift = gifpars.parse(giftfile)
+    except Exception as error:
+        print(
+            CRED
+            + error_msg + "Can't parse \"" + str(filename) + '"\n'
+            + str(error)
+            + CEND
+        )
+        raise RuntimeError
+    questions: list = [__get_question_data__(i) for i in parse_result.questions]
+    return questions
 
 def get_Step_list(lesson_id: int) -> list:
     pass
