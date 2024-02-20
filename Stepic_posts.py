@@ -1,27 +1,27 @@
 import json
 import requests
+import yaml
 
-client_id = ""
-client_secret = ""
 token = ""
 
-#разделить клиент айди секрет и токен
-#изменить формат файла Session_information  ->  yaml
 
-def set_user_variables(cl_id, cl_secret):
-    # 2. Get a token
-    global client_id
-    global client_secret
+def set_user_variables(client_id, client_secret):
+
+    with open("Client_information.yaml", "w") as file:
+        yaml.dump({"client_id": client_id, "client_secret": client_secret}, file)
+
+def get_token():
     global token
-    client_id = cl_id
-    client_secret = cl_secret
-
+    client_id = ""
+    client_secret = ""
+    with open("Client_information.yaml", "r") as file:
+        data = yaml.safe_load(file)
+        client_id = data["client_id"]
+        client_secret = data["client_secret"]
     auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
     resp = requests.post('https://stepik.org/oauth2/token/', data={'grant_type': 'client_credentials'}, auth=auth)
     token = json.loads(resp.text)['access_token']
-    Session_inf = open("Session_information.txt", "w")
-    Session_inf.write(f"{client_id=}\n{client_secret=}\n{token=}")
-    Session_inf.close()
+    
 
 def send_status(*r):
     """ r - (requests.post object, strict requirment, ...)
@@ -44,27 +44,12 @@ def send_status(*r):
 # token = json.loads(resp.text)['access_token']
 
 def __update_session_inf__():
-    global client_id
-    global client_secret
     global token
-    if client_id != "" and client_secret != "" and token != "":
+
+    if token != "":
         return
-    Session_inf = open("Session_information.txt", "r").read()
-
-    def find_new():
-        nonlocal Session_inf
-        index_0 = Session_inf.find("'")
-        Session_inf = Session_inf[:index_0] + Session_inf[index_0+1:]
-        index_1 = Session_inf.find("'")
-        Session_inf = Session_inf[:index_1] + Session_inf[index_1+1:]
-
-        ans = Session_inf[index_0:index_1]
-        Session_inf = Session_inf[index_1:]
-        return ans
+    get_token() 
     
-    client_id = find_new()
-    client_secret = find_new()
-    token = find_new()    
 
 def create_step(lesson_id: int, position: int, text:str, check=False, get_json=False):
     """(Position inside your lesson, Name of your step, Text inside your step)
@@ -121,9 +106,10 @@ def create_lesson(section_id: int, position: int, title: str, check=False, get_j
     if check: send_status(r, 201, r2, 0)     # r.status_code() should be 201 (HTTP Created)
     if get_json: return r.text + r2.text
     return lesson_id
-# set_user_variables("", "")
 
+set_user_variables("", "")
+get_token()
 # create_step(1226398, 1, "text", "Это был Алекс2 из Питона", check=True)
 
 # create_lesson(389525, 4, "Python lesson", check=True, get_json=True)
-print(create_step(1237002, 1, "SSSSSSSSSSSSS", check=True, get_json=True))
+print(create_step(1237002, 1, "Yaml check", check=True, get_json=True))
