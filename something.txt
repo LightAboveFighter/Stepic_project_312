@@ -1,0 +1,1042 @@
+attemps ()
+POST
+https://stepik.org/api/attempts
+{
+    "attempts": [
+        {
+            "id": 1065375776,
+            "dataset": {
+                "is_multiple_choice": false,
+                "options": [
+                    "52",
+                    "5002",
+                    "520",
+                    "502"
+                ]
+            },
+            "dataset_url": null,
+            "time": "2024-02-19T19:43:22.370Z",
+            "status": "active",
+            "time_left": null,
+            "step": 5116869,
+            "user": 768104077
+        }
+    ]
+}
+
+
+progresses
+GET
+https://stepik.org/api/progresses/77-5136494
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "progresses": [
+        {
+            "id": "77-5136494",
+            "last_viewed": 1708372674,
+            "score": 1.0,
+            "cost": 1,
+            "n_steps": 1,
+            "n_steps_attempted": 1,
+            "n_steps_passed": 1,
+            "is_attempted": true,
+            "is_passed": true,
+            "is_exam_mode": false
+        }
+    ]
+}
+
+
+
+
+attemps.step(информация о попытках тестого задания с 1 вариантом ответа)
+GET
+https://stepik.org/api/attempts?step=5116869&user=768104077
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "attempts": [
+        {
+            "id": 1065375776,
+            "dataset": {
+                "is_multiple_choice": false,
+                "options": [
+                    "52",
+                    "5002",
+                    "520",
+                    "502"
+                ]
+            },
+            "dataset_url": null,
+            "time": "2024-02-19T19:43:22Z",
+            "status": "active",
+            "time_left": null,
+            "step": 5116869,
+            "user": 768104077
+        }
+    ]
+}
+
+
+submissions
+POST
+https://stepik.org/api/submissions
+
+{
+    "submissions": [
+        {
+            "id": 1143604570,
+            "status": "evaluation",
+            "score": 0,
+            "hint": "",
+            "feedback": "",
+            "time": "2024-02-19T19:58:24.385Z",
+            "reply": {
+                "choices": [
+                    true,
+                    false,
+                    true,
+                    true
+                ]
+            },
+            "reply_url": null,
+            "attempt": 1068799342,
+            "session": null,
+            "eta": 0.8847476264060166
+        }
+    ]
+}
+
+
+submissions.limit
+GET
+https://stepik.org/api/submissions?limit=1&order=desc&step=5116869&user=768104077
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "submissions": [
+        {
+            "id": 1143600248,
+            "status": "correct",
+            "score": 1.0,
+            "hint": "",
+            "feedback": "",
+            "time": "2024-02-19T19:51:56Z",
+            "reply": {
+                "choices": [
+                    false,
+                    false,
+                    false,
+                    true
+                ]
+            },
+            "reply_url": null,
+            "attempt": 1065375776,
+            "session": null,
+            "eta": 0
+        }
+    ]
+}
+
+
+
+submissions.order (вывод списка решений)
+GET
+https://stepik.org/api/submissions?order=desc&page=1&step=5091293
+
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "submissions": [
+        {
+            "id": 1143493565,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "",
+            "feedback": "",
+            "time": "2024-02-19T17:33:42Z",
+            "reply": {
+                "choices": [
+                    false,
+                    false,
+                    true,
+                    false
+                ]
+            },
+            "reply_url": null,
+            "attempt": 1060305100,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1143479684,
+            "status": "correct",
+            "score": 1.0,
+            "hint": "",
+            "feedback": "",
+            "time": "2024-02-19T17:17:36Z",
+            "reply": {
+                "choices": [
+                    false,
+                    true,
+                    false,
+                    false
+                ]
+            },
+            "reply_url": null,
+            "attempt": 1060305101,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1143477659,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "",
+            "feedback": "",
+            "time": "2024-02-19T17:15:17Z",
+            "reply": {
+                "choices": [
+                    false,
+                    false,
+                    true,
+                    false
+                ]
+            },
+            "reply_url": null,
+            "attempt": 1060305100,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1143476890,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "",
+            "feedback": "",
+            "time": "2024-02-19T17:14:28Z",
+            "reply": {
+                "choices": [
+                    true,
+                    false,
+                    false, 
+                    false
+                ]
+            },
+            "reply_url": null,
+            "attempt": 1060305100,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1143468986,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "",
+            "feedback": "",
+            "time": "2024-02-19T17:05:22Z",
+            "reply": {
+                "choices": [
+                    true,
+                    false,
+                    false,
+                    false
+                ]
+            },
+            "reply_url": null,
+            "attempt": 1060305100,
+            "session": null,
+            "eta": 0
+        }
+    ]
+}
+
+
+discussion-threads (вывод комментов)
+GET
+https://stepik.org/api/discussion-threads?ids%5B%5D=77-5116869-1&ids%5B%5D=77-5116869-2
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "discussion-threads": [
+        {
+            "id": "77-5116869-1",
+            "thread": "default",
+            "discussions_count": 0,
+            "discussion_proxy": "77-5116869-1"
+        },
+        {
+            "id": "77-5116869-2",
+            "thread": "solutions",
+            "discussions_count": 0,
+            "discussion_proxy": "77-5116869-2"
+        }
+    ]
+}
+
+
+
+
+user.activity
+GET
+https://stepik.org/api/user-activity-summaries/768104077
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "user-activity-summaries": [
+        {
+            "id": 768104077,
+            "recent_strike": 1,
+            "solved_today": 3,
+            "max_strike": 1,
+            "solved": 3,
+            "days": 1,
+            "pins": [
+                3,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        }
+    ]
+}
+
+
+
+
+Программирование:
+
+User.code.run
+POST
+https://stepik.org/api/user-code-runs
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "user-code-runs": [
+        {
+            "id": 417771803,
+            "user": 768104077,
+            "step": 246459,
+            "language": "python3",
+            "code": "# put your python code here\n\nprint(sum([int(i) for i in input().split()]))\n\n\n\n",
+            "status": "evaluation",
+            "stdin": "9 8\n",
+            "stdout": "",
+            "stderr": "",
+            "time_limit_exceeded": false,
+            "memory_limit_exceeded": false,
+            "create_date": "2024-02-19T20:23:44.980Z",
+            "update_date": "2024-02-19T20:23:44.980Z"
+        }
+    ]
+}
+
+answer.to.user.code
+GET
+https://stepik.org/api/user-code-runs/417771803
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "user-code-runs": [
+        {
+            "id": 417771803,
+            "user": 768104077,
+            "step": 246459,
+            "language": "python3",
+            "code": "# put your python code here\n\nprint(sum([int(i) for i in input().split()]))\n\n\n\n",
+            "status": "success",
+            "stdin": "9 8\n",
+            "stdout": "17\n",
+            "stderr": "",
+            "time_limit_exceeded": false,
+            "memory_limit_exceeded": false,
+            "create_date": "2024-02-19T20:23:44.980Z",
+            "update_date": "2024-02-19T20:23:45.053Z"
+        }
+    ]
+}
+
+
+
+STEPS, GET, https://stepik.org/api/steps/248610 :
+(один вариант ответа)
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "steps": [
+        {
+            "id": 1495075,
+            "lesson": 385334,
+            "position": 5,
+            "status": "ready",
+            "block": {
+                "name": "choice",
+                "text": "<h3 style=\"text-align: center;\">\u041f\u0440\u0438\u043c\u0435\u0440 \u0442\u0435\u0441\u0442\u043e\u0432\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0438 \u0441 \u043e\u0434\u043d\u0438\u043c \u043e\u0442\u0432\u0435\u0442\u043e\u043c</h3>\n\n<p>\u0412 \u0434\u0430\u043d\u043d\u043e\u043c \u0437\u0430\u0434\u0430\u043d\u0438\u0438 \u043c\u043e\u0436\u043d\u043e \u0432\u044b\u0431\u0440\u0430\u0442\u044c \u0442\u043e\u043b\u044c\u043a\u043e \u043e\u0434\u0438\u043d \u0432\u0430\u0440\u0438\u0430\u043d\u0442 \u043e\u0442\u0432\u0435\u0442\u0430. \u0420\u0430\u0437\u043c\u0435\u0440 \u0432\u044b\u0431\u043e\u0440\u043a\u0438 \u0438\u0437 \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u043e\u0432 \u043e\u0442\u0432\u0435\u0442\u0430 \u0440\u0430\u0432\u043d\u044f\u0435\u0442\u0441\u044f \u0435\u0434\u0438\u043d\u0438\u0446\u0435, \u043d\u043e \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u043e\u0432 \u043e\u0442\u0432\u0435\u0442\u0430 \u0432\u0441\u0435 \u0440\u0430\u0432\u043d\u043e \u043e\u0441\u0442\u0430\u0435\u0442\u0441\u044f \u0434\u0432\u0430, \u0442\u0430\u043a \u043a\u0430\u043a \u0438\u0445 \u043d\u0435 \u043c\u043e\u0436\u0435\u0442 \u0431\u044b\u0442\u044c \u043c\u0435\u043d\u044c\u0448\u0435 \u0434\u0432\u0443\u0445.\u00a0\u041e\u0434\u0438\u043d \u0432\u0430\u0440\u0438\u0430\u043d\u0442 \u043e\u0442\u0432\u0435\u0442\u0430\u00a0\u043d\u0435 \u0437\u0430\u043f\u043e\u043b\u043d\u0435\u043d.\u00a0</p>\n\n<p>\u0422\u0430\u043a\u043e\u0439 \u0442\u0435\u0441\u0442 \u043c\u043e\u0436\u043d\u043e \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c, \u0435\u0441\u043b\u0438 \u0432\u044b \u0445\u043e\u0442\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u0443\u0447\u0430\u0449\u0438\u0435\u0441\u044f \u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u043b\u0438, \u0447\u0442\u043e \u043e\u043d\u0438 \u043e\u0437\u043d\u0430\u043a\u043e\u043c\u0438\u043b\u0438\u0441\u044c \u0441 \u043a\u0430\u043a\u043e\u0439-\u043b\u0438\u0431\u043e \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u0435\u0439.</p>\n\n<p>\u00a0</p>\n\n<h3>\u042f \u043f\u0440\u043e\u0447\u0438\u0442\u0430\u043b/\u043f\u0440\u043e\u0447\u0438\u0442\u0430\u043b\u0430\u00a0\u043f\u0440\u0430\u0432\u0438\u043b\u0430 \u043e\u0431\u0449\u0435\u043d\u0438\u044f \u0432 \u043a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u044f\u0445 \u0438 \u0441\u043e\u0433\u043b\u0430\u0441\u0435\u043d \u0441 \u043d\u0438\u043c\u0438:</h3>",
+                "video": null,
+                "options": {
+                    "is_multiple_choice": false
+                },
+                "subtitle_files": [],
+                "is_deprecated": false
+            },
+            "actions": {
+                "submit": "#",
+                "comment": "#"
+            },
+            "progress": "77-1495075",
+            "subscriptions": [
+                "31-77-1495075",
+                "30-77-1495075"
+            ],
+            "instruction": null,
+            "session": null,
+            "instruction_type": null,
+            "viewed_by": 642,
+            "passed_by": 348,
+            "correct_ratio": 1.0,
+            "worth": 1,
+            "is_solutions_unlocked": false,
+            "solutions_unlocked_attempts": 3,
+            "has_submissions_restrictions": false,
+            "max_submissions_count": 3,
+            "variation": 1,
+            "variations_count": 1,
+            "is_enabled": true,
+            "needs_plan": null,
+            "create_date": "2020-08-19T15:55:11Z",
+            "update_date": "2020-10-08T14:01:49Z",
+            "discussions_count": 1,
+            "discussion_proxy": "77-1495075-1",
+            "discussion_threads": [
+                "77-1495075-1",
+                "77-1495075-2"
+            ]
+        }
+    ]
+}
+
+
+
+(много правильных вариантов ответа)
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "steps": [
+        {
+            "id": 1454899,
+            "lesson": 385334,
+            "position": 3,
+            "status": "ready",
+            "block": {
+                "name": "choice",
+                "text": "<h3 style=\"text-align: center;\">\u041f\u0440\u0438\u043c\u0435\u0440 \u0442\u0435\u0441\u0442\u043e\u0432\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0438 \u0441 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u0438\u043c\u0438 \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u0430\u043c\u0438 \u043e\u0442\u0432\u0435\u0442\u0430</h3>\n\n<p>\u0412 \u0434\u0430\u043d\u043d\u043e\u043c \u0437\u0430\u0434\u0430\u043d\u0438\u0438 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0441\u044f\u00a0\u0442\u0435\u0441\u0442 \u0441 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u0438\u043c\u0438 \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u0430\u043c\u0438 \u043e\u0442\u0432\u0435\u0442\u0430, \u0430 \u0442\u0430\u043a\u0436\u0435 \u043e\u0431\u044a\u044f\u0441\u043d\u0435\u043d\u0438\u044f, \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u043f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u044e\u0442\u0441\u044f \u0440\u044f\u0434\u043e\u043c \u0441 \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u0430\u043c\u0438 \u043e\u0442\u0432\u0435\u0442\u0430.</p>\n\n<p>\u00a0</p>\n\n<h3>\u041a\u0442\u043e \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 \u043d\u0438\u0436\u0435 \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u0433\u0435\u0440\u043e\u0435\u043c \u0440\u043e\u043c\u0430\u043d\u0430 \u00ab\u0410\u0432\u0442\u043e\u0441\u0442\u043e\u043f\u043e\u043c \u043f\u043e \u0433\u0430\u043b\u0430\u043a\u0442\u0438\u043a\u0435\u00bb?</h3>\n\n<p>(\u043e\u0442\u0432\u0435\u0447\u0430\u044f \u043d\u0430 \u044d\u0442\u043e\u0442 \u0432\u043e\u043f\u0440\u043e\u0441, \u043e\u0431\u0440\u0430\u0442\u0438\u0442\u0435 \u0432\u043d\u0438\u043c\u0430\u043d\u0438\u0435, \u043a\u0430\u043a \u043f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u044e\u0442\u0441\u044f \u043f\u043e\u0434\u0441\u043a\u0430\u0437\u043a\u0438)</p>",
+                "video": null,
+                "options": {
+                    "is_multiple_choice": true
+                },
+                "subtitle_files": [],
+                "is_deprecated": false
+            },
+            "actions": {
+                "submit": "#",
+                "comment": "#"
+            },
+            "progress": "77-1454899",
+            "subscriptions": [
+                "31-77-1454899",
+                "30-77-1454899"
+            ],
+            "instruction": null,
+            "session": null,
+            "instruction_type": null,
+            "viewed_by": 883,
+            "passed_by": 258,
+            "correct_ratio": 0.2,
+            "worth": 1,
+            "is_solutions_unlocked": false,
+            "solutions_unlocked_attempts": 3,
+            "has_submissions_restrictions": false,
+            "max_submissions_count": 3,
+            "variation": 1,
+            "variations_count": 1,
+            "is_enabled": true,
+            "needs_plan": null,
+            "create_date": "2020-07-31T09:04:54Z",
+            "update_date": "2020-09-16T12:33:11Z",
+            "discussions_count": 5,
+            "discussion_proxy": "77-1454899-1",
+            "discussion_threads": [
+                "77-1454899-1",
+                "77-1454899-2"
+            ]
+        }
+    ]
+}
+
+
+(опрос)
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "steps": [
+        {
+            "id": 1495070,
+            "lesson": 385334,
+            "position": 4,
+            "status": "ready",
+            "block": {
+                "name": "choice",
+                "text": "<h3 style=\"text-align: center;\"><strong>\u041f\u0440\u0438\u043c\u0435\u0440 \u0442\u0435\u0441\u0442\u043e\u0432\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0438, \u0433\u0434\u0435 \u0432\u0441\u0435 \u043e\u0442\u0432\u0435\u0442\u044b \u0432\u0435\u0440\u043d\u044b\u0435</strong></h3>\n\n<p>\u0412 \u0434\u0430\u043d\u043d\u043e\u043c \u0437\u0430\u0434\u0430\u043d\u0438\u0438 \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0441\u044f \u0442\u0435\u0441\u0442 \u0441 \u0432\u043e\u0437\u043c\u043e\u0436\u043d\u043e\u0441\u0442\u044c\u044e \u0432\u044b\u0431\u0440\u0430\u0442\u044c \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u043e\u0432 \u043e\u0442\u0432\u0435\u0442\u0430, \u043f\u0440\u0438 \u044d\u0442\u043e\u043c \u0432\u0441\u0435 \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u044b \u043e\u0442\u0432\u0435\u0442\u0430 \u044f\u0432\u043b\u044f\u044e\u0442\u0441\u044f \u0432\u0435\u0440\u043d\u044b\u043c\u0438. \u0412\u0430\u0440\u0438\u0430\u043d\u0442\u044b \u043e\u0442\u0432\u0435\u0442\u043e\u0432 \u0432 \u0434\u0430\u043d\u043d\u043e\u043c \u0437\u0430\u0434\u0430\u043d\u0438\u0438 \u043d\u0435 \u043f\u0435\u0440\u0435\u043c\u0435\u0448\u0438\u0432\u0430\u044e\u0442\u0441\u044f.</p>\n\n<p>\u00a0</p>\n\n<h3>\u041d\u0430 \u043a\u0430\u043a\u043e\u043c \u044f\u0437\u044b\u043a\u0435 \u043f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f \u0432\u044b \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442\u0435?</h3>",
+                "video": null,
+                "options": {
+                    "is_multiple_choice": true
+                },
+                "subtitle_files": [],
+                "is_deprecated": false
+            },
+            "actions": {
+                "submit": "#",
+                "comment": "#"
+            },
+            "progress": "77-1495070",
+            "subscriptions": [
+                "31-77-1495070",
+                "30-77-1495070"
+            ],
+            "instruction": null,
+            "session": null,
+            "instruction_type": null,
+            "viewed_by": 691,
+            "passed_by": 360,
+            "correct_ratio": 1.0,
+            "worth": 1,
+            "is_solutions_unlocked": false,
+            "solutions_unlocked_attempts": 3,
+            "has_submissions_restrictions": false,
+            "max_submissions_count": 3,
+            "variation": 1,
+            "variations_count": 1,
+            "is_enabled": true,
+            "needs_plan": null,
+            "create_date": "2020-08-19T15:52:12Z",
+            "update_date": "2020-10-08T14:01:12Z",
+            "discussions_count": 1,
+            "discussion_proxy": "77-1495070-1",
+            "discussion_threads": [
+                "77-1495070-1",
+                "77-1495070-2"
+            ]
+        }
+    ]
+}
+
+
+(ответ в строку)
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "steps": [
+        {
+            "id": 2163714,
+            "lesson": 385339,
+            "position": 2,
+            "status": "ready",
+            "block": {
+                "name": "fill-blanks",
+                "text": "<h3 style=\"text-align: center;\">\u041f\u0440\u0438\u043c\u0435\u0440 \u0437\u0430\u0434\u0430\u0447\u0438\u00a0\u043d\u0430 \u043f\u0440\u043e\u043f\u0443\u0441\u043a\u0438 \u0441 \u0432\u0432\u043e\u0434\u043e\u043c \u043e\u0442\u0432\u0435\u0442\u0430</h3>\n\n<p>\u0421\u0442\u0430\u043d\u0434\u0430\u0440\u0442\u043d\u0430\u044f \u0437\u0430\u0434\u0430\u0447\u0430 \u043d\u0430 \u043f\u0440\u043e\u043f\u0443\u0441\u043a\u0438 \u0441 \u0432\u0432\u043e\u0434\u043e\u043c \u043e\u0442\u0432\u0435\u0442\u0430. \u0414\u043b\u044f \u043a\u0430\u0436\u0434\u043e\u0433\u043e \u043f\u0440\u043e\u043f\u0443\u0441\u043a\u0430 \u0437\u0430\u0434\u0430\u043d\u00a0\u0442\u043e\u043b\u044c\u043a\u043e \u043e\u0434\u0438\u043d \u0432\u0435\u0440\u043d\u044b\u0439 \u0432\u0430\u0440\u0438\u0430\u043d\u0442 \u043e\u0442\u0432\u0435\u0442\u0430. \u0420\u0430\u0441\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u0432 \u0441\u0442\u043e\u043b\u0431\u0438\u043a \u0437\u0430\u0434\u0430\u043d\u043e \u0441 \u043f\u043e\u043c\u043e\u0449\u044c\u044e \u0442\u0435\u0433\u0430 <code>&lt;br&gt;</code>\u00a0\u043f\u0435\u0440\u0435\u0434 \u0442\u0435\u043a\u0441\u0442\u043e\u043c \u043f\u0440\u0438\u043c\u0435\u0440\u0430.</p>\n\n<p>\u00a0</p>\n\n<h3>\u0420\u0435\u0448\u0438\u0442\u0435 \u043f\u0440\u0438\u043c\u0435\u0440\u044b:</h3>",
+                "video": null,
+                "options": {},
+                "subtitle_files": [],
+                "is_deprecated": false
+            },
+            "actions": {
+                "submit": "#",
+                "comment": "#"
+            },
+            "progress": "77-2163714",
+            "subscriptions": [
+                "31-77-2163714",
+                "30-77-2163714"
+            ],
+            "instruction": null,
+            "session": null,
+            "instruction_type": null,
+            "viewed_by": 424,
+            "passed_by": 134,
+            "correct_ratio": 0.6146788990825688,
+            "worth": 1,
+            "is_solutions_unlocked": true,
+            "solutions_unlocked_attempts": 5,
+            "has_submissions_restrictions": false,
+            "max_submissions_count": 3,
+            "variation": 1,
+            "variations_count": 1,
+            "is_enabled": true,
+            "needs_plan": null,
+            "create_date": "2021-05-26T12:54:46Z",
+            "update_date": "2022-02-18T13:45:33Z",
+            "discussions_count": 0,
+            "discussion_proxy": "77-2163714-1",
+            "discussion_threads": [
+                "77-2163714-1",
+                "77-2163714-2"
+            ]
+        }
+    ]
+}
+
+(Пропуски с выбором ответа)
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "steps": [
+        {
+            "id": 2163713,
+            "lesson": 385339,
+            "position": 3,
+            "status": "ready",
+            "block": {
+                "name": "fill-blanks",
+                "text": "<h3 style=\"text-align: center;\">\u041f\u0440\u0438\u043c\u0435\u0440 \u0437\u0430\u0434\u0430\u0447\u0438\u00a0\u043d\u0430 \u043f\u0440\u043e\u043f\u0443\u0441\u043a\u0438 \u0441 \u0432\u044b\u0431\u043e\u0440\u043e\u043c \u043e\u0442\u0432\u0435\u0442\u0430</h3>\n\n<p>\u0421\u0442\u0430\u043d\u0434\u0430\u0440\u0442\u043d\u0430\u044f \u0437\u0430\u0434\u0430\u0447\u0430 \u043d\u0430 \u043f\u0440\u043e\u043f\u0443\u0441\u043a\u0438 \u0441 \u0432\u044b\u0431\u043e\u0440\u043e\u043c \u043e\u0442\u0432\u0435\u0442\u0430 \u0438\u0437 \u0432\u044b\u043f\u0430\u0434\u0430\u044e\u0449\u0435\u0433\u043e \u0441\u043f\u0438\u0441\u043a\u0430.</p>\n\n<p>\u00a0</p>\n\n<h3>\u0414\u043e\u043f\u043e\u043b\u043d\u0438\u0442\u0435 \u0444\u0440\u0430\u0437\u044b, \u0432\u044b\u0431\u0440\u0430\u0432 \u043f\u0440\u043e\u0434\u043e\u043b\u0436\u0435\u043d\u0438\u0435 \u0438\u0437 \u0432\u044b\u043f\u0430\u0434\u0430\u044e\u0449\u0435\u0433\u043e \u0441\u043f\u0438\u0441\u043a\u0430:</h3>",
+                "video": null,
+                "options": {},
+                "subtitle_files": [],
+                "is_deprecated": false
+            },
+            "actions": {
+                "submit": "#",
+                "comment": "#"
+            },
+            "progress": "77-2163713",
+            "subscriptions": [
+                "31-77-2163713",
+                "30-77-2163713"
+            ],
+            "instruction": null,
+            "session": null,
+            "instruction_type": null,
+            "viewed_by": 347,
+            "passed_by": 162,
+            "correct_ratio": 0.6861924686192469,
+            "worth": 1,
+            "is_solutions_unlocked": true,
+            "solutions_unlocked_attempts": 5,
+            "has_submissions_restrictions": false,
+            "max_submissions_count": 3,
+            "variation": 1,
+            "variations_count": 1,
+            "is_enabled": true,
+            "needs_plan": null,
+            "create_date": "2021-05-26T12:54:46Z",
+            "update_date": "2022-02-18T13:45:33Z",
+            "discussions_count": 0,
+            "discussion_proxy": "77-2163713-1",
+            "discussion_threads": [
+                "77-2163713-1",
+                "77-2163713-2"
+            ]
+        }
+    ]
+}
+
+
+
+(задачи на программирование)
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "steps": [
+        {
+            "id": 248610,
+            "lesson": 62530,
+            "position": 2,
+            "status": "ready",
+            "block": {
+                "name": "code",
+                "text": "<h1 style=\"text-align: center;\">\u041f\u0440\u0438\u043c\u0435\u0440 1: \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u043e \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u043e\u0432 \u043e\u0442\u0432\u0435\u0442\u0430<br></h1><p>\u041d\u0430 \u0432\u0445\u043e\u0434 \u043f\u043e\u0434\u0430\u0451\u0442\u0441\u044f \u0441\u043f\u0438\u0441\u043e\u043a \u0438\u0437 \u043d\u0435\u0441\u043a\u043e\u043b\u044c\u043a\u0438\u0445 \u0447\u0438\u0441\u0435\u043b. \u0412\u0430\u0448\u0430 \u043f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u0430 \u0434\u043e\u043b\u0436\u043d\u0430 \u0432\u0435\u0440\u043d\u0443\u0442\u044c \u043b\u044e\u0431\u043e\u0435 \u0447\u0451\u0442\u043d\u043e\u0435 \u0447\u0438\u0441\u043b\u043e \u0438\u0437 \u044d\u0442\u043e\u0433\u043e \u0441\u043f\u0438\u0441\u043a\u0430.</p>",
+                "video": null,
+                "options": {
+                    "execution_time_limit": 5,
+                    "execution_memory_limit": 256,
+                    "limits": {
+                        "asm32": {
+                            "time": 5,
+                            "memory": 256
+                        },
+                        "asm64": {
+                            "time": 5,
+                            "memory": 256
+                        },
+                        "c": {
+                            "time": 5,
+                            "memory": 256
+                        },
+                        "c_valgrind": {
+                            "time": 10,
+                            "memory": 256
+                        },
+                        "clojure": {
+                            "time": 10,
+                            "memory": 256
+                        },
+                        "c++": {
+                            "time": 5,
+                            "memory": 256
+                        },
+                        "c++11": {
+                            "time": 5,
+                            "memory": 256
+                        },
+                        "c++20": {
+                            "time": 5,
+                            "memory": 256
+                        },
+                        "c#": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "dart": {
+                            "time": 15,
+                            "memory": 256
+                        },
+                        "go": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "haskell": {
+                            "time": 10,
+                            "memory": 256
+                        },
+                        "haskell 7.10": {
+                            "time": 10,
+                            "memory": 256
+                        },
+                        "haskell 8.0": {
+                            "time": 10,
+                            "memory": 256
+                        },
+                        "haskell 8.8": {
+                            "time": 10,
+                            "memory": 256
+                        },
+                        "java": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "java11": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "java17": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "java8": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "java9": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "javascript": {
+                            "time": 15,
+                            "memory": 256
+                        },
+                        "julia": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "kotlin": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "mono c#": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "nasm": {
+                            "time": 5,
+                            "memory": 256
+                        },
+                        "octave": {
+                            "time": 13,
+                            "memory": 256
+                        },
+                        "pascalabc": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "perl": {
+                            "time": 15,
+                            "memory": 256
+                        },
+                        "php": {
+                            "time": 15,
+                            "memory": 256
+                        },
+                        "python3": {
+                            "time": 15,
+                            "memory": 256
+                        },
+                        "python3.10": {
+                            "time": 15,
+                            "memory": 256
+                        },
+                        "r": {
+                            "time": 8,
+                            "memory": 256
+                        },
+                        "ruby": {
+                            "time": 15,
+                            "memory": 256
+                        },
+                        "rust": {
+                            "time": 5,
+                            "memory": 256
+                        },
+                        "scala": {
+                            "time": 9,
+                            "memory": 256
+                        },
+                        "scala3": {
+                            "time": 9,
+                            "memory": 256
+                        },
+                        "shell": {
+                            "time": 5,
+                            "memory": 256
+                        },
+                        "swift": {
+                            "time": 5,
+                            "memory": 256
+                        },
+                        "typescript": {
+                            "time": 15,
+                            "memory": 256
+                        }
+                    },
+                    "code_templates": {
+                        "asm32": "# put your asm32 code here",
+                        "asm64": "# put your asm64 code here",
+                        "c": "#include <stdio.h>\n\nint main() {\n    // put your code here\n    return 0;\n}",
+                        "c_valgrind": "#include <stdio.h>\n\nint main() {\n    // put your code here\n    return 0;\n}",
+                        "clojure": ";; put your clojure code here",
+                        "c++": "#include <iostream>\n\nint main() {\n    // put your code here\n    return 0;\n}",
+                        "c++11": "#include <iostream>\n\nint main() {\n    // put your code here\n    return 0;\n}",
+                        "c++20": "#include <iostream>\n\nint main() {\n    // put your code here\n    return 0;\n}",
+                        "c#": "using System;\n\npublic class MainClass\n{\n    public static void Main()\n    {\n        // put your c# code here\n    }\n}",
+                        "dart": "// put your dart code here",
+                        "go": "package main\n\nfunc main() {\n    // put your code here\n}",
+                        "haskell": "main :: IO ()\n-- put your code here",
+                        "haskell 7.10": "main :: IO ()\n-- put your code here",
+                        "haskell 8.0": "main :: IO ()\n-- put your code here",
+                        "haskell 8.8": "main :: IO ()\n-- put your code here",
+                        "java": "class Main {\n    public static void main(String[] args) {\n        // put your code here\n    }\n}",
+                        "java11": "class Main {\n    public static void main(String[] args) {\n        // put your code here\n    }\n}",
+                        "java17": "class Main {\n    public static void main(String[] args) {\n        // put your code here\n    }\n}",
+                        "java8": "class Main {\n    public static void main(String[] args) {\n        // put your code here\n    }\n}",
+                        "java9": "class Main {\n    public static void main(String[] args) {\n        // put your code here\n    }\n}",
+                        "javascript": "// put your javascript (node.js) code here",
+                        "julia": "# put your Julia code here",
+                        "kotlin": "fun main() {\n    // put your code here\n}",
+                        "mono c#": "using System;\n\npublic class MainClass\n{\n    public static void Main()\n    {\n        // put your c# code here\n    }\n}",
+                        "nasm": "; put your NASM code here",
+                        "octave": "% put your octave code here",
+                        "pascalabc": "begin\n  // put your code here\nend.",
+                        "perl": "use 5.024; # strict enabled by default\nuse warnings;\n\n# put your Perl code here",
+                        "php": "<?php\n// put your PHP code here\n?>",
+                        "python3": "# put your python code here",
+                        "python3.10": "# put your python code here",
+                        "r": "# put your R code here",
+                        "ruby": "# put your ruby code here",
+                        "rust": "fn main() {\n    // put your Rust code here\n}",
+                        "scala": "object Main {\n  def main(args: Array[String]) {\n    // put your code here\n  }\n}",
+                        "scala3": "@main def main =\n  // put your code here",
+                        "shell": "# put your shell (bash) code here",
+                        "swift": "// put your swift code here",
+                        "typescript": "// put your typescript code here"
+                    },
+                    "code_templates_options": {},
+                    "samples": [
+                        [
+                            "4 8 8 3 3 8 2 8 7 3\n",
+                            "4"
+                        ],
+                        [
+                            "7 3 9 6 4 0 1 5 8 6\n",
+                            "6"
+                        ],
+                        [
+                            "3 8 6 2 3 7 9 1 7 0\n",
+                            "8"
+                        ]
+                    ],
+                    "is_run_user_code_allowed": true,
+                    "code_templates_header_lines_count": {
+                        "asm32": 0,
+                        "asm64": 0,
+                        "c": 0,
+                        "c_valgrind": 0,
+                        "clojure": 0,
+                        "c++": 0,
+                        "c++11": 0,
+                        "c++20": 0,
+                        "c#": 0,
+                        "dart": 0,
+                        "go": 0,
+                        "haskell": 0,
+                        "haskell 7.10": 0,
+                        "haskell 8.0": 0,
+                        "haskell 8.8": 0,
+                        "java": 0,
+                        "java11": 0,
+                        "java17": 0,
+                        "java8": 0,
+                        "java9": 0,
+                        "javascript": 0,
+                        "julia": 0,
+                        "kotlin": 0,
+                        "mono c#": 0,
+                        "nasm": 0,
+                        "octave": 0,
+                        "pascalabc": 0,
+                        "perl": 0,
+                        "php": 0,
+                        "python3": 0,
+                        "python3.10": 0,
+                        "r": 0,
+                        "ruby": 0,
+                        "rust": 0,
+                        "scala": 0,
+                        "scala3": 0,
+                        "shell": 0,
+                        "swift": 0,
+                        "typescript": 0
+                    },
+                    "code_templates_footer_lines_count": {
+                        "asm32": 0,
+                        "asm64": 0,
+                        "c": 0,
+                        "c_valgrind": 0,
+                        "clojure": 0,
+                        "c++": 0,
+                        "c++11": 0,
+                        "c++20": 0,
+                        "c#": 0,
+                        "dart": 0,
+                        "go": 0,
+                        "haskell": 0,
+                        "haskell 7.10": 0,
+                        "haskell 8.0": 0,
+                        "haskell 8.8": 0,
+                        "java": 0,
+                        "java11": 0,
+                        "java17": 0,
+                        "java8": 0,
+                        "java9": 0,
+                        "javascript": 0,
+                        "julia": 0,
+                        "kotlin": 0,
+                        "mono c#": 0,
+                        "nasm": 0,
+                        "octave": 0,
+                        "pascalabc": 0,
+                        "perl": 0,
+                        "php": 0,
+                        "python3": 0,
+                        "python3.10": 0,
+                        "r": 0,
+                        "ruby": 0,
+                        "rust": 0,
+                        "scala": 0,
+                        "scala3": 0,
+                        "shell": 0,
+                        "swift": 0,
+                        "typescript": 0
+                    }
+                },
+                "subtitle_files": [],
+                "is_deprecated": false
+            },
+            "actions": {
+                "submit": "#",
+                "comment": "#"
+            },
+            "progress": "77-248610",
+            "subscriptions": [
+                "31-77-248610",
+                "30-77-248610"
+            ],
+            "instruction": null,
+            "session": null,
+            "instruction_type": null,
+            "viewed_by": 927,
+            "passed_by": 211,
+            "correct_ratio": 0.3961267605633803,
+            "worth": 1,
+            "is_solutions_unlocked": true,
+            "solutions_unlocked_attempts": 5,
+            "has_submissions_restrictions": false,
+            "max_submissions_count": 3,
+            "variation": 1,
+            "variations_count": 1,
+            "is_enabled": true,
+            "needs_plan": null,
+            "create_date": "2017-12-06T14:29:59Z",
+            "update_date": "2022-02-18T14:27:53Z",
+            "discussions_count": 0,
+            "discussion_proxy": "77-248610-1",
+            "discussion_threads": [
+                "77-248610-1",
+                "77-248610-2"
+            ]
+        }
+    ]
+}
