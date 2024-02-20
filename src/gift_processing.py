@@ -3,20 +3,64 @@ from pygiftparser import parser as giftparser
 import json
 
 # global vars
+error_msg = "ERROR while processing the gift file: "
+CRED = "\033[91m"  # start red stdout
+CEND = "\033[0m"  # stop CRED
 STEPIK_name_types = {"MultipleChoiceCheckbox()": "choice",
                      "MultipleChoiceRadio()": "choice",
                     }
+STEPIK_sampe_size = 10
+
 
 def __question_validator__(x:dict) -> bool:
     '''returns True if question is valid'''
     pass
 
-def __get_question_options__(x: gifpars.gift.Question) -> dict:
-    """gets options dict for Stepik json"""
-    pass
+def __data_multiple_choice__(x: giftparser.gift.Question) -> dict:
+    options = {}
+    options["options"] = []
+    for i in x.answer.options:
+        options["options"].append({})
+        options["options"][-1]["is_correct"] = abs(i.percentage)>0.95
+        options["options"][-1]["text"] = i.text
+        if i.feedback != None:
+            options["options"][-1]["feedback"] = i.feedback
+        else:
+            options["options"][-1]["feedback"] = ""
+    options["sample_size"] = min(len(x.answer.options), STEPIK_sampe_size)
+    tmp = 0
+    for i in options["options"]:
+        tmp += i["is_correct"]
+    options["is_multiple_choice"] = tmp > 1
+    return options
 
-def __get_question_data__(x: gifpars.gift.Question) -> dict:
+
+def __get_question_options__(x: giftparser.gift.Question) -> dict:
+    """gets options dict for Stepik json"""
+    if (
+        str(x.answer.__repr__()) == "MultipleChoiceRadio()"
+        or str(x.answer.__repr__()) == "MultipleChoiceCheckbox()"
+    ):
+        return __data_multiple_choice__(x)
+
+
+    return {"ISBROKEN": True}  # FIXME
+
+
+def __get_question_data__(question: giftparser.gift.Question) -> dict:
     """gets block dict for Stepik json"""
+    question_data: dict = {}
+    if not(question.answer.__repr__() in STEPIK_name_types.keys()):
+        question_data["name"] = None
+    else:
+        question_data["name"] = STEPIK_name_types[question.answer.__repr__()]
+    question_data["text"] = question.text
+    options: dict = __get_question_options__(question)
+    options["is_always_correct"] = False
+    question_data["source"] = options # FIXME from config
+    return question_data
+
+
     pass
 
 def get_gift_dicts(filename: str) -> list:
@@ -38,7 +82,7 @@ def get_gift_dicts(filename: str) -> list:
         )
         raise PermissionError
     try:
-        parse_result: gifpars.gift.Gift = gifpars.parse(giftfile)
+        parse_result = giftparser.    parse(giftfile)
     except Exception as error:
         print(
             CRED
@@ -54,5 +98,19 @@ def get_Step_list(lesson_id: int) -> list:
     pass
 
 if __name__ == "__main__":
-    pass
+    import argparse
+    import pprint
+
+    def parse_input_arguments():
+        parser = argparse.ArgumentParser(description="GIFT Moodle file parser.")
+        parser.add_argument(
+            "-f", "--file", dest="file", required=True, help="GIFT Moodle file."
+        )
+        args = parser.parse_args()
+        return args
+
+    args = parse_input_arguments()
+    for i in get_gift_dicts(args.file):  
+        print("\n\n",i['name'])
+        print(json.dumps(i, indent=4))
 
