@@ -5,6 +5,9 @@ client_id = ""
 client_secret = ""
 token = ""
 
+#разделить клиент айди секрет и токен
+#изменить формат файла Session_information  ->  yaml
+
 def set_user_variables(cl_id, cl_secret):
     # 2. Get a token
     global client_id
@@ -28,12 +31,12 @@ def send_status(*r):
             if not(r[i-1]):
                 print("Failed")
                 return
-            print("success")
+            print("Success")
             return
         if r[i-1].status_code != r[i]:
             print("Failed") 
             return
-    print("success")
+    print("Success")
 
 # # 2. Get a token
 # auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
@@ -123,4 +126,4 @@ def create_lesson(section_id: int, position: int, title: str, check=False, get_j
 # create_step(1226398, 1, "text", "Это был Алекс2 из Питона", check=True)
 
 # create_lesson(389525, 4, "Python lesson", check=True, get_json=True)
-print(create_step(1236965, 1, "SSSSSSSSSSSSS", check=True, get_json=True))
+print(create_step(1237002, 1, "SSSSSSSSSSSSS", check=True, get_json=True))
