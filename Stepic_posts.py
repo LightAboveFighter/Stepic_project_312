@@ -107,7 +107,7 @@ def create_lesson(section_id: int, position: int, title: str, check=False, get_j
     if get_json: return r.text + r2.text
     return lesson_id
 
-set_user_variables("", "")
+# set_user_variables("", "")
 get_token()
 # create_step(1226398, 1, "text", "Это был Алекс2 из Питона", check=True)
 
