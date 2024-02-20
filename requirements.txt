@@ -1,1 +1,2 @@
-pygiftparser==1.1 
+pygiftparser==1.1
+PyYAML
