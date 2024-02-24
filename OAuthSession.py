@@ -17,7 +17,7 @@ class OAuthSession:
         return self.__token
     
     @token.setter
-    def update_token(self):
+    def set_token(self):
         file = open("Client_information.yaml", "r")
         data = yaml.safe_load(file)
         client_id = data["client_id"]

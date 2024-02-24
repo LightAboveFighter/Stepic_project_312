@@ -107,9 +107,15 @@ def create_lesson(section_id: int, position: int, title: str, check=False, get_j
     if get_json: return r.text + r2.text
     return lesson_id
 
+def delete_course(course_id: int, check=False, get_json=False):
+
+    api_url = f"https://stepik.org/api/courses/{course_id}"
+    r = requests.delete(api_url)
+    if check: send_status(r, 204)   # It must be 204
+    if get_json: return r.text
+
 # set_user_variables("", "")
 get_token()
 # create_step(1226398, 1, "text", "Это был Алекс2 из Питона", check=True)
 
 # create_lesson(389525, 4, "Python lesson", check=True, get_json=True)
-print(create_step(1237002, 1, "Yaml check", check=True, get_json=True))
