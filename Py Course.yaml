@@ -1,0 +1,30 @@
+Course:
+  Description: This is Py description
+  Sections:
+  - Lessons:
+    - Title: pyyyyyyyyyyyy
+      id: null
+    Title: DD section
+    id: null
+  - Lessons:
+    - Title: Lesson Pypypy
+      id: null
+    - Title: Ryryry
+      id: null
+    Title: 2 obj
+    id: null
+  - Lessons:
+    - Title: 1lesson
+      id: null
+    - Title: 2lessson
+      id: null
+    - Title: 3lesson
+      id: null
+    - Title: 4lesson
+      id: null
+    - Title: 5lesson
+      id: null
+    Title: '3333'
+    id: 393994
+  Title: Py Course
+  id: 198074
