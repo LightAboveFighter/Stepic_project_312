@@ -19,6 +19,7 @@ def __question_validator__(x:dict) -> bool:
 def __data_multiple_choice__(x: giftparser.gift.Question) -> dict:
     options = {}
     options["options"] = []
+    options["is_always_correct"] = False
     for i in x.answer.options:
         options["options"].append({})
         options["options"][-1]["is_correct"] = abs(i.percentage)>0.95
@@ -42,9 +43,9 @@ def __get_question_options__(x: giftparser.gift.Question) -> dict:
         or str(x.answer.__repr__()) == "MultipleChoiceCheckbox()"
     ):
         return __data_multiple_choice__(x)
+    else:
+        return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
-
-    return {"ISBROKEN": True}  # FIXME
 
 
 def __get_question_data__(question: giftparser.gift.Question) -> dict:
@@ -56,7 +57,6 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
         question_data["name"] = STEPIK_name_types[question.answer.__repr__()]
     question_data["text"] = question.text
     options: dict = __get_question_options__(question)
-    options["is_always_correct"] = False
     question_data["source"] = options # FIXME from config
     return question_data
 
