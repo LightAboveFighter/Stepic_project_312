@@ -2,6 +2,16 @@ from Classes import Step_text #FIXME
 from pygiftparser import parser as giftparser
 import json
 
+'''TODO
+True-false
+Short answer
+Matching
+Missing word
+Numerical questions
+Essay
+Description -- not a question
+'''
+
 # global vars
 error_msg = "ERROR while processing the gift file: "
 CRED = "\033[91m"  # start red stdout
@@ -35,6 +45,19 @@ def __data_multiple_choice__(x: giftparser.gift.Question) -> dict:
     options["is_multiple_choice"] = tmp > 1
     return options
 
+def __data_true_false__(x: giftparser.gift.Question):
+    options = __data_multiple_choice__(x)
+    options["options"].append({})
+    if options["options"][0]["text"] == "True":
+        options["options"][1]["text"] = "False"
+        options["options"][1]["is_correct"] = False
+        options["options"][1]["feedback"] = ""
+    else:
+        options["options"][1]["text"] = "True"
+        options["options"][1]["is_correct"] = False
+        options["options"][1]["feedback"] = ""
+    return options
+
 
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
@@ -43,6 +66,8 @@ def __get_question_options__(x: giftparser.gift.Question) -> dict:
         or str(x.answer.__repr__()) == "MultipleChoiceCheckbox()"
     ):
         return __data_multiple_choice__(x)
+    if str(x.answer.__repr__()) == "TrueFalse()":
+        return __data_true_false__(x)
     else:
         return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
