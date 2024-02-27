@@ -1,6 +1,6 @@
 import requests
 import json
-import yaml 
+import yaml
 
 class OAuthSession:
 
