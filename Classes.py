@@ -13,7 +13,7 @@ class Step(ABC):
         self.type_info = None
 
     @abstractclassmethod
-    def set_type_information():
+    def set_type_information(self):
         pass
 
 class Step_text(Step):

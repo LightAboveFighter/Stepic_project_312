@@ -1,0 +1,228 @@
+
+GET https://stepik.org/api/courses/198074
+
+Форма ответа:
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "courses": [
+        {
+            "id": 198074,
+            "summary": "",
+            "workload": "",
+            "cover": null,
+            "intro": "",
+            "course_format": "",
+            "target_audience": "",
+            "certificate_footer": null,
+            "certificate_cover_org": null,
+            "is_certificate_issued": false,
+            "is_certificate_auto_issued": false,
+            "certificate_regular_threshold": null,
+            "certificate_distinction_threshold": null,
+            "instructors": [
+                281385630
+            ],
+            "certificate": "",
+            "requirements": "",
+            "description": "",
+            "sections": [
+                393994,
+                394032
+            ],
+            "total_units": 1,
+            "enrollment": 198074,
+            "is_favorite": false,
+            "actions": {
+                "view_reports": {
+                    "enabled": true
+                },
+                "edit_reports": {
+                    "enabled": false,
+                    "needs_plan": "enterprise"
+                },
+                "view_grade_book_page": {
+                    "enabled": true
+                },
+                "view_grade_book": {
+                    "enabled": false,
+                    "needs_plan": "enterprise"
+                },
+                "edit_lti": {
+                    "enabled": true,
+                    "is_draft": true,
+                    "needs_plan": "enterprise"
+                },
+                "edit_advanced_settings": {
+                    "enabled": true,
+                    "is_draft": true,
+                    "needs_plan": "enterprise"
+                },
+                "manage_permissions": {
+                    "enabled": false,
+                    "needs_plan": "enterprise"
+                },
+                "assist_course": "#",
+                "view_instructor_dashboard": "#",
+                "edit_course": "/course/198074/edit-info",
+                "edit_syllabus": "/course/198074/edit",
+                "view_statistics": "/course/198074/statistics/",
+                "attachments": "/course/198074/attachments/",
+                "create_announcements": "#",
+                "clone_course": "/course/198074/clone/",
+                "clone_module": "/course/198074/clone-module/",
+                "can_publish": {
+                    "enabled": true,
+                    "needs_plan": null
+                },
+                "can_be_private": {
+                    "enabled": false,
+                    "needs_plan": "enterprise"
+                },
+                "admin_course": "#",
+                "edit_permissions": "/course/198074/edit-permissions",
+                "edit_publish_settings": "#",
+                "transfer_ownership": "/course/198074/transfer/",
+                "view_revenue": {
+                    "enabled": false
+                },
+                "can_be_bought": {
+                    "enabled": false
+                },
+                "can_be_deleted": {
+                    "enabled": true
+                },
+                "edit_tags": {
+                    "enabled": true
+                }
+            },
+            "progress": "78-198074",
+            "first_lesson": 1241964,
+            "first_unit": 1255734,
+            "certificate_link": null,
+            "certificate_regular_link": "/api/courses/198074/regular",
+            "certificate_distinction_link": "/api/courses/198074/distinction",
+            "user_certificate": null,
+            "referral_link": "/a/198074",
+            "schedule_link": "/course/198074/schedule/dd38eea4757c23e36af44648b5d64369481686cd/",
+            "schedule_long_link": "/course/198074/schedule/long/dd38eea4757c23e36af44648b5d64369481686cd/",
+            "first_deadline": null,
+            "last_deadline": null,
+            "subscriptions": [
+                "31-78-198074",
+                "30-78-198074"
+            ],
+            "announcements": [],
+            "is_contest": false,
+            "is_self_paced": true,
+            "is_adaptive": false,
+            "is_idea_compatible": false,
+            "is_in_wishlist": false,
+            "last_step": "78-198074",
+            "intro_video": null,
+            "social_providers": [],
+            "authors": [
+                281385630
+            ],
+            "tags": [],
+            "has_tutors": false,
+            "is_enabled": false,
+            "is_proctored": false,
+            "proctor_url": null,
+            "review_summary": 197543,
+            "schedule_type": "self_paced",
+            "certificates_count": 0,
+            "learners_count": 0,
+            "lessons_count": 1,
+            "quizzes_count": 0,
+            "challenges_count": 0,
+            "peer_reviews_count": 0,
+            "instructor_reviews_count": 0,
+            "videos_duration": 0,
+            "time_to_complete": null,
+            "is_popular": false,
+            "is_processed_with_paddle": false,
+            "is_unsuitable": false,
+            "is_paid": false,
+            "price": null,
+            "currency_code": null,
+            "display_price": "-",
+            "default_promo_code_name": null,
+            "default_promo_code_price": null,
+            "default_promo_code_discount": null,
+            "default_promo_code_is_percent_discount": null,
+            "default_promo_code_expire_date": null,
+            "continue_url": "/course/198074/continue",
+            "readiness": 0.2727272727272727,
+            "is_archived": false,
+            "options": {},
+            "price_tier": null,
+            "position": 1,
+            "is_censored": false,
+            "difficulty": null,
+            "acquired_skills": [],
+            "acquired_assets": [],
+            "learning_format": "",
+            "content_details": [],
+            "issue": 155434,
+            "course_type": "basic",
+            "possible_type": "basic",
+            "is_certificate_with_score": false,
+            "preview_lesson": null,
+            "preview_unit": null,
+            "possible_currencies": [],
+            "commission_basic": "7.00",
+            "commission_promo": "40.00",
+            "with_certificate": false,
+            "child_courses": [],
+            "child_courses_count": 0,
+            "parent_courses": [],
+            "became_published_at": null,
+            "became_paid_at": null,
+            "title_en": "Das f Py without course",
+            "owner": 281385630,
+            "language": "ru",
+            "is_featured": false,
+            "is_public": false,
+            "canonical_url": "https://stepik.org/course/198074/",
+            "title": "Das f Py without course",
+            "slug": "Das-f-Py-without-course-198074",
+            "begin_date": null,
+            "end_date": null,
+            "soft_deadline": null,
+            "hard_deadline": null,
+            "grading_policy": "no_deadlines",
+            "begin_date_source": null,
+            "end_date_source": null,
+            "soft_deadline_source": null,
+            "hard_deadline_source": null,
+            "grading_policy_source": "no_deadlines",
+            "is_active": true,
+            "create_date": "2024-02-25T12:23:01Z",
+            "update_date": "2024-02-25T13:31:28Z",
+            "learners_group": 8330775,
+            "testers_group": 8330776,
+            "moderators_group": 8330777,
+            "assistants_group": 8330778,
+            "teachers_group": 8330773,
+            "admins_group": 8330774,
+            "discussions_count": 0,
+            "discussion_proxy": "78-198074-1",
+            "discussion_threads": [
+                "78-198074-1"
+            ],
+            "lti_consumer_key": "",
+            "lti_secret_key": "",
+            "lti_private_profile": false
+        }
+    ],
+    "enrollments": [
+        {
+            "id": 198074,
+            "course": 198074
+        }
+    ]
+}

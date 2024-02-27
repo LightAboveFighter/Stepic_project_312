@@ -1,84 +1,114 @@
 import pytest
+import OAuthSession as auth
+import Course as co
+import Classes
+import yaml
 
-def add(x, y):
-    return x+y
+""" Для корректной работы моих функций вам нужно создать свое Степик API приложение
+    по следующей ссылке: https://stepik.org/oauth2/applications/ (client type = confidential, authorization grant type = client credentials)
+    Свой client_id и client_secret нельзя публиковать, поэтому я использовал input()
+"""
 
-def sub(x, y):
-    return x-y
+client_id = input("Client_id: ")           # Для pytest поставьте сюда свой id и secret, но потом не забудьте стереть эти значения
+client_secret = input("Client_secret: ")    # OAuthSession создает по заданным id и secret файл с их значениями
+                                            # В последующие разы эти значения можно брать оттуда, файл добавлен в .gitignore
 
-class A:
-    def __init__(self, x: int, name: str):
-        self.x = x
-        self.name = name
+# Если какой то из тестов не прошелся - в степике у вас могут оказаться лишние созданные курсы
+""" -------------------------------------------------- Tests for correct working  --------------------------------------------------------- """
 
-class Segment:
-    def __init__(self, x1: int, x2: int):
-        self.start = x1
-        self.finish = x2
+def test_course():
+    title = "Tsrgs"
+    descr = "drtdrth"
+    c = co.Course(title, descr)
+    assert c.structure["Course"]["Title"] == title
+    assert c.structure["Course"]["Description"] == descr
 
-    def move(self, dx: int):
-        self.start += dx
-        self.finish += dx
+def test_create_section():
+    c = co.Course("", "")
+    for i in range(4):
+        c.create_section(str(i))
+    for i in range(4):
+        assert c.structure["Course"]["Sections"][i]["Title"] == f"{i}"
+    c.create_section("8", 2)
+    assert c.structure["Course"]["Sections"][3]["Title"] == "8"
 
-    def __repr__(self):
-        return f"({self.start=}, {self.finish=})"
-    
-    def __str__(self):
-        return f"({self.start}, {self.finish})"
+def test_create_lesson():
+    c = co.Course("", "")
+    for i in range(4):
+        c.create_section(str(i))
+    for i in range(4):
+        c.create_lesson(str(i*10), i)
+        c.create_lesson(str(i*10 + 1), i)
+    for i in range(4):
+        assert c.structure["Course"]["Sections"][i]["Lessons"][0]["Title"] == str(i*10)
+        assert c.structure["Course"]["Sections"][i]["Lessons"][1]["Title"] == str(i*10 + 1)
+    c.create_lesson("50", -1, 1)
+    assert c.structure["Course"]["Sections"][3]["Lessons"][1]["Title"] == "50"
 
-    def __eq__(self, other):
-        return self.start == other.start \
-                and \
-                self.finish == other.finish
-    
-# a = Segment(2, 10)
-# print(a)
-# print([a, a])
-# print(repr(a))
+def test_save():
+    title = "Check file-delete it"
+    descr = "rtdrthdtrhd"
+    c = co.Course(title, descr)
+    for i in range(4):
+        c.create_section(str(i))
+    for i in range(4):
+        c.create_lesson(str(i*10), i)
+        c.create_lesson(str(i*10 + 1), i)
+    for i in range(4):
+        assert c.structure["Course"]["Sections"][i]["Lessons"][0]["Title"] == str(i*10)
+        assert c.structure["Course"]["Sections"][i]["Lessons"][1]["Title"] == str(i*10 + 1)
+    c.create_lesson("50", -1, 1)
+    c.save()
+    with open(f"{title}.yaml", "r") as file:
+        data = yaml.safe_load(file)
+        assert data == c.structure
 
-def test_Segment_create():
-    f = Segment(12, 18)
-    assert f.start == 12
-    assert f.finish == 18
+def test_load_from_file():
+    c = co.Course("", "")
+    c.load_from_file("Check file-delete it.yaml")
+    assert c.structure["Course"]["Sections"][3]["Lessons"][1]["Title"] == "50"
+    with open("Check file-delete it.yaml", "r") as file:
+        data = yaml.safe_load(file)
+        assert data == c.structure
 
-def test_Segment_move():
-    a = Segment(1, 3)
-    a.move(5)
-    assert a == Segment(6, 8)
-    assert str(a) == "(6, 8)"
-    
-def test_A():
-    b = A(12, "tanya")
-    assert 12 == b.x
-    assert "tanya" == b.name
+def test_auth():
+    s = auth.OAuthSession(client_id, client_secret)
+    assert not( s.token == "" )
 
-def test_add():
-    for i in range(-50, 50):
-        for j in range(-50, 50):
-            assert i + j == add(i, j)
+def test_send_delete_course():
+    title = "Check file-delete it"
+    descr = "rtdrthdtrhd"
+    c = co.Course(title, descr)
+    s = auth.OAuthSession(client_id, client_secret)
+    c.auth(s)
+    assert c.send_all()[0]["Success"] # Sending course
+    assert not( c.structure["Course"]["id"] == None)
+    assert c.delete_network() == {"Success": True, "json": ""} # Deleting course
 
-@pytest.mark.parametrize("res, x, y", [
-                         [5, 2, 3],
-                         [7, 2, 5],
-                         [-1, 9, -10]
-])
-def test_add2(res, x, y):
-    assert res == add(x, y)
+def test_send_section():
+    title = "Check file-delete it"
+    descr = "rtdrthdtrhd"
+    c = co.Course(title, descr)
+    c.create_section("dhdf")
+    s = auth.OAuthSession(client_id, client_secret)
+    c.auth(s)
+    assert c.send_all()[1]["Success"]
+    assert not( c.structure["Course"]["Sections"][0]["id"] == None)
+    c.delete_network()
 
-def test_sub():
-    for i in range(-50, 50):
-        for j in range(-50, 50):
-            assert i - j == sub(i, j)
+def test_send_lesson():
+    title = "Check file-delete it"
+    descr = "rtdrthdtrhd"
+    c = co.Course(title, descr)
+    c.create_section("sgs")
+    c.create_lesson("drgrd", 0)
+    s = auth.OAuthSession(client_id, client_secret)
+    c.auth(s)
+    assert c.send_all()[2]["Success"]
+    assert not( c.structure["Course"]["Sections"][0]["Lessons"][0]["id"] == None)
+    c.delete_network()
 
+""" -------------------------------------------------- Tests for correct working  --------------------------------------------------------- """
 
-def send_status(*r):
-    """ r - (requests.post object, strict requirment, ...)
-    If strict requirment = 0 - every succes code will be enough """
-    for i in range(1, len(r)+1, 2):
-        if r[i] == 0:
-            if not(r[i-1]):
-                return "Failed"
-            return "Succes"
-        if r[i-1] != r[i]:
-            return "Failed"
-    return "Succes"
+        
+print("Hello world!")
