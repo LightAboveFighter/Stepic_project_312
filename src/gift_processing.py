@@ -1,6 +1,9 @@
-from Classes import Step_text #FIXME 
 from pygiftparser import parser as giftparser
 import json
+import sys
+sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
+from Classes import Step_text #FIXME 
+
 
 '''TODO
 True-false DONE
