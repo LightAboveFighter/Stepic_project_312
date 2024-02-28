@@ -1,2 +1,4 @@
 pygiftparserrgmf
 PyYAML
+pytest
+requests
