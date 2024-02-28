@@ -3,10 +3,10 @@ from pygiftparser import parser as giftparser
 import json
 
 '''TODO
-True-false
-Short answer
+True-false DONE
+Short answer 
 Matching
-Missing word
+Missing word 
 Numerical questions
 Essay
 Description -- not a question
@@ -18,6 +18,7 @@ CRED = "\033[91m"  # start red stdout
 CEND = "\033[0m"  # stop CRED
 STEPIK_name_types = {"MultipleChoiceCheckbox()": "choice",
                      "MultipleChoiceRadio()": "choice",
+                     "TrueFalse()": "choice",
                     }
 STEPIK_sampe_size = 10
 
@@ -80,7 +81,7 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
         question_data["name"] = None
     else:
         question_data["name"] = STEPIK_name_types[question.answer.__repr__()]
-    question_data["text"] = question.text
+    question_data["text"] = question.text + (' _______ ' + question.text_continue if question.text_continue else '')
     options: dict = __get_question_options__(question)
     question_data["source"] = options # FIXME from config
     return question_data
