@@ -1,0 +1,43 @@
+
+GET - https://stepik.org/api/user-lessons?is_moderator=true&order=-is_pinned,-last_viewed&page=1
+
+order - параметр сортировки по главам внутри user_lessons[i]
+page - если уроков много, придется листать
+Id уроков - глава ans["user_lessons"][i]["lesson"]
+Eaxmple:
+{
+    "meta": {
+        "page": 1,
+        "has_next": true,
+        "has_previous": false
+    },
+    "user-lessons": [
+        {
+            "id": 3322034,
+            "user": 281385630,
+            "lesson": 1244024,
+            "is_favorite": false,
+            "is_pinned": false,
+            "is_archived": false,
+            "last_viewed": "2024-02-29T18:13:12.047Z"
+        },
+        {
+            "id": 3322036,
+            "user": 281385630,
+            "lesson": 1244025,
+            "is_favorite": false,
+            "is_pinned": false,
+            "is_archived": false,
+            "last_viewed": "2024-02-27T20:36:06.303Z"
+        },
+        {
+            "id": 3322032,
+            "user": 281385630,
+            "lesson": 1244023,
+            "is_favorite": false,
+            "is_pinned": false,
+            "is_archived": false,
+            "last_viewed": "2024-02-27T20:25:45.413Z"
+        }
+    ]
+}

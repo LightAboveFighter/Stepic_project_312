@@ -3,5 +3,4 @@ venv
 .pytest_cache
 __pycache__
 Seminars
-Test.yaml
-Client_information.yaml
+*.yaml
