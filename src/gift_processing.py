@@ -1,7 +1,7 @@
 from pygiftparser import parser as giftparser
 import json
 import sys
-sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
+sys.path.insert(1, '.')       #FIXME PATH CAN BE EASILY BROKEN
 from Classes import Step_text #FIXME 
 
 
@@ -53,13 +53,15 @@ def __data_true_false__(x: giftparser.gift.Question):
     options = __data_multiple_choice__(x)
     options["options"].append({})
     if options["options"][0]["text"] == "True":
-        options["options"][1]["text"] = "False"
-        options["options"][1]["is_correct"] = False
-        options["options"][1]["feedback"] = ""
+        options["options"][1] = {"text":      "False",
+                                 "is_correct": False,
+                                 "feedback":   ""
+                                }
     else:
-        options["options"][1]["text"] = "True"
-        options["options"][1]["is_correct"] = False
-        options["options"][1]["feedback"] = ""
+        options["options"][1] = {"text":      "True",
+                                 "is_correct": False,
+                                 "feedback":   ""
+                                }
     return options
 
 
@@ -101,7 +103,7 @@ def get_gift_dicts(filename: str) -> list:
             CRED
             + error_msg + 'File "' + str(filename) + '" not found' 
             + CEND
-        )  # TODO change to stderr
+        )  # TODO change to logger
         raise FileNotFoundError
     except PermissionError:
         print(
