@@ -70,9 +70,9 @@ def __function_short_generator__(x : giftparser.gift.Question): #FIXME make a mo
     for i in x.answer.options:
         if i.percentage > 0.95:
             a = str(i.text)
-            checker = checker + "reply == \"" + str(i.text) + "\" or"
-    checker = checker[:-2]
-    return f'def check(reply):\n\treturn {checker}\ndef solve():\n\treturn {a}'
+            checker = checker + "reply == \"" + str(i.text) + "\" or "
+    checker = checker[:-3]
+    return f'def check(reply):\n\treturn {checker}\ndef solve():\n\treturn \"{a}\"'
 
 def __data_short__(x: giftparser.gift.Question)->dict:
     return {
