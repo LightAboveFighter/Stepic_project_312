@@ -27,7 +27,7 @@ def request_status(*r):
 
 class Course:
 
-    def __init__(self, title: str, description = ""):
+    def __init__(self, title = "", description = ""):
                                             # Создание экземпляра этого класса равносильно созданию курса
         # {
         #     "Course": {
@@ -41,11 +41,13 @@ class Course:
         #             "Lessons": [
         #                     {
         #                         "Title": "one",
-        #                         "id": 1226398
+        #                         "id": 1226398,
+        #                         "Tied": True 
         #                     },
         #                     {
         #                         "Title": "TITLE",
-        #                         "id": 30485038
+        #                         "id": 30485038,
+        #                         "Tied": True 
         #                     }
         #                 ]
         #             }
@@ -60,6 +62,15 @@ class Course:
                         "Sections": []
                         }
                     }
+        
+    # def __getitem(self, section_num: int):
+    #     return self.structure["Course"]["Sections"][section_num]
+    
+    # def __getitem(self, section_num: int, lesson_num: int):
+    #     return self.structure["Course"]["Sections"][section_num]["Lessons"][lesson_num]
+    
+    # def __getitem(self, section_num: int, lesson_num: int, step_num: int):
+    #     return self.structure["Course"]["Sections"][section_num]["Lessons"][lesson_num]["Steps"][step_num]
         
     def auth(self, s: OAuthSession):
         self.session = s
@@ -109,8 +120,21 @@ class Course:
             append if position = -1 """
         
         if position != -1:
-            self.structure["Course"]["Sections"].insert(position+1, {"Title": title, "id": None, "Lessons": []})
+            self.structure["Course"]["Sections"].insert(position, {"Title": title, "id": None, "Lessons": []})
         self.structure["Course"]["Sections"].append({"Title": title, "id": None, "Lessons": []})
+
+    def delete_network_section(self, section_pos: int):
+        id = self.structure["Course"]["Sections"][section_pos]["id"]
+
+        api_url = f"https://stepik.org/api/sections/{id}"
+        r = requests.delete(api_url, headers=self.session.headers())
+
+        if is_success(r, 204):
+            self.structure["Course"]["Sections"][section_pos]["id"] = None
+            for i in range( len( self.structure["Course"]["Sections"][section_pos]["Lessons"])):
+                self.session["Course"]["Sections"][section_pos]["Lessons"][i]["Tied"] = False
+            self.save()
+        return request_status(r, 204)
 
     def __send_section__(self, position: int):
 
@@ -136,8 +160,7 @@ class Course:
         )
         head = self.session.headers()
         head["Cookie"] = self.session.cookie
-        print(head)
-        print(self.session.cookie)
+
         r = requests.post(api_url, headers=head, data=payload)
 
         if is_success(r, 201):
@@ -149,13 +172,32 @@ class Course:
             append if position = -1 """
         
         if position != -1:
-            self.structure["Course"]["Sections"][section_num]["Lessons"].insert(position, {"Title": title, "id": None})
-        self.structure["Course"]["Sections"][section_num]["Lessons"].append({"Title": title, "id": None})
+            self.structure["Course"]["Sections"][section_num]["Lessons"].insert(position, {"Title": title, "id": None, "Tied": False})
+        self.structure["Course"]["Sections"][section_num]["Lessons"].append({"Title": title, "id": None, "Tied": False})
+
+    def __tie_lesson__(self, lesson_id: int, section: int, lesson_pos: int):
+        api_url = 'https://stepik.org/api/units'
+        data = {
+            "unit": {
+                "position": lesson_pos+1,
+                "lesson": lesson_id,
+                "section": self.structure["Course"]["Sections"][section]["id"]
+            }
+        }
+
+        r2 = requests.post(api_url, headers=self.session.headers(), json=data)
+        return r2
     
     def __send_lesson__(self, section: int, lesson_pos: int):
 
-        if self.structure["Course"]["Sections"][section]["Lessons"][lesson_pos]["id"] is not None:
-            return {"Success": True, "json": {"Status": "Already sent"}}
+        p = self.structure["Course"]["Sections"][section]["Lessons"][lesson_pos]
+        if  p["id"] is not None:
+            if p["Tied"]:
+                return {"Success": True, "json": {"Status": "Already sent"}}
+            r = self.__tie_lesson__(p["id"], section, lesson_pos)
+            if is_success(r, 0):
+                self.structure["Course"]["Sections"][section]["Lessons"][lesson_pos]["Tied"] = True
+            return request_status(r, 0)
         
         title = self.structure["Course"]["Sections"][section]["Lessons"][lesson_pos]["Title"]
 
@@ -169,20 +211,24 @@ class Course:
         r = requests.post(api_url, headers=self.session.headers(), json=data)
         lesson_id = r.json()['lessons'][0]['id']
 
-        api_url = 'https://stepik.org/api/units'
-        data = {
-            "unit": {
-                "position": lesson_pos+1,
-                "lesson": lesson_id,
-                "section": self.structure["Course"]["Sections"][section]["id"]
-            }
-        }
-
-        r2 = requests.post(api_url, headers=self.session.headers(), json=data)
+        r2 = self.__tie_lesson__(lesson_id, section, lesson_pos)
 
         if is_success(r, 201, r2, 0):     # r.status_code() should be 201 (HTTP Created)
+            self.structure["Course"]["Sections"][section]["Lessons"][lesson_pos]["Tied"] = True
             self.structure["Course"]["Sections"][section]["Lessons"][lesson_pos]["id"] = lesson_id
         return request_status(r, 201, r2, 0)
+    
+    def delete_network_lesson(self, section: int, lesson_pos: int):
+        lesson_id = self.structure["Course"]["Sections"][section]["Lessons"][lesson_pos]["id"]
+
+        api_url = f"https://stepik.org/api/lessons/{lesson_id}"
+        r = requests.delete(api_url, headers=self.session.headers())
+
+        if is_success(r, 204):
+            self.structure["Course"]["Sections"][section]["Lessons"][lesson_pos]["Tied"] = False
+            self.structure["Course"]["Sections"][section]["Lessons"][lesson_pos]["id"] = None
+            self.save()
+        return request_status(r, 204)
 
     # def create_step(self, Step):
 
@@ -193,24 +239,38 @@ class Course:
         logs = []
         content = self.structure["Course"]
         logs.append(self.__send_course__())
-        if not(logs[0]["Success"]): return logs
-        print(self.structure["Course"]["id"])
+        if not(logs[0]["Success"]): 
+            self.save()
+            return logs
         for i in range(len(content["Sections"])):
             logs.append(self.__send_section__(i))
             if not(logs[-1]["Success"]):
+                self.save()
                 return logs
             for j in range(len(content["Sections"][i]["Lessons"])):
                 logs.append(self.__send_lesson__(i, j))
-                if not(logs[-1]["Success"]): return logs
+                if not(logs[-1]["Success"]):
+                    self.save()
+                    return logs
                 # for k in range(content["Section"][i]["Lessons"][j]["Steps"].len()):
                 #     self.__send_step__()
+        self.save()
+
         return logs
 
-    def delete_network(self):
+    def delete_network_course(self):
         id = self.structure["Course"]["id"]
         url = f"https://stepik.org/api/courses/{id}"
 
         r = requests.delete(url, headers=self.session.headers())
+
+        if is_success(r, 204):
+            self.structure["Course"]["id"] = None
+            for i in range( len( self.structure["Course"]["Sections"] )):
+                self.structure["Course"]["Sections"][i]["id"] = None
+                for j in range( len( self.structure["Course"]["Sections"][i]["Lessons"])):
+                    self.structure["Course"]["Sections"][i]["Lessons"][j]["Tied"] = False
+                    self.save()
         return request_status(r, 204)
 
     def load_from_file(self, filename: str):
