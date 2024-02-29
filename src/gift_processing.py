@@ -65,6 +65,26 @@ def __data_true_false__(x: giftparser.gift.Question):
     return options
 
 
+def __function_short_generator__(x : giftparser.gift.Question): #FIXME make a more "smart" check
+    checker = ""
+    for i in x.answer.options:
+        if i.percentage > 0.95:
+            a = str(i.text)
+            checker = checker + "reply == \"" + str(i.text) + "\" or"
+    checker = checker[:-2]
+    return f'def check(reply):\n\treturn {checker}\ndef solve():\n\treturn {a}'
+
+def __data_short__(x: giftparser.gift.Question)->dict:
+    return {
+            "code": __function_short_generator__(x),
+            "case_sensitive": False,
+            "is_file_disabled": True,
+            "is_text_disabled": False,
+            "match_substring": False,
+            "pattern": "Hello",
+            "use_re": False
+            }
+
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
     if (
@@ -74,6 +94,8 @@ def __get_question_options__(x: giftparser.gift.Question) -> dict:
         return __data_multiple_choice__(x)
     if str(x.answer.__repr__()) == "TrueFalse()":
         return __data_true_false__(x)
+    if str(x.answer.__repr__()) == "Short()":
+        return __data_short__(x)
     else:
         return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
@@ -103,7 +125,7 @@ def get_gift_dicts(filename: str) -> list:
             CRED
             + error_msg + 'File "' + str(filename) + '" not found' 
             + CEND
-        )  # TODO change to logger
+        )  # TODO change to stderr
         raise FileNotFoundError
     except PermissionError:
         print(
