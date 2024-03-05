@@ -82,5 +82,3 @@ def send_status(*r):
         if r[i-1] != r[i]:
             return "Failed"
     return "Succes"
-
-r = requests.get(url)+-
