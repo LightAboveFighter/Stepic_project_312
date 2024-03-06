@@ -27,7 +27,7 @@
                 "1140054-4": {
                     "step_id": 4818239,
                     "is_passed": true,
-                    "first_success": 1,А
+                    "first_success": 1,
                     "total_submissions": 1,
                     "score": 1.0
                 },
