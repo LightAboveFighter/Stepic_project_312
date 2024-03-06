@@ -4,7 +4,9 @@ import Course as co
 import OAuthSession as auth
 
 @pytest.fixture(autouse=True, scope="session")
-def clean():
+def coverage():
+    if not os.path.exists("Client_information.yaml"):
+        auth.OAuthSession(input("Client_id: "), input("Client_secret: "))
     yield
     # if os.path.exists("Check_file.yaml"):
     #     os.remove("Check_file.yaml")
