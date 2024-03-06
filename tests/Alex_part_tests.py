@@ -29,29 +29,24 @@ def test_create_section():
 
 @pytest.mark.local
 def test_create_lesson():
+    global course
 
-    for i in range(4):
+    for i in range(5):
         course.create_lesson(str(i*10), i)
         course.create_lesson(str(i*10 + 1), i)
-    for i in range(4):
+    for i in range(5):
         assert course.structure["Course"]["Sections"][i]["Lessons"][0]["Title"] == str(i*10)
         assert course.structure["Course"]["Sections"][i]["Lessons"][1]["Title"] == str(i*10 + 1)
-    course.create_lesson("50", -1, 1)
-    assert course.structure["Course"]["Sections"][3]["Lessons"][1]["Title"] == "50"
+    les_title = "Test insert lesson"
+    course.create_lesson(les_title, -1, 1)
+    assert course.structure["Course"]["Sections"][4]["Lessons"][1]["Title"] == les_title
 
 
 @pytest.mark.local
 def test_save():
     global course
-    for i in range(4):
-        course.create_section(str(i))
-    for i in range(4):
-        course.create_lesson(str(i*10), i)
-        course.create_lesson(str(i*10 + 1), i)
-    for i in range(4):
-        assert course.structure["Course"]["Sections"][i]["Lessons"][0]["Title"] == str(i*10)
-        assert course.structure["Course"]["Sections"][i]["Lessons"][1]["Title"] == str(i*10 + 1)
-    course.create_lesson("50", -1, 1)
+
+    course.create_lesson("Test file lesson", -1, 1)
     course.save()
     with open(f"{course.structure['Course']['Title']}.yaml", "r") as file:
         data = yaml.safe_load(file)
@@ -62,7 +57,7 @@ def test_save():
 def test_load_from_file():
     c = co.Course("", "")
     c.load_from_file("Test course's title.yaml")
-    assert c.structure["Course"]["Sections"][3]["Lessons"][1]["Title"] == "50"
+    assert c.structure["Course"]["Sections"][4]["Lessons"][1]["Title"] == "Test file lesson"
     with open("Test course's title.yaml", "r") as file:
         data = yaml.safe_load(file)
         assert data == c.structure

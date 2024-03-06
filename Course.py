@@ -121,7 +121,8 @@ class Course:
         
         if position != -1:
             self.structure["Course"]["Sections"].insert(position, {"Title": title, "id": None, "Lessons": []})
-        self.structure["Course"]["Sections"].append({"Title": title, "id": None, "Lessons": []})
+        else:
+            self.structure["Course"]["Sections"].append({"Title": title, "id": None, "Lessons": []})
 
     def delete_network_section(self, section_pos: int):
         id = self.structure["Course"]["Sections"][section_pos]["id"]
@@ -173,7 +174,8 @@ class Course:
         
         if position != -1:
             self.structure["Course"]["Sections"][section_num]["Lessons"].insert(position, {"Title": title, "id": None, "Tied": False})
-        self.structure["Course"]["Sections"][section_num]["Lessons"].append({"Title": title, "id": None, "Tied": False})
+        else:
+            self.structure["Course"]["Sections"][section_num]["Lessons"].append({"Title": title, "id": None, "Tied": False})
 
     def __tie_lesson__(self, lesson_id: int, section: int, lesson_pos: int):
         api_url = 'https://stepik.org/api/units'
