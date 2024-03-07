@@ -8,4 +8,3 @@ import logs.project_logger as log
     pytest -m network  -  запустит тесты требующие подключение к интернету
 """
 
-log.activate_logger("D")
