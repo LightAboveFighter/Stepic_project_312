@@ -39,7 +39,7 @@ class Lesson:
         #     self.sect_ids = []
 
     def dict_info(self):
-        ans = { **{"Title": self.title, "id": self.id, "Steps": [] }, **self.params}
+        ans = { **{"Title": self.title, "id": self.id, "Steps": [], "Sect_ids": self.sect_ids }, **self.params}
         for i in range(len(self.steps)):
             ans["Steps"].append(self.steps[i].dict_info())
         return ans
@@ -115,6 +115,26 @@ class Lesson:
                 self.sect_ids.append(sect_id)
             return mk.request_status(r2, 0)
         return mk.success_status(True, "Already tied")
+    
+    def load_from_file(self, filename: str):
+        data = ""
+        with open(filename, "r") as file:
+            data = yaml.safe_load(file)
+        self.load_from_dict(data)
+
+    def load_from_dict(self, data: dict):
+        self.title = data["Title"]
+        self.id = data["id"]
+        self.sect_ids = data["Sect_ids"]
+        self.steps = []
+        for i in range(len(data["Steps"])):
+            self.steps.append(Step().load_from_dict(data["Steps"][i]))
+
+        data2 = data
+        del data2["Title"]
+        del data2["id"]
+        del data2["Sect_ids"]
+        del data2["Steps"]
     
 
 class Section:
@@ -215,6 +235,26 @@ class Section:
 
     def delete_network_lesson(self, les_pos, session: auth.OAuthSession, danger = False):
         self.lessons[les_pos].delete_network(session, danger)
+
+    def load_from_file(self, filename: str):
+        data = ""
+        with open(filename, "r") as file:
+            data = yaml.safe_load(file)
+        self.load_from_dict(data)
+
+    def load_from_dict(self, data: dict, pos = -1):
+        self.title = data["Title"]
+        self.pos = pos
+        self.id = data["id"]
+        self.lessons = []
+        for i in range(len(data["Lessons"])):
+            self.lessons.append( Lesson().load_from_dict(data["Lessons"][i]))
+
+        data2 = data
+        del data2["Title"]
+        del data2["id"]
+        del data2["Lessons"]
+        self.params = data2
     
 class Course:
 
@@ -342,8 +382,24 @@ class Course:
         self.sections[sect_pos].send_lesson(les_pos, self.session)
         if save: self.save()
 
-    def dict_special_params(self):
-        return self.params
+    def load_from_file(self, filename: str):
+        data = ""
+        with open(filename, "r") as file:
+            data = yaml.safe_load(file)["Course"]
+        self.load_from_dict(data)
+    
+    def load_from_dict(self, data: dict):
+        self.title = data["Title"]
+        self.id = data["id"]
+
+        self.sections = []
+        for i in range(len(data["Sections"])):
+            self.sections.append( Section().load_from_dict(data["Sections"][i]))
+
+        del data["Title"]
+        del data["Sections"]
+        del data["id"]
+        self.params = data
 
 
     

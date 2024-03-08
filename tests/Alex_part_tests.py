@@ -1,7 +1,6 @@
 import pytest
 import yaml
 import OAuthSession as auth
-# import Course as co
 import Classes as cl
 
 session = ""
@@ -56,9 +55,9 @@ def test_save():
 
 @pytest.mark.local
 def test_load_from_file():
-    c = cl.Course("")
+    c = cl.Course()
     c.load_from_file("Test course's title.yaml")
-    assert c.sections[4].lesson[1].title == "Test file lesson"
+    assert c.sections[4].lessons[1].title == "Test file lesson"
     with open("Test course's title.yaml", "r") as file:
         data = yaml.safe_load(file)
         assert data == c.dict_info()

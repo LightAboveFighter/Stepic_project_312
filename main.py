@@ -1,7 +1,6 @@
 import OAuthSession as auth
 import logs.project_logger as log
 import Classes as cl
-import Course as co
 
 """ Для корректной работы моих функций вам нужно создать свое Степик API приложение
     по следующей ссылке: https://stepik.org/oauth2/applications/ (client type = confidential, authorization grant type = client credentials)
