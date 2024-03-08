@@ -7,7 +7,7 @@ from Classes import Step_text #FIXME
 
 '''TODO
 True-false DONE
-Short answer 
+Short answer DONE 
 Matching
 Missing word 
 Numerical questions
@@ -85,6 +85,9 @@ def __data_short__(x: giftparser.gift.Question)->dict:
             "use_re": False
             }
 
+def __data_matching__(x:giftparser.gift.Question):
+    return {}#{"x":x}
+
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
     if (
@@ -96,6 +99,8 @@ def __get_question_options__(x: giftparser.gift.Question) -> dict:
         return __data_true_false__(x)
     if str(x.answer.__repr__()) == "Short()":
         return __data_short__(x)
+    if str(x.answer.__repr__()) == "Matching()":
+        return __data_matching__(x)
     else:
         return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
