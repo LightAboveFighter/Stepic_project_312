@@ -7,5 +7,3 @@ import logs.project_logger as log
     pytest -m local  -  запустит тесты функций не требующих подключение к интернету
     pytest -m network  -  запустит тесты требующие подключение к интернету
 """
-
-log.activate_logger("D")
