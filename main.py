@@ -3,14 +3,15 @@ import OAuthSession as auth
 import Course as co
 import Classes
 import yaml
+import os
 
 """ Для корректной работы моих функций вам нужно создать свое Степик API приложение
     по следующей ссылке: https://stepik.org/oauth2/applications/ (client type = confidential, authorization grant type = client credentials)
     Свой client_id и client_secret нельзя публиковать, поэтому я использовал input()
 """
-
-client_id = input("Client_id: ")           # Для pytest поставьте сюда свой id и secret, но потом не забудьте стереть эти значения
-client_secret = input("Client_secret: ")    # OAuthSession создает по заданным id и secret файл с их значениями
+# После первого удачного теста можете закомментировать эти строки
+# client_id = input("Client_id: ")           # Для pytest поставьте сюда свой id и secret, но потом не забудьте стереть эти значения
+# client_secret = input("Client_secret: ")    # OAuthSession создает по заданным id и secret файл с их значениями
                                             # В последующие разы эти значения можно брать оттуда, файл добавлен в .gitignore
 
 # Если какой то из тестов не прошелся - в степике у вас могут оказаться лишние созданные курсы
@@ -30,7 +31,7 @@ def test_create_section():
     for i in range(4):
         assert c.structure["Course"]["Sections"][i]["Title"] == f"{i}"
     c.create_section("8", 2)
-    assert c.structure["Course"]["Sections"][3]["Title"] == "8"
+    assert c.structure["Course"]["Sections"][2]["Title"] == "8"
 
 def test_create_lesson():
     c = co.Course("", "")
@@ -72,29 +73,30 @@ def test_load_from_file():
         assert data == c.structure
 
 def test_auth():
-    s = auth.OAuthSession(client_id, client_secret)
+    s = auth.OAuthSession()
     assert not( s.token == "" )
 
-def test_send_delete_course():
+def test_full_send_delete_course():
     title = "Check file-delete it"
     descr = "rtdrthdtrhd"
     c = co.Course(title, descr)
-    s = auth.OAuthSession(client_id, client_secret)
+    s = auth.OAuthSession()
     c.auth(s)
     assert c.send_all()[0]["Success"] # Sending course
     assert not( c.structure["Course"]["id"] == None)
-    assert c.delete_network() == {"Success": True, "json": ""} # Deleting course
+    assert c.delete_network_course() == {"Success": True, "json": ""} # Deleting course
 
 def test_send_section():
     title = "Check file-delete it"
     descr = "rtdrthdtrhd"
     c = co.Course(title, descr)
     c.create_section("dhdf")
-    s = auth.OAuthSession(client_id, client_secret)
+    s = auth.OAuthSession()
     c.auth(s)
     assert c.send_all()[1]["Success"]
     assert not( c.structure["Course"]["Sections"][0]["id"] == None)
-    c.delete_network()
+    assert c.delete_network_section(0) == {"Success": True, "json": ""}
+    c.delete_network_course()
 
 def test_send_lesson():
     title = "Check file-delete it"
@@ -102,11 +104,13 @@ def test_send_lesson():
     c = co.Course(title, descr)
     c.create_section("sgs")
     c.create_lesson("drgrd", 0)
-    s = auth.OAuthSession(client_id, client_secret)
+    s = auth.OAuthSession()
     c.auth(s)
     assert c.send_all()[2]["Success"]
     assert not( c.structure["Course"]["Sections"][0]["Lessons"][0]["id"] == None)
-    c.delete_network()
+    assert c.delete_network_lesson(0, 0) == {"Success": True, "json": ""}
+    c.delete_network_course()
+    os.remove(f"{title}.yaml")
 
 """ -------------------------------------------------- Tests for correct working  --------------------------------------------------------- """
 
