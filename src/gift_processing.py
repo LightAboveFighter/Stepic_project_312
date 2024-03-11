@@ -134,12 +134,11 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
     return question_data
 
 
-    pass
-
 def get_gift_dicts(filename: str) -> list:
     """returns list if block dicts of question from GIFT file"""
     try:
         giftfile = open(filename, "r").read()
+        parse_result = giftparser.parse(giftfile)
     except FileNotFoundError:
         print(
             CRED
@@ -154,8 +153,6 @@ def get_gift_dicts(filename: str) -> list:
             + CEND
         )
         raise PermissionError
-    try:
-        parse_result = giftparser.    parse(giftfile)
     except Exception as error:
         print(
             CRED
