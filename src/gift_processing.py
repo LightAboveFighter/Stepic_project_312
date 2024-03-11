@@ -102,11 +102,11 @@ def __get_question_options__(x: giftparser.gift.Question) -> dict:
         str(x.answer.__repr__()) == "MultipleChoiceRadio()"
         or str(x.answer.__repr__()) == "MultipleChoiceCheckbox()"
     ):
-        return __data_multiple_choice__(x)
+        return {"source":__data_multiple_choice__(x)}
     if str(x.answer.__repr__()) == "TrueFalse()":
-        return __data_true_false__(x)
+        return {"source":__data_true_false__(x)}
     if str(x.answer.__repr__()) == "Short()":
-        return __data_short__(x)
+        return {"source":__data_short__(x)}
     if str(x.answer.__repr__()) == "Matching()":
         return __data_matching__(x)
     else:
@@ -123,7 +123,7 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
         question_data["name"] = STEPIK_name_types[question.answer.__repr__()]
     question_data["text"] = question.text + (' _______ ' + question.text_continue if question.text_continue else '')
     options: dict = __get_question_options__(question)
-    question_data["source"] = options # FIXME from config
+    question_data = question_data | options # FIXME from config
     return question_data
 
 
