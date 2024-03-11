@@ -87,13 +87,20 @@ def __data_short__(x: giftparser.gift.Question)->dict:
 
 def __data_matching__(x:giftparser.gift.Question):
     options = {
-        "is_html_enabled": True,
-        "preserve_firsts_order": True,
-        "pairs": []
+        "source":{
+            "is_html_enabled": True,
+            "preserve_firsts_order": True,
+            "pairs": []
+            }
     }
+    feedback_wrong = ""
     for i in range(len(x.answer.options)):
         tmp = x.answer.get_pair(x.answer.options[i])
-        options["pairs"].append(tmp)
+        feedbacktmp = (x.answer.options[i]).feedback
+        if feedbacktmp is not None:
+            feedback_wrong+= tmp["first"] + ": " + feedbacktmp + "\n"
+        options["source"]["pairs"].append(tmp)
+    options["feedback_wrong"] = feedback_wrong
     return options#{"a":[str(i) for i in x.answer.options]}#{"x":x}
 
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
