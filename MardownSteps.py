@@ -103,12 +103,3 @@ class Lesson:
     @property
     def lesson_id(self) -> int:
         return self._lesson_id
-    
-
-test = Lesson('test2.md')
-print(test.lesson_name)
-print(test._step_list[1]._lesson_id)
-# l = []
-# m = StepText(1212, 'Happy Thoughts')
-# l.append(m)
-# print(l[0]._text_lines)
