@@ -2,13 +2,12 @@ from pygiftparser import parser as giftparser
 import json
 import sys
 sys.path.insert(1, '.')       #FIXME PATH CAN BE EASILY BROKEN
-from Classes import Step_text #FIXME 
 
 
 '''TODO
 True-false DONE
 Short answer DONE 
-Matching
+Matching DONE
 Missing word 
 Numerical questions
 Essay
@@ -22,6 +21,7 @@ CEND = "\033[0m"  # stop CRED
 STEPIK_name_types = {"MultipleChoiceCheckbox()": "choice",
                      "MultipleChoiceRadio()": "choice",
                      "TrueFalse()": "choice",
+                     "Matching()":"matching",
                     }
 STEPIK_sampe_size = 10
 
@@ -86,7 +86,15 @@ def __data_short__(x: giftparser.gift.Question)->dict:
             }
 
 def __data_matching__(x:giftparser.gift.Question):
-    return {}#{"x":x}
+    options = {
+        "is_html_enabled": True,
+        "preserve_firsts_order": True,
+        "pairs": []
+    }
+    for i in range(len(x.answer.options)):
+        tmp = x.answer.get_pair(x.answer.options[i])
+        options["pairs"].append(tmp)
+    return options#{"a":[str(i) for i in x.answer.options]}#{"x":x}
 
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
