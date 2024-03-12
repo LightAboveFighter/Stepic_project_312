@@ -33,7 +33,6 @@ class Step(ABC):
                                 "position": position
                                 }, **optional }
                 }
-        print(data)
         
         r = requests.post(api_url, headers=session.headers(), json=data)
 
