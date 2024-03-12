@@ -1,42 +1,24 @@
-from abc import ABC, abstractclassmethod
 import yaml
 import requests
-import OAuthSession as auth
-import Mark_requests as mk
+from src.API.OAuthSession import OAuthSession
+from Mark_requests import is_success, request_status, success_status
 import json
 import os
+from src.API.Step import Step
 
-class Step(ABC):
-    """
-    lesson_id: int
-    position: int
-    (abstract) type_info: Any or tuple(Any)
-    """
-    def __init__(self, les_id: int, position: int, **type_params):
-        self.lesson_id = les_id
-        self.pos = position
-        self.type_info = type_params
-
-    @abstractclassmethod
-    def dict_info():
-        pass
 
 
 class Lesson:
 
-    def __init__(self, title = "", id = None, steps = [], section_ids = [], **params):
+    def __init__(self, title = "", id = None, steps = None, section_ids = None, **params):
         """ **kwargs:
         'section_ids' - [section's id] to tie lesson without 'Course' class
         """
         self.title = title
-        self.steps = steps
+        self.steps = steps or []
         self.id = id
-        self.sect_ids = section_ids
+        self.sect_ids = section_ids or []
         self.params = params
-        # if kwargs["section_id"]:
-        #     self.sect_ids = kwargs["section_id"]
-        # else:
-        #     self.sect_ids = []
 
     def dict_info(self):
         ans = { **{"Title": self.title, "id": self.id, "Steps": [], "Sect_ids": self.sect_ids }, **self.params}
@@ -44,10 +26,10 @@ class Lesson:
             ans["Steps"].append(self.steps[i].dict_info())
         return ans
 
-    def send(self, session: auth.OAuthSession):
+    def send(self, session: OAuthSession):
 
         if  self.id is not None:
-            return mk.success_status(True, "Already sent")
+            return success_status(True, "Already sent")
 
         api_url = 'https://stepik.org/api/lessons'
         data = {
@@ -58,38 +40,38 @@ class Lesson:
         r = requests.post(api_url, headers=session.headers(), json=data)
         id = r.json()['lessons'][0]['id']
 
-        if mk.is_success(r, 201):
+        if is_success(r, 201):
             self.id = id
 
-        # r.status_code() should be 201 (HTTP Created)
-        return mk.request_status(r, 201)
+        return request_status(r, 201)
 
-    def delete_network(self, session: auth.OAuthSession, danger = False):
+    def delete_network(self, session: OAuthSession, danger = False):
         if danger:
             if self.sect_id:
                 raise "Safety delete: can't delete lesson, inside another courses"
-        self.__danger_delete_network__(session)
+        return self.__danger_delete_network__(session)
 
-    def __danger_delete_network__(self, session: auth.OAuthSession):
+    def __danger_delete_network__(self, session: OAuthSession):
 
         api_url = f"https://stepik.org/api/lessons/{self.id}"
         r = requests.delete(api_url, headers=session.headers())
 
-        if mk.is_success(r, 204):
+        if is_success(r, 204):
             self.sect_ids = []
             self.id = None
-        return mk.request_status(r, 204)
+        return request_status(r, 204)
     
     def save(self):
         """ Write your lesson to 'Lesson's Title'.yaml """
         title = self.title
         file = ""
         try:
-            file = open(f"{title}.yaml", "x")
+            file = open(f"src/API/{title}.yaml", "x")
         except:
-            file = open(f"{title}.yaml", "w")
+            file = open(f"src/API/{title}.yaml", "w")
 
         yaml.dump({"Lesson": self.dict_info() }, file)
+        file.close()
 
     def update(self):
         if os.path.exists(f"{self.title}.yaml"):
@@ -98,7 +80,7 @@ class Lesson:
     def is_tied(self, sect_id: int):
         return sect_id in self.sect_ids
 
-    def tie(self, sect_id: int, position: int, session: auth.OAuthSession):
+    def tie(self, sect_id: int, position: int, session: OAuthSession):
 
         if not self.is_tied(sect_id):
             api_url = 'https://stepik.org/api/units'
@@ -111,16 +93,16 @@ class Lesson:
             }
 
             r2 = requests.post(api_url, headers=session.headers(), json=data)
-            if mk.is_success(r2, 0):
+            if is_success(r2, 0):
                 self.sect_ids.append(sect_id)
-            return mk.request_status(r2, 0)
-        return mk.success_status(True, "Already tied")
+            return request_status(r2, 0)
+        return success_status(True, "Already tied")
     
     def load_from_file(self, filename: str):
         data = ""
-        with open(filename, "r") as file:
+        with open(f"src/API/{filename}", "r") as file:
             data = yaml.safe_load(file)
-        self.load_from_dict(data)
+        return self.load_from_dict(data)
 
     def load_from_dict(self, data: dict):
         self.title = data["Title"]
@@ -135,14 +117,16 @@ class Lesson:
         del data2["id"]
         del data2["Sect_ids"]
         del data2["Steps"]
+        return self
+
     
 
 class Section:
 
-    def __init__(self, title = "", position = -1, lessons = [], **params):
+    def __init__(self, title = "", position = -1, lessons = None, **params):
         self.title = title
         self.pos = position
-        self.lessons = lessons
+        self.lessons = lessons or []
         self.id = None
         self.params = params
 
@@ -158,11 +142,12 @@ class Section:
         title = self.title
         file = ""
         try:
-            file = open(f"{title}.yaml", "x")
+            file = open(f"src/API/{title}.yaml", "x")
         except:
-            file = open(f"{title}.yaml", "w")
+            file = open(f"src/API/{title}.yaml", "w")
 
         yaml.dump({"Section": self.dict_info() }, file)
+        file.close()
     
     def update(self):
         if os.path.exists(f"{self.title}.yaml"):
@@ -174,16 +159,16 @@ class Section:
             api_url = f"https://stepik.org/api/sections/{id}"
             r = requests.delete(api_url, headers=session.headers())
 
-            if mk.is_success(r, 204):
+            if is_success(r, 204):
                 self.id = None
                 for i in range(len(self.lessons)):
                     index = self.lessons[i].sect_ids.index(id)
                     self.lessons[i].sect_ids.pop(index)
                 self.update()
-            return mk.request_status(r, 204)
-        return mk.success_status(False, "")
+            return request_status(r, 204)
+        return success_status(False, "")
     
-    def send(self, course_id: int, session: auth.OAuthSession):
+    def send(self, course_id: int, session: OAuthSession):
 
         if self.id is not None:
             skip = True
@@ -192,7 +177,7 @@ class Section:
                     skip = False
                     break
             if skip:
-                return mk.success_status(True, "Already sent") #{"Success": True, "json": {"Status": "Already sent"}}
+                return success_status(True, "Already sent")
         else:
             title = self.title
 
@@ -212,20 +197,19 @@ class Section:
             head["Cookie"] = session.cookie
 
             r = requests.post(api_url, headers=head, data=payload)
-            if mk.is_success(r, 201):
+            if is_success(r, 201):
                 id = json.loads(r.text)["sections"][0]["id"]
                 self.id = id
                 for i in range(len(self.lessons)):
                     self.lessons[i].tie(self.id, i, session)
-            return mk.request_status(r, 201)
+            return request_status(r, 201)
         
         for i in len(self.lessons):
             if self.lessons[i].is_tied(self.id):
                 self.lessons[i].tie(self.id, i, session)
-        # return mk.request_status(r, 201)
-        return mk.success_status(True, "Already sent, modify lessons")
+        return success_status(True, "Already sent, modify lessons")
     
-    def send_lesson(self, les_pos: int, session: auth.OAuthSession):
+    def send_lesson(self, les_pos: int, session: OAuthSession):
         self.lessons[les_pos].send(session)
         self.lessons[les_pos].tie(self.id, les_pos, session)
 
@@ -233,14 +217,14 @@ class Section:
         if self.lessons[les_pos].id is None:
             self.lessons.pop(les_pos)
 
-    def delete_network_lesson(self, les_pos, session: auth.OAuthSession, danger = False):
-        self.lessons[les_pos].delete_network(session, danger)
+    def delete_network_lesson(self, les_pos, session: OAuthSession, danger = False):
+        return self.lessons[les_pos].delete_network(session, danger)
 
     def load_from_file(self, filename: str):
         data = ""
-        with open(filename, "r") as file:
+        with open(f"src/API/{filename}", "r") as file:
             data = yaml.safe_load(file)
-        self.load_from_dict(data)
+        return self.load_from_dict(data)
 
     def load_from_dict(self, data: dict, pos = -1):
         self.title = data["Title"]
@@ -255,16 +239,19 @@ class Section:
         del data2["id"]
         del data2["Lessons"]
         self.params = data2
+        return self
+
+
     
 class Course:
 
-    def __init__(self, title = "", sections = [], **params):
+    def __init__(self, title = "", sections = None, **params):
         self.title = title
         self.id = None
-        self.sections = sections
+        self.sections = sections or []
         self.params = params
 
-    def auth(self, s: auth.OAuthSession):
+    def auth(self, s: OAuthSession):
         self.session = s
 
     def save(self):
@@ -272,11 +259,12 @@ class Course:
         title = self.title
         file = ""
         try:
-            file = open(f"{title}.yaml", "x")
+            file = open(f"src/API/{title}.yaml", "x")
         except:
-            file = open(f"{title}.yaml", "w")
+            file = open(f"src/API/{title}.yaml", "w")
 
         yaml.dump({"Course": self.dict_info() }, file)
+        file.close()
 
     def dict_info(self):
         ans = { **{"Title": self.title, "id": self.id, "Sections": [] }, **self.params }
@@ -310,7 +298,21 @@ class Course:
         self.sections = []
         self.save()
 
-    # def delete_network(self):
+    def delete_network(self):
+        id = self.id
+        url = f"https://stepik.org/api/courses/{id}"
+
+        r = requests.delete(url, headers=self.session.headers())
+
+        if is_success(r, 204):
+            self.id = None
+            for i in range( len( self.sections )):
+                for j in range(len(self.sections[i].lessons)):
+                    index = self.sections[i].lessons[j].sect_ids.index( self.sections[i].id )
+                    self.sections[i].lessons[j].sect_ids.pop(index)
+                self.sections[i].id = None
+            self.save()
+        return request_status(r, 204)
 
 
     def delete_local_section(self, sect_pos: int):
@@ -318,9 +320,9 @@ class Course:
             self.sections.pop(sect_pos)
 
     def delete_network_section(self, sect_pos: int):
-        res = self.sections[sect_pos].delete_network(self.session)["Success"]
+        res = self.sections[sect_pos].delete_network(self.session)
         if res["Success"]:
-            self.delete_section_local(sect_pos)
+            self.delete_local_section(sect_pos)
             self.save()
         return res
     
@@ -328,8 +330,8 @@ class Course:
         self.sections[sect_pos].delete_local_lesson(les_pos)
     
     def delete_network_lesson(self, sect_pos: int, les_pos: int, danger = False):
-        """ danger - in case you know what are yu doing """
-        self.sections[sect_pos].delete_network_lesson(les_pos, self.session, danger)
+        """ danger - in case you know what are you doing """
+        return self.sections[sect_pos].delete_network_lesson(les_pos, self.session, danger)
 
     def send_all(self):
 
@@ -343,13 +345,10 @@ class Course:
 
     def send_heading(self, save = False):
 
-        # if self.structure["Course"]["id"] is not None:
         if self.id is not None:
             return {"Success": True, "json": {"Status": "Already sent"}}
 
-        # title = self.structure["Course"]["Title"]
         title = self.title
-        # description = self.structure["Course"]["Description"]
 
         api_url = "https://stepik.org/api/courses"
         payload = json.dumps( 
@@ -367,12 +366,12 @@ class Course:
 
         r = requests.post(api_url, headers=head, data=payload)
 
-        if mk.is_success(r, 201):
+        if is_success(r, 201):
             id = json.loads(r.text)['enrollments'][0]['id']
             # self.structure["Course"]["id"] = id
             self.id = id
         if save: self.save()
-        return mk.request_status(r, 201)
+        return request_status(r, 201)
     
     def send_section(self, sect_pos: int, save = True):
         self.sections[sect_pos].send(self.id, self.session)
@@ -384,9 +383,9 @@ class Course:
 
     def load_from_file(self, filename: str):
         data = ""
-        with open(filename, "r") as file:
+        with open(f"src/API/{filename}", "r") as file:
             data = yaml.safe_load(file)["Course"]
-        self.load_from_dict(data)
+        return self.load_from_dict(data)
     
     def load_from_dict(self, data: dict):
         self.title = data["Title"]
@@ -400,6 +399,7 @@ class Course:
         del data["Sections"]
         del data["id"]
         self.params = data
+        return self
 
 
     
@@ -412,10 +412,3 @@ class Course:
     #     self.sections = []
     #     for i in structure["Sections"]:
     #         self.sections.appe
-
-
-
-class Step_text(Step):
-
-    def dict_info(self):
-        return self.type_info
