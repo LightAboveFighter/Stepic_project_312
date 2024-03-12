@@ -40,6 +40,7 @@ class Step(ABC):
 
     
 class Step_text(Step):
+
     __type = "text"
 
     def get_type(self):
@@ -54,17 +55,16 @@ class Step_text(Step):
 
         api_url = "https://stepik.org/api/step-sources"
         text = self.params["text"]
-        optional = self.params
-        optional.pop("text")
+        optional = self.params["params"]
         data = {
                 "stepSource": { ** {
                                 "block": {
-                                    "name": "text",
+                                    "name": self.__type,
                                     "text": f"<p>{text}</p>"
                                     },
                                 "lesson": self.lesson_id,
                                 "position": position
-                                }, **self.params }
+                                }, **optional }
                 }
         
         r = requests.post(api_url, headers=session.headers(), json=data)
