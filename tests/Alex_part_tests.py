@@ -1,7 +1,7 @@
 import pytest
 import yaml
-import OAuthSession as auth
-import Course as co
+from src.API.OAuthSession import OAuthSession
+from src.API.Classes import Course, Section, Lesson
 
 session = ""
 course = ""
@@ -11,20 +11,20 @@ def test_course():
     global course
     title = "Test course's title"
     descr = "Test course's description"
-    c = co.Course(title, descr)
-    assert c.structure["Course"]["Title"] == title
-    assert c.structure["Course"]["Description"] == descr
+    c = Course(title, description = descr)
+    assert c.title == title
+    assert c.params["description"] == descr
     course = c
 
 @pytest.mark.local
 def test_create_section():
     global course
     for i in range(4):
-        course.create_section(str(i))
+        course.create_section(Section(str(i)))
     for i in range(4):
-        assert course.structure["Course"]["Sections"][i]["Title"] == f"{i}"
-    course.create_section("8", 2)
-    assert course.structure["Course"]["Sections"][2]["Title"] == "8"
+        assert course.sections[i].title == f"{i}"
+    course.create_section(Section("8", 2))
+    assert course.sections[2].title == "8"
 
 
 @pytest.mark.local
@@ -32,41 +32,41 @@ def test_create_lesson():
     global course
 
     for i in range(5):
-        course.create_lesson(str(i*10), i)
-        course.create_lesson(str(i*10 + 1), i)
+        course.create_lesson(Lesson(str(i*10)), i)
+        course.create_lesson(Lesson(str(i*10 + 1)), i)
     for i in range(5):
-        assert course.structure["Course"]["Sections"][i]["Lessons"][0]["Title"] == str(i*10)
-        assert course.structure["Course"]["Sections"][i]["Lessons"][1]["Title"] == str(i*10 + 1)
+        assert course.sections[i].lessons[0].title == str(i*10)
+        assert course.sections[i].lessons[1].title == str(i*10 + 1)
     les_title = "Test insert lesson"
-    course.create_lesson(les_title, -1, 1)
-    assert course.structure["Course"]["Sections"][4]["Lessons"][1]["Title"] == les_title
+    course.create_lesson(Lesson(les_title), -1, 1)
+    assert course.sections[4].lessons[1].title == les_title
 
 
 @pytest.mark.local
 def test_save():
     global course
 
-    course.create_lesson("Test file lesson", -1, 1)
+    course.create_lesson(Lesson("Test file lesson"), -1, 1)
     course.save()
-    with open(f"{course.structure['Course']['Title']}.yaml", "r") as file:
+    with open(f"src/API/{course.title}.yaml", "r") as file:
         data = yaml.safe_load(file)
-        assert data == course.structure
+        assert data["Course"] == course.dict_info()
 
 
 @pytest.mark.local
 def test_load_from_file():
-    c = co.Course("", "")
+    c = Course()
     c.load_from_file("Test course's title.yaml")
-    assert c.structure["Course"]["Sections"][4]["Lessons"][1]["Title"] == "Test file lesson"
-    with open("Test course's title.yaml", "r") as file:
+    assert c.sections[4].lessons[1].title == "Test file lesson"
+    with open("src/API/Test course's title.yaml", "r") as file:
         data = yaml.safe_load(file)
-        assert data == c.structure
+        assert data["Course"] == c.dict_info()
 
 
 @pytest.mark.network
 def test_auth():
     global session
-    session = auth.OAuthSession()
+    session = OAuthSession()
     assert not( session.token == "" )
 
 
@@ -76,11 +76,11 @@ def test_full_send_delete_course():
 
     title = "Test course's title"
     descr = "Test course's description"
-    c = co.Course(title, descr)
+    c = Course(title, description=descr)
     c.auth(session)
-    assert c.send_all()[0]["Success"] # Sending course
-    assert not( c.structure["Course"]["id"] == None)
-    assert c.delete_network_course() == {"Success": True, "json": ""} # Deleting course
+    c.send_all() # Sending course
+    assert not( c.id == None)
+    assert c.delete_network() == {"Success": True, "json": ""} # Deleting course
 
 
 @pytest.mark.network
@@ -90,11 +90,11 @@ def test_send_section():
 
     title = "Test course's title"
     descr = "Test course's description"
-    course = co.Course(title, descr)
-    course.create_section("Test section's title")
+    course = Course(title, description=descr)
+    course.create_section(Section("Test section's title"))
     course.auth(session)
-    assert course.send_all()[1]["Success"]
-    assert not( course.structure["Course"]["Sections"][0]["id"] == None)
+    course.send_all()
+    assert not( course.sections[0].id == None)
     assert course.delete_network_section(0) == {"Success": True, "json": ""}
 
 
@@ -103,9 +103,9 @@ def test_send_lesson():
     global session
     global course
 
-    course.create_section("Test section")
-    course.create_lesson("Test lesson", 0)
+    course.create_section(Section("Test section"))
+    course.create_lesson(Lesson("Test lesson"), 0)
     course.auth(session)
-    assert course.send_all()[2]["Success"]
-    assert not( course.structure["Course"]["Sections"][0]["Lessons"][0]["id"] == None)
+    course.send_all()
+    assert not( course.sections[0].lessons[0].id == None)
     assert course.delete_network_lesson(0, 0) == {"Success": True, "json": ""}
