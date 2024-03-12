@@ -1,3 +1,4 @@
+from src.API.Step import Step_text
 """ Для корректной работы моих функций вам нужно создать свое Степик API приложение
     по следующей ссылке: https://stepik.org/oauth2/applications/ (client type = confidential, authorization grant type = client credentials)
     Далее запускайте pytest с аргументом -s для первого раза
