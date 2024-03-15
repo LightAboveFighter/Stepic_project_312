@@ -2,7 +2,7 @@ from pygiftparser import parser as giftparser
 import json
 import sys
 sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
-from src.API.Classes import Step_text #FIXME 
+#from src.API.Classes import Step_text #FIXME 
 
 
 '''TODO
@@ -164,6 +164,23 @@ def get_gift_dicts(filename: str) -> list:
         raise RuntimeError
     questions: list = [__get_question_data__(i) for i in parse_result.questions]
     return questions
+
+
+def get_gift_dicts_from_text(text: str) -> list:
+    """returns list if block dicts of question from GIFT file"""
+    try:
+        parse_result = giftparser.parse(text)
+    except Exception as error:
+        print(
+            CRED
+            + error_msg + "Can't parse \"" + str(filename) + '"\n'
+            + str(error)
+            + CEND
+        )
+        raise RuntimeError
+    questions: list = [__get_question_data__(i) for i in parse_result.questions]
+    return questions
+
 
 def get_Step_list(lesson_id: int) -> list:
     pass
