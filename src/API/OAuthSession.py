@@ -7,13 +7,13 @@ class OAuthSession:
 
     def __init__(self, client_id="", client_secret=""):
 
-        if os.path.exists("Client_information.yaml") and (client_id == "" or client_secret == ""): 
-            with open("Client_information.yaml", "r") as file:
+        if os.path.exists("src/API/Client_information.yaml") and (client_id == "" or client_secret == ""): 
+            with open("src/API/Client_information.yaml", "r") as file:
                 data = yaml.safe_load(file)
                 client_id = data["client_id"]
                 client_secret = data["client_secret"]
         else:
-            with open("Client_information.yaml", "x") as file:
+            with open("src/API/Client_information.yaml", "x") as file:
                 yaml.dump({"client_id": client_id, "client_secret": client_secret}, file)
 
         auth = requests.auth.HTTPBasicAuth(client_id, client_secret)

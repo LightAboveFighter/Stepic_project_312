@@ -1,0 +1,82 @@
+
+Создает текстовый шаг внутри урока по их айди, позиции шага, и его тексту
+POST   https://stepik.org/api/step-sources
+{
+    "stepSource": {
+    "block": {
+        "name": "text",
+        "text": f"<p>{Your Text}</p>"
+        },
+    "lesson": lesson_id,
+    "position": position
+    }
+}
+
+Ответ в формате:
+
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "step-sources": [
+        {
+            "id": 5209515,
+            "lesson": 1243957,
+            "position": 0,
+            "status": "preparing",
+            "block": {
+                "name": "text",
+                "text": "<p>FAFAFD</p>",
+                "video": null,
+                "options": {},
+                "subtitle_files": [],
+                "is_deprecated": false,
+                "source": {},
+                "subtitles": {},
+                "tests_archive": null,
+                "feedback_correct": "",
+                "feedback_wrong": ""
+            },
+            "actions": {
+                "comment": "#"
+            },
+            "progress": "77-5209515",
+            "subscriptions": [
+                "31-77-5209515",
+                "30-77-5209515"
+            ],
+            "instruction": null,
+            "session": null,
+            "instruction_type": null,
+            "viewed_by": 0,
+            "passed_by": 0,
+            "correct_ratio": null,
+            "worth": 0,
+            "is_solutions_unlocked": false,
+            "solutions_unlocked_attempts": 3,
+            "has_submissions_restrictions": false,
+            "max_submissions_count": 3,
+            "variation": 1,
+            "variations_count": 1,
+            "is_enabled": true,
+            "needs_plan": null,
+            "create_date": "2024-03-12T18:45:34.819Z",
+            "update_date": "2024-03-12T18:45:34.963Z",
+            "discussions_count": 0,
+            "discussion_proxy": "77-5209515-1",
+            "discussion_threads": [
+                "77-5209515-1"
+            ],
+            "reason_of_failure": "",
+            "error": {
+                "text": "",
+                "code": "",
+                "params": {}
+            },
+            "warnings": [],
+            "cost": 0
+        }
+    ]
+}

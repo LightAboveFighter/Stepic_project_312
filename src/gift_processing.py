@@ -1,7 +1,8 @@
 from pygiftparser import parser as giftparser
 import json
 import sys
-sys.path.insert(1, '.')       #FIXME PATH CAN BE EASILY BROKEN
+sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
+from src.API.Classes import Step_text #FIXME 
 
 
 '''TODO
