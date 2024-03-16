@@ -37,7 +37,7 @@ def __data_multiple_choice__(x: giftparser.gift.Question) -> dict:
     options["is_always_correct"] = False
     for i in x.answer.options:
         options["options"].append({})
-        options["options"][-1]["is_correct"] = abs(i.percentage)>0.95
+        options["options"][-1]["is_correct"] = i.percentage>0.09
         options["options"][-1]["text"] = i.text
         if i.feedback != None:
             options["options"][-1]["feedback"] = i.feedback
@@ -173,7 +173,7 @@ def get_gift_dicts_from_text(text: str) -> list:
     except Exception as error:
         print(
             CRED
-            + error_msg + "Can't parse \"" + str(filename) + '"\n'
+            + error_msg + "Can't parse \"" + text + '"\n'
             + str(error)
             + CEND
         )
