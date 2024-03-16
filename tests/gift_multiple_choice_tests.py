@@ -56,4 +56,18 @@ def test_single_choice_feedback():
     assert q['source']['options'][1]['feedback'] == "wrong, it\'s yellow"
     assert q['source']['options'][2]['feedback'] == "wrong, it\'s yellow"
 
-    
+
+
+@pytest.mark.gift
+def test_is_multiple_choise_value():
+    text_single = '''
+    ::Q2:: What's between orange and green in the spectrum? 
+    { =yellow # right; good! ~red # wrong, it's yellow ~blue # wrong, it's yellow }
+    '''
+    text_multiple = '''
+    ::Q2:: What's between orange and green in the spectrum? 
+    { ~%50%yellow # right; good! ~%-100%red # wrong, it's yellow ~%50%yellow2 # it's yellow }
+    '''
+    questions = [get_gift_dicts_from_text(text_single)[0], get_gift_dicts_from_text(text_multiple)[0]]
+    assert questions[0]['source']['is_multiple_choice'] == False
+    assert questions[1]['source']['is_multiple_choice'] == True
