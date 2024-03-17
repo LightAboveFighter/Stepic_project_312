@@ -37,7 +37,7 @@ def __data_multiple_choice__(x: giftparser.gift.Question) -> dict:
     options["is_always_correct"] = False
     for i in x.answer.options:
         options["options"].append({})
-        options["options"][-1]["is_correct"] = i.percentage>0.09
+        options["options"][-1]["is_correct"] = i.percentage>0.
         options["options"][-1]["text"] = i.text
         if i.feedback != None:
             options["options"][-1]["feedback"] = i.feedback
