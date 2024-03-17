@@ -71,3 +71,35 @@ def test_is_multiple_choise_value():
     questions = [get_gift_dicts_from_text(text_single)[0], get_gift_dicts_from_text(text_multiple)[0]]
     assert questions[0]['source']['is_multiple_choice'] == False
     assert questions[1]['source']['is_multiple_choice'] == True
+
+
+@pytest.mark.gift
+def test_true_false_generation():
+    text = '''
+    ::Q1:: 1+1=2 {T}
+    '''
+    question = get_gift_dicts_from_text(text)[0]
+    expected_json = '''
+    {
+        "name": "choice",
+        "text": "1+1=2",
+        "source": {
+            "options": [
+                {
+                    "is_correct": true,
+                    "text": "True",
+                    "feedback": ""
+                },
+                {
+                    "text": "False",
+                    "is_correct": false,
+                    "feedback": ""
+                }
+            ],
+            "is_always_correct": false,
+            "sample_size": 2,
+            "is_multiple_choice": false
+        }
+    }
+    '''
+    assert question == json.loads(expected_json)
