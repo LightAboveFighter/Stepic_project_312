@@ -52,6 +52,7 @@ def __data_multiple_choice__(x: giftparser.gift.Question) -> dict:
 
 def __data_true_false__(x: giftparser.gift.Question):
     options = __data_multiple_choice__(x)
+    options["sample_size"] = 2
     options["options"].append({})
     if options["options"][0]["text"] == "True":
         options["options"][1] = {"text":      "False",
