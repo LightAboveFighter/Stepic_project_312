@@ -1,7 +1,7 @@
 import json
 import pytest
 
-from src.gift_processing import get_gift_dicts_from_text
+from src.gift.gift_processing import get_gift_dicts_from_text, __function_short_generator__
 
 
 @pytest.mark.gift
