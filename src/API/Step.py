@@ -17,7 +17,7 @@ class Step(ABC):
         self.lesson_id = les_id
         self.params = params
         self.body = body
-        self.check_body()
+        self.configure()
         self.id = params.get("id")
 
     def send(self, position: int, session):
@@ -49,14 +49,19 @@ class Step(ABC):
         return self._type
 
     def dict_info(self):
-        ans = { **{"id": self.id}, "lesson_id": self.lesson_id, "type": self._type, **self.body, **self.params}
+        ans = { **{"id": self.id},
+               "lesson_id": self.lesson_id,
+               "type": self._type,
+               **self.body,
+               **self.params
+               }
         return ans
     
 
     
 class Step_text(Step):
     
-    def check_body(self):
+    def configure(self):
         self._type = "text"
         if self.body.get("text") is None:
             raise "Step_text must contain text field"
