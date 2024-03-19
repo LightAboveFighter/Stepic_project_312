@@ -25,4 +25,4 @@
         >    =cat -> cat food
         >    =dog -> dog food
         > }
-        > '''
+        > ```
