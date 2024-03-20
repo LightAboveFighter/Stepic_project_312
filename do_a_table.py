@@ -19,6 +19,5 @@ for i in range(len(klass)):
     file_html.write(f"  <tr>\n    <td>{klass[i].get('name')}</td>\n    <td>{klass[i].get('Result_lesson1')}</td>\n    <td>{klass[i].get('Result_lesson2')}</td>\n    <td>{klass[i].get('Result_lesson3')}</td>\n  </tr>\n")
 
 
-
 file_html.write("</table>\n\n</body>\n</html>")
 file_html.close()
