@@ -12,7 +12,7 @@ class Step(ABC):
     position: int
     (abstract) type_info: Any or tuple(Any)
     """
-    def __init__(self, les_id: int, id = None, body = {}, **params):
+    def __init__(self, les_id: int, id = None, body: dict = None, **params):
         """ body - dict of main class parameters """
         self.lesson_id = les_id
         self.params = params

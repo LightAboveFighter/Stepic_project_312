@@ -12,9 +12,14 @@ class Step(ABC):
     position: int
     (abstract) type_info: Any or tuple(Any)
     """
-    def __init__(self, les_id: int, body, **params):
-        """ body - dict of main class parameters """
+    def __init__(self, title: str, les_id: int, body: dict, **params):
+        """ body - dict of main class parameters 
+        example: {'text':  [str],
+                  'quiz':  [Any]}
+        """
+
         self.lesson_id = les_id
+        self.title = title
         self.params = params
         self.body = body
         self.check_body()
@@ -48,7 +53,7 @@ class Step(ABC):
         return self._type
 
     def dict_info(self):
-        ans = { **{"id": self.id}, "lesson_id": self.lesson_id, "type": self._type, **self.body, **self.params}
+        ans = { **{"title": self.title, "id": self.id}, "lesson_id": self.lesson_id, "type": self._type, **self.body, **self.params}
         return ans
     
 
