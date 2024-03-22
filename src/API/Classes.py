@@ -10,14 +10,14 @@ from src.API.Step import Step
 
 class Lesson:
 
-    def __init__(self, title = "", id = None, steps = None, section_ids = None, **params):
+    def __init__(self, title = "", id = None, steps = None, sect_ids = None, **params):
         """ **kwargs:
-        'section_ids' - [section's id] to tie lesson without 'Course' class
+        'sect_ids - section_ids - [section's id] to tie lesson without 'Course' class
         """
         self.title = title
         self.steps = steps or []
         self.id = id
-        self.sect_ids = section_ids or []
+        self.sect_ids = sect_ids or []
         self.params = params
 
     def dict_info(self):

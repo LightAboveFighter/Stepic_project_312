@@ -12,13 +12,13 @@ class Step(ABC):
     position: int
     (abstract) type_info: Any or tuple(Any)
     """
-    def __init__(self, les_id: int, body, **params):
+    def __init__(self, les_id: int, id = None, body = {}, **params):
         """ body - dict of main class parameters """
         self.lesson_id = les_id
         self.params = params
         self.body = body
         self.configure()
-        self.id = params.get("id")
+        self.id = id
 
     def send(self, position: int, session):
         api_url = "https://stepik.org/api/step-sources"
