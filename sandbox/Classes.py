@@ -4,67 +4,21 @@ from src.API.OAuthSession import OAuthSession
 from Mark_requests import is_success, request_status, success_status
 import json
 import os
-from src.API.Step import Step_text, Step
-import pyparsing as pp
-import io
+from src.API.Step import Step
+
+
 
 class Lesson:
-    '''title: str
-    steps: list or []
-    id: int
-    sect_ids: list or []
-    params: dict'''
 
-    def __init__(self, lesson_path: str):
-
-        self.sect_ids = []
-        self.params = {}
-
-        name = pp.rest_of_line ('name')
-        parse_name = pp.Suppress(pp.Keyword('#') + pp.ZeroOrMore(pp.White())) + pp.Optional(name)
-
-        id = pp.Word(pp.nums) ('id')
-        parse_id = pp.Suppress(pp.Keyword('lesson') + pp.ZeroOrMore(pp.White()) + '=' + pp.ZeroOrMore(pp.White())) + id
-
-        parse_step = self._module_step()
-
-                                # self.sect_ids = section_ids or []
-                                # self.params = params
-
-        with io.open(lesson_path, 'r', encoding='utf-8') as f:
-            # Writting down name of the lesson
-            self.title = (parse_name.parseString(f.readline())).name
-            
-            # Writting down id of the lesson 
-            for id_line in f:
-                if id_line != pp.Empty():
-                    # self.id = int((parse_id.parseString(id_line)).id)
-                    self.id = None                                      
-                    break
-            
-            # Writting down steps of the lesson
-            self.steps = []
-
-            step_lines = ""
-            first_cycle = True
-
-            for line in f:
-                try:
-                    new_step = parse_step.parseString(line)
-                    if not first_cycle:
-                        self.steps.append(Step_text(previous_step.name, None, {"text": step_lines} ))  # for now -- only StepText
-                    step_lines = ""
-                    first_cycle = False
-                    previous_step = new_step
-                except pp.ParseException:
-                    step_lines += line
-            self.steps.append(Step_text(previous_step.name, None, {"text": step_lines} ))
-
-    def _module_step(self):
-            step_type = pp.one_of(['QUIZ', 'CHOICE', 'TEXT'], as_keyword=True) ('type')
-            step_name = pp.rest_of_line() ('name')
-            parse_module = pp.Suppress(pp.Keyword('##')) + pp.Optional(step_type) + pp.Suppress(pp.ZeroOrMore(pp.White())) + pp.Optional(step_name)
-            return parse_module
+    def __init__(self, title = "", id = None, steps = None, section_ids = None, **params):
+        """ **kwargs:
+        'section_ids' - [section's id] to tie lesson without 'Course' class
+        """
+        self.title = title
+        self.steps = steps or []
+        self.id = id
+        self.sect_ids = section_ids or []
+        self.params = params
 
     def dict_info(self):
         ans = { **{"Title": self.title, "id": self.id, "Steps": [], "Sect_ids": self.sect_ids }, **self.params}
@@ -72,7 +26,7 @@ class Lesson:
             ans["Steps"].append(self.steps[i].dict_info())
         return ans
 
-    def send(self, session: OAuthSession, send_all = False):
+    def send(self, session: OAuthSession):
 
         if  self.id is not None:
             return success_status(True, "Already sent")
@@ -88,10 +42,6 @@ class Lesson:
 
         if is_success(r, 201):
             self.id = id
-            if (send_all):
-                for i in range(len(self.steps)):
-                    self.steps[i].lesson_id = self.id
-                    self.steps[i].send(i, session)
 
         return request_status(r, 201)
 
@@ -168,6 +118,7 @@ class Lesson:
         del data2["Sect_ids"]
         del data2["Steps"]
         return self
+
     
 
 class Section:
@@ -289,6 +240,7 @@ class Section:
         del data2["Lessons"]
         self.params = data2
         return self
+
 
     
 class Course:

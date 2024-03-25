@@ -12,18 +12,13 @@ class Step(ABC):
     position: int
     (abstract) type_info: Any or tuple(Any)
     """
-    def __init__(self, title: str, les_id: int, body: dict, **params):
-        """ body - dict of main class parameters 
-        example: {'text':  [str],
-                  'quiz':  [Any]}
-        """
-
+    def __init__(self, les_id: int, id = None, body: dict = None, **params):
+        """ body - dict of main class parameters """
         self.lesson_id = les_id
-        self.title = title
         self.params = params
         self.body = body
-        self.check_body()
-        self.id = params.get("id")
+        self.configure()
+        self.id = id
 
     def send(self, position: int, session):
         api_url = "https://stepik.org/api/step-sources"
@@ -38,6 +33,7 @@ class Step(ABC):
                                 "position": position
                                 }, **optional }
                 }
+        print(data)
         
         r = requests.post(api_url, headers=session.headers(), json=data)
 
@@ -53,14 +49,19 @@ class Step(ABC):
         return self._type
 
     def dict_info(self):
-        ans = { **{"title": self.title, "id": self.id}, "lesson_id": self.lesson_id, "type": self._type, **self.body, **self.params}
+        ans = { **{"id": self.id},
+               "lesson_id": self.lesson_id,
+               "type": self._type,
+               **self.body,
+               **self.params
+               }
         return ans
     
 
     
 class Step_text(Step):
     
-    def check_body(self):
+    def configure(self):
         self._type = "text"
         if self.body.get("text") is None:
             raise "Step_text must contain text field"
