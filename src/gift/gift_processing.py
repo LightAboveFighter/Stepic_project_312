@@ -1,15 +1,17 @@
 from pygiftparser import parser as giftparser
 import json
 import sys
+import logging as log
 sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
 #from src.API.Classes import Step_text #FIXME 
 
+from logs.project_logger import activate_logger
 
 '''TODO
 True-false DONE
 Short answer DONE 
 Matching DONE
-Missing word 
+Missing word interpreted as MultipleChoice
 Numerical questions
 Essay
 Description -- not a question
@@ -51,6 +53,7 @@ def __data_multiple_choice__(x: giftparser.gift.Question) -> dict:
     return options
 
 def __data_true_false__(x: giftparser.gift.Question):
+    log.info("True_False will be interpreted as Choice()")
     options = __data_multiple_choice__(x)
     options["sample_size"] = 2
     options["options"].append({})
@@ -72,9 +75,14 @@ def __function_short_generator__(x : giftparser.gift.Question): #FIXME make a mo
     for i in x.answer.options:
         if i.percentage > 0.95:
             a = str(i.text)
-            checker = checker + "reply == \"" + str(i.text) + "\" or "
+            if "'" in a:
+                checker = checker + "reply == \"" + str(i.text) + "\" or "
+                continue
+            checker = checker + "reply == '" + str(i.text) + "' or "
     checker = checker[:-3]
-    return f'def check(reply):\n\treturn {checker}\ndef solve():\n\treturn \"{a}\"'
+    if '"' in a:
+        return f"def check(reply):\n\treturn {checker}\n#sep\ndef solve():\n\treturn '''{a}'''"
+    return f'def check(reply):\n\treturn {checker}\n#sep\ndef solve():\n\treturn \"{a}\"'
 
 def __data_short__(x: giftparser.gift.Question)->dict:
     return {
@@ -105,6 +113,26 @@ def __data_matching__(x:giftparser.gift.Question):
     options["feedback_wrong"] = feedback_wrong
     return options#{"a":[str(i) for i in x.answer.options]}#{"x":x}
 
+def __data_numerical__(x:giftparser.gift.Question):
+    '''
+    self.assertEqual(self.options[0].prefix, '#')
+    self.assertEqual(self.options[0].text, '1822:5')
+    self.assertEqual(self.options[0].raw_text, '#1822:5')
+    self.assertEqual(self.options[0].percentage, 1.0)
+    self.assertEqual(self.options[0].feedback, None)
+    self.assertEqual(self.answer.get_number(), 1822.0)
+    self.assertEqual(self.answer.get_error_margin(), 5.0)
+    '''
+    log.info("Numerical question will be reinterpreted as Short()")
+    options = {
+        "feedback_wrong": x.answer.options[0].feedback,
+        "source":{
+            "options":[{"answer":x.answer.get_number(),"max_error":x.answer.get_error_margin()}]
+            }
+    }
+    return options
+
+
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
     if (
@@ -118,6 +146,8 @@ def __get_question_options__(x: giftparser.gift.Question) -> dict:
         return {"source":__data_short__(x)}
     if str(x.answer.__repr__()) == "Matching()":
         return __data_matching__(x)
+    if str(x.answer.__repr__()) == "Numerical()": #FIXME MultipleNumerical neaded 
+        return __data_numerical__(x)
     else:
         return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
@@ -142,26 +172,13 @@ def get_gift_dicts(filename: str) -> list:
         giftfile = open(filename, "r").read()
         parse_result = giftparser.parse(giftfile)
     except FileNotFoundError:
-        print(
-            CRED
-            + error_msg + 'File "' + str(filename) + '" not found' 
-            + CEND
-        )  # TODO change to stderr
+        log.error( 'File "' + str(filename) + '" not found')
         raise FileNotFoundError
     except PermissionError:
-        print(
-            CRED
-            + error_msg + "Can't open \"" + str(filename) + '" permission denied'
-            + CEND
-        )
+        log.error("Can't open \"" + str(filename) + '" permission denied')
         raise PermissionError
     except Exception as error:
-        print(
-            CRED
-            + error_msg + "Can't parse \"" + str(filename) + '"\n'
-            + str(error)
-            + CEND
-        )
+        log.error("Can't parse \"" + str(filename) + '"\n'+ str(error))
         raise RuntimeError
     questions: list = [__get_question_data__(i) for i in parse_result.questions]
     return questions
@@ -189,6 +206,7 @@ def get_Step_list(lesson_id: int) -> list:
 if __name__ == "__main__":
     import argparse
     import pprint
+    activate_logger("I")
 
     def parse_input_arguments():
         parser = argparse.ArgumentParser(description="GIFT Moodle file parser.")
