@@ -2,3 +2,4 @@ pygiftparserrgmf
 PyYAML
 pytest
 requests
+pyparsing
