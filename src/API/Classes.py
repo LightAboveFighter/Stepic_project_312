@@ -74,7 +74,7 @@ class Lesson:
         self.title = title
         self.steps = steps or []
         self.id = id
-        self.sect_ids = sect_ids or []
+        self.sect_ids = section_ids or []
         self.params = params
 
     
@@ -198,24 +198,28 @@ class Lesson:
             return request_status(r, 0)
         
         steps = json.loads(r.text)["steps"]
+        print(steps)
         for i in steps:
             type = i["block"]["name"]
-            body = i["body"]
+            body = i["block"]
             del body["name"]
-            del i["body"]
-            del i["title"]
+            del i["block"]
             i["lesson"] = self.id
             if copy:
-                del i["id"]            # It loads every step and while sending constructs a new ones,
-                                        # but while working at one lesson it will lead to copying steps
+                id = None
+            else:
+                id = i["id"]
+            del i["id"]
+
             params = i.copy()
             for key in params.keys():
                 elem = params[key]
                 if not elem:
                     del i[key]
             params = i
-
-            self.steps.append( create_any_step(type, i["title"], i["id"], body, **params))
+            step = create_any_step(type, f"Step_{steps.index(i)}", id, body, **params)
+            print(step)
+            self.steps.append(step)
     
 
 class Section:
@@ -343,11 +347,14 @@ class Section:
         ids_url = "&ids[]=".join(ids_url)
         url = f"https://stepik.org/api/lessons?ids[]=" + ids_url
 
-        r = requests.get(url, headers=session.headers())
+        head = session.headers()
+        head["cookie"] = session.cookie
+        r = requests.get(url, headers=head)
         if not is_success(r, 0):
             return request_status(r, 0)
         
         lessons = json.loads(r.text)["lessons"]
+        print(lessons)
         for i in lessons:
             les = Lesson()
             title = i["title"]
@@ -367,6 +374,7 @@ class Section:
             params = i
 
             les.fill_args(title, id, None, [self.id], **params)
+            print(steps_ids)
             les.load_steps(steps_ids, copy, session)
             self.lessons.append(les)
 
@@ -538,6 +546,7 @@ class Course:
             return success_status(False, "Can't get course's head")
         
         content = json.loads(r.text)["courses"][0]
+        print(content)
         if copy:
             self.id = None
         else:
@@ -561,7 +570,10 @@ class Course:
         ids_url = "&ids[]=".join(ids_url)
         url = f"https://stepik.org/api/sections?ids[]=" + ids_url
 
-        r = requests.get(url, headers=session.headers())
+        head = session.headers()
+        head["cookie"] = session.cookie
+        r = requests.get(url, headers=head)
+
         if not is_success(r, 0):
             return request_status(r)
         
@@ -577,7 +589,6 @@ class Course:
             for key in params.keys():
                 elem = params[key]
                 if not elem:
-                    print(f"{key} = {elem}")
                     del i[key]
             params = i
 

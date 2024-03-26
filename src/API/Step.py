@@ -7,11 +7,11 @@ import yaml
 from dataclasses import dataclass
 
 
-def create_any_step(type: str, *args):
+def create_any_step(type: str, *args, **kwargs):
     if type == "text":
-        return StepText(*args)
+        return StepText(*args, **kwargs)
     if type == "choice":
-        return StepChoice(*args)
+        return StepChoice(*args, **kwargs)
 
 
 @dataclass
