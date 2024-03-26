@@ -4,7 +4,7 @@ from src.API.OAuthSession import OAuthSession
 from Mark_requests import is_success, request_status, success_status
 import json
 import os
-from src.API.Step import Step_text, Step
+from src.API.Step import StepText, Step
 import pyparsing as pp
 import io
 
@@ -52,13 +52,13 @@ class Lesson:
                 try:
                     new_step = parse_step.parseString(line)
                     if not first_cycle:
-                        self.steps.append(Step_text(previous_step.name, None, {"text": step_lines} ))  # for now -- only StepText
+                        self.steps.append(StepText(previous_step.name, None, {"text": step_lines} ))  # for now -- only StepText
                     step_lines = ""
                     first_cycle = False
                     previous_step = new_step
                 except pp.ParseException:
                     step_lines += line
-            self.steps.append(Step_text(previous_step.name, None, {"text": step_lines} ))
+            self.steps.append(StepText(previous_step.name, None, {"text": step_lines} ))
 
     def _module_step(self):
             step_type = pp.one_of(['QUIZ', 'CHOICE', 'TEXT'], as_keyword=True) ('type')
