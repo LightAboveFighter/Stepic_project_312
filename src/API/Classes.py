@@ -211,7 +211,7 @@ class Lesson:
             params = i.copy()
             for key in params.keys():
                 elem = params[key]
-                if elem is None or elem == False or elem == "" or elem == [] or elem == 0 or elem == {}:
+                if not elem:
                     del i[key]
             params = i
 
@@ -362,7 +362,7 @@ class Section:
             params = i.copy()
             for key in params.keys():
                 elem = params[key]
-                if elem is None or elem == False or elem == "" or elem == [] or elem == 0 or elem == {}:
+                if not elem:
                     del i[key]
             params = i
 
@@ -576,7 +576,7 @@ class Course:
             params = i.copy()
             for key in params.keys():
                 elem = params[key]
-                if elem is None or elem == False or elem == "" or elem == [] or elem == 0 or elem == {}:
+                if not elem:
                     print(f"{key} = {elem}")
                     del i[key]
             params = i
