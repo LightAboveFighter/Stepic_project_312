@@ -7,6 +7,13 @@ import yaml
 from dataclasses import dataclass
 
 
+def create_any_step(type: str, *args):
+    if type == "text":
+        return StepText(*args)
+    if type == "choice":
+        return StepChoice(*args)
+
+
 @dataclass
 class Step(ABC):
 
@@ -81,9 +88,8 @@ class Step(ABC):
         return ans
     
 
-@dataclass
+@dataclass(init=False)
 class StepText(Step):
-    _type = "text"
     
     def set_body(self):
         self._type = "text"
@@ -110,18 +116,19 @@ class StepChoice(Step):
                 "feedback": self.feedback
                 }
 
-    def __init__(self, title: str, lesson_id: int, body: dict, is_multiple_choice: bool, options: list[Option], **params):
+    def __init__(self, title: str, lesson_id: int, body: dict, is_multiple_choice: bool, preserve_order: bool, options: list[Option], **params):
         self._type = "choice"
         add_body = body.copy()
         add_body["text"] = f"<p>{body['text']}<p>"
-        choices = {"options": [ options[i].get_option() for i in range(len(options)) ],
-                   "is_multiple_choice": is_multiple_choice,
-                   "is_always_correct": False,
-                   "sample_size": len(options),
-                   "preserve_order": False,
-                   "is_html_enabled": True,
-                   "is_options_feedback": all([options[2]])
-                   }
+        choices = {
+            "options": [ i.get_option() for i in options ],
+            "is_multiple_choice": is_multiple_choice,
+            "is_always_correct": False,
+            "sample_size": len(options),
+            "preserve_order": preserve_order,
+            "is_html_enabled": True,
+            "is_options_feedback": all([options[2]])
+            }
         add_body["source"] = choices
 
         super().__init__(title, lesson_id, add_body, **params)

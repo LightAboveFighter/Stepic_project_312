@@ -1,0 +1,157 @@
+
+GET  -  https://stepik.org/api/steps?ids[]=5263710&ids[]=5264363&ids[]=5263711
+
+
+Ответ:
+
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "steps": [
+        {
+            "id": 5263710,
+            "lesson": 1243955,
+            "position": 1,
+            "status": "ready",
+            "block": {
+                "name": "text",
+                "text": "\u0412\u0441\u0435 \u0448\u0430\u0433\u0438 \u0443\u0440\u043e\u043a\u0430 \u0431\u044b\u043b\u0438 \u0443\u0434\u0430\u043b\u0435\u043d\u044b. \u042d\u0442\u043e\u0442 \u0448\u0430\u0433 \u0441\u0433\u0435\u043d\u0435\u0440\u0438\u0440\u043e\u0432\u0430\u043d \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438. \u041e\u0442\u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u0443\u0439\u0442\u0435 \u0442\u0435\u043a\u0441\u0442 \u0448\u0430\u0433\u0430 \u0438 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u0435 \u0443\u0440\u043e\u043a.",
+                "video": null,
+                "options": {},
+                "subtitle_files": [],
+                "is_deprecated": false
+            },
+            "actions": {
+                "comment": "#"
+            },
+            "progress": "77-5263710",
+            "subscriptions": [
+                "31-77-5263710",
+                "30-77-5263710"
+            ],
+            "instruction": null,
+            "session": null,
+            "instruction_type": null,
+            "viewed_by": 0,
+            "passed_by": 0,
+            "correct_ratio": null,
+            "worth": 0,
+            "is_solutions_unlocked": false,
+            "solutions_unlocked_attempts": 3,
+            "has_submissions_restrictions": false,
+            "max_submissions_count": 3,
+            "variation": 1,
+            "variations_count": 1,
+            "is_enabled": true,
+            "needs_plan": null,
+            "create_date": "2024-03-26T12:58:20Z",
+            "update_date": "2024-03-26T12:58:20Z",
+            "discussions_count": 0,
+            "discussion_proxy": "77-5263710-1",
+            "discussion_threads": [
+                "77-5263710-1"
+            ]
+        },
+        {
+            "id": 5264363,
+            "lesson": 1243955,
+            "position": 2,
+            "status": "ready",
+            "block": {
+                "name": "choice",
+                "text": "<p>Choose one of this variants:</p><p></p>",
+                "video": null,
+                "options": {
+                    "is_multiple_choice": true
+                },
+                "subtitle_files": [],
+                "is_deprecated": false
+            },
+            "actions": {
+                "edit_instructions": "#",
+                "submit": "#",
+                "comment": "#"
+            },
+            "progress": "77-5264363",
+            "subscriptions": [
+                "31-77-5264363",
+                "30-77-5264363"
+            ],
+            "instruction": null,
+            "session": null,
+            "instruction_type": null,
+            "viewed_by": 0,
+            "passed_by": 0,
+            "correct_ratio": null,
+            "worth": 0,
+            "is_solutions_unlocked": false,
+            "solutions_unlocked_attempts": 3,
+            "has_submissions_restrictions": false,
+            "max_submissions_count": 3,
+            "variation": 1,
+            "variations_count": 1,
+            "is_enabled": true,
+            "needs_plan": null,
+            "create_date": "2024-03-26T16:21:41Z",
+            "update_date": "2024-03-26T16:21:41Z",
+            "discussions_count": 0,
+            "discussion_proxy": "77-5264363-1",
+            "discussion_threads": [
+                "77-5264363-1",
+                "77-5264363-2"
+            ]
+        },
+        {
+            "id": 5263711,
+            "lesson": 1243955,
+            "position": 3,
+            "status": "ready",
+            "block": {
+                "name": "choice",
+                "text": "\u0412\u044b \u043c\u043e\u0436\u0435\u0442\u0435 \u0438\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u0443\u0441\u043b\u043e\u0432\u0438\u0435 \u0437\u0430\u0434\u0430\u043d\u0438\u044f \u0432 \u044d\u0442\u043e\u043c \u043f\u043e\u043b\u0435 \u0438 \u0443\u043a\u0430\u0437\u0430\u0442\u044c \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u043d\u0438\u0436\u0435. <br><br> \u0427\u0435\u043c\u0443 \u0440\u0430\u0432\u043d\u044f\u0435\u0442\u0441\u044f 1004 \u0440\u0430\u0437\u0434\u0435\u043b\u0438\u0442\u044c \u043d\u0430 2?",
+                "video": null,
+                "options": {
+                    "is_multiple_choice": false
+                },
+                "subtitle_files": [],
+                "is_deprecated": false
+            },
+            "actions": {
+                "edit_instructions": "#",
+                "submit": "#",
+                "comment": "#"
+            },
+            "progress": "77-5263711",
+            "subscriptions": [
+                "31-77-5263711",
+                "30-77-5263711"
+            ],
+            "instruction": null,
+            "session": null,
+            "instruction_type": null,
+            "viewed_by": 0,
+            "passed_by": 0,
+            "correct_ratio": null,
+            "worth": 0,
+            "is_solutions_unlocked": false,
+            "solutions_unlocked_attempts": 3,
+            "has_submissions_restrictions": false,
+            "max_submissions_count": 3,
+            "variation": 1,
+            "variations_count": 1,
+            "is_enabled": true,
+            "needs_plan": null,
+            "create_date": "2024-03-26T12:58:20Z",
+            "update_date": "2024-03-26T12:58:20Z",
+            "discussions_count": 0,
+            "discussion_proxy": "77-5263711-1",
+            "discussion_threads": [
+                "77-5263711-1",
+                "77-5263711-2"
+            ]
+        }
+    ]
+}
