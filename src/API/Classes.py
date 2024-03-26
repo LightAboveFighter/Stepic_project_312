@@ -31,7 +31,7 @@ class Lesson:
                                 # self.sect_ids = section_ids or []
                                 # self.params = params
 
-        with io.open(lesson_path, 'r', encoding='utf-8') as f:
+        with io.open(f"Input_files/{lesson_path}", 'r', encoding='utf-8') as f:
             # Writting down name of the lesson
             self.title = (parse_name.parseString(f.readline())).name
             
@@ -72,7 +72,7 @@ class Lesson:
             ans["Steps"].append(self.steps[i].dict_info())
         return ans
 
-    def send(self, session: OAuthSession, send_all = False):
+    def send(self, session: OAuthSession):
 
         if  self.id is not None:
             return success_status(True, "Already sent")
@@ -88,10 +88,10 @@ class Lesson:
 
         if is_success(r, 201):
             self.id = id
-            if (send_all):
-                for i in range(len(self.steps)):
-                    self.steps[i].lesson_id = self.id
-                    self.steps[i].send(i, session)
+            for i in range(len(self.steps)):
+                self.steps[i].lesson_id = self.id
+            for i in range(len(self.steps)):
+                self.steps[i].send(session)
 
         return request_status(r, 201)
 
@@ -217,7 +217,7 @@ class Section:
             return request_status(r, 204)
         return success_status(False, "")
     
-    def send(self, course_id: int, session: OAuthSession):
+    def send(self, course_id: int, session: OAuthSession, send_all = False):
 
         if self.id is not None:
             skip = True
