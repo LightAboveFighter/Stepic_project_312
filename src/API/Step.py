@@ -1,5 +1,5 @@
 import requests
-from Mark_requests import is_success, request_status, success_status
+from src.Help_methods import is_success, request_status, success_status
 from src.API.OAuthSession import OAuthSession
 from abc import ABC, abstractclassmethod
 import json
@@ -11,7 +11,9 @@ def create_any_step(type: str, *args, **kwargs):
     if type == "text":
         return StepText(*args, **kwargs)
     if type == "choice":
-        return StepChoice(*args, **kwargs)
+        is_m_ch = args[2]["options"].get("is_multiple_choice") or False
+        pr_order = args[2].get("preserve_order") or False
+        return StepChoice( *args, is_multiple_choice=is_m_ch, preserve_order=pr_order, options=[], **kwargs )
 
 
 @dataclass
@@ -121,14 +123,17 @@ class StepChoice(Step):
         add_body = body.copy()
         add_body["text"] = f"<p>{body['text']}<p>"
         choices = {
-            "options": [ i.get_option() for i in options ],
             "is_multiple_choice": is_multiple_choice,
             "is_always_correct": False,
             "sample_size": len(options),
             "preserve_order": preserve_order,
             "is_html_enabled": True,
-            "is_options_feedback": all([options[2]])
+            "is_options_feedback": all([options[i][2] for i in range(len(options))])
             }
+        if options:
+            choices["options"] = [ i.get_option() for i in options ]
+        else:
+            choices["options"] = body["source"]["options"]
         add_body["source"] = choices
 
         super().__init__(title, lesson_id, add_body, **params)
