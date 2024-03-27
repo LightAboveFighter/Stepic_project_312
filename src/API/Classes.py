@@ -89,6 +89,11 @@ class Lesson:
         for i in range(len(self.steps)):
             ans["Steps"].append(self.steps[i].dict_info())
         return ans
+    
+    def get_structure(self):
+        ans = {"id": self.id, "Steps": []}
+        for i in self.steps:
+            ans["Steps"].append(i.id)
 
     def send(self, session: OAuthSession):
 
@@ -265,6 +270,12 @@ class Section:
             ans["Lessons"].append(self.lessons[i].dict_info())
         return ans
     
+    def get_structure(self):
+        ans = {"id": self.id, "Lessons": []}
+        for i in self.lessons:
+            ans["Lessons"].append(i.get_structure())
+        return ans
+    
     def save(self):
         """ Write your section to 'Section's Title'.yaml """
         title = self.title
@@ -415,6 +426,12 @@ class Course:
         ans = { **{"Title": self.title, "id": self.id, "Sections": [] }, **self.params }
         for i in range(len(self.sections)):
             ans["Sections"].append( self.sections[i].dict_info() )
+        return ans
+    
+    def get_structure(self):
+        ans = {"id": self.id, "Sections": []}
+        for i in self.sections:
+            ans["Sections"].append(i.get_structure())
         return ans
     
     def create_section(self, section: Section):
@@ -597,10 +614,6 @@ class Course:
             sect = Section(title, **params)
             sect.load_lessons(lessons_ids, copy, session)
             self.sections.append(sect)
-
-            
-
-
 
     
     # def load_from_file(self, filename: str):
