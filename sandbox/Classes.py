@@ -1,7 +1,7 @@
 import yaml
 import requests
 from src.API.OAuthSession import OAuthSession
-from Mark_requests import is_success, request_status, success_status
+from Help_methods import is_success, request_status, success_status
 import json
 import os
 from src.API.Step import Step

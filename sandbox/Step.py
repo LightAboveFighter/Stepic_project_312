@@ -1,5 +1,5 @@
 import requests
-from Mark_requests import is_success, request_status, success_status
+from Help_methods import is_success, request_status, success_status
 from src.API.OAuthSession import OAuthSession
 from abc import ABC, abstractclassmethod
 import json
