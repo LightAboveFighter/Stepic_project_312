@@ -4,7 +4,8 @@ from src.API.OAuthSession import OAuthSession
 from abc import ABC, abstractclassmethod
 import json
 import yaml
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+from typing import Any
 
 
 def create_any_step(type: str, *args, **kwargs):
@@ -18,28 +19,19 @@ def create_any_step(type: str, *args, **kwargs):
 
 @dataclass
 class Step(ABC):
-
+    """ body - dict of main class parameters 
+    example: {'text':  [str],
+                'source':  [Any]}
     """
+    title: str
     lesson_id: int
-    position: int
-    (abstract) type_info: Any or tuple(Any)
-    """
-    def __init__(self, title: str, lesson_id: int, body: dict, **params):
-        """ body - dict of main class parameters 
-        example: {'text':  [str],
-                  'source':  [Any]}
-        """
-
-        self.lesson_id = lesson_id
-        self.title = title
-        self.params = params
-        self.body = body
-        self.set_body()
-        self.id = params.get("id")
+    body: dict
+    params: Any
+    id = asdict(params).get("id")
 
     def send(self, position: int, session):
         api_url = "https://stepik.org/api/step-sources"
-        optional = self.params
+        optional = asdict(self.params)
         data = {
                 "stepSource": { ** {
                                 "block": {
@@ -58,7 +50,7 @@ class Step(ABC):
         return request_status(r, 201)
     
     def save(self):
-        optional = self.params
+        optional = asdict(self.params)
         data = {
                 "stepSource": { ** {
                                 "block": {
@@ -86,15 +78,15 @@ class Step(ABC):
         return self._type
 
     def dict_info(self):
-        ans = { **{"title": self.title, "id": self.id}, "lesson_id": self.lesson_id, "type": self._type, **self.body, **self.params}
+        ans = { **{"title": self.title, "id": self.id}, "lesson_id": self.lesson_id, "type": self._type, **self.body, **asdict(self.params) }
         return ans
     
 
 @dataclass(init=False)
 class StepText(Step):
+    _type = "text"
     
     def set_body(self):
-        self._type = "text"
         if self.body.get("text") is None:
             raise "StepText must contain text field"
         self.body["text"] = f"<p>{self.body['text']}<p>"
@@ -117,26 +109,33 @@ class StepChoice(Step):
                 "text": self.text,
                 "feedback": self.feedback
                 }
+        
+    title: str
+    lesson_id: int
+    body: dict
+    is_multiple_choice: bool
+    preserve_order: bool
+    options: list[Option]
+    params: Any
+    _type = "choice"
+    id = asdict(params).get("id")
+    
 
-    def __init__(self, title: str, lesson_id: int, body: dict, is_multiple_choice: bool, preserve_order: bool, options: list[Option], **params):
-        self._type = "choice"
-        add_body = body.copy()
-        add_body["text"] = f"<p>{body['text']}<p>"
+    def __post_init__(self):
+        self.body["text"] = f"<p>{self.body['text']}<p>"
         choices = {
-            "is_multiple_choice": is_multiple_choice,
+            "is_multiple_choice": self.is_multiple_choice,
             "is_always_correct": False,
-            "sample_size": len(options),
-            "preserve_order": preserve_order,
+            "sample_size": len(self.options),
+            "preserve_order": self.preserve_order,
             "is_html_enabled": True,
-            "is_options_feedback": all([options[i][2] for i in range(len(options))])
+            "is_options_feedback": all([self.options[i][2] for i in range(len(self.options))])
             }
-        if options:
-            choices["options"] = [ i.get_option() for i in options ]
+        if self.options:
+            choices["options"] = [ i.get_option() for i in self.options ]
         else:
-            choices["options"] = body["source"]["options"]
-        add_body["source"] = choices
-
-        super().__init__(title, lesson_id, add_body, **params)
+            choices["options"] = self.body["source"]["options"]
+        self.body["source"] = choices
     
     def set_body(self):
         # self._type = "choice"

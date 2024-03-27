@@ -16,3 +16,4 @@ from src.API.Step import StepChoice as SC
 # a = SC("Choice title", 1243955, {"text": "Choose one of this variants:"}, True, [SC.Option(True, "Text 1 tutu"), SC.Option(False, "Text 2 fls", ":("), SC.Option(False, "dgdrg", "srgsgsdf")], cost=19)
 # print(a.send(1, auth.OAuthSession()))
 # # a.save()
+
