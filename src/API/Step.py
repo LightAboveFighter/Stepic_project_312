@@ -4,17 +4,15 @@ from src.API.OAuthSession import OAuthSession
 from abc import ABC, abstractclassmethod
 import json
 import yaml
-from dataclasses import dataclass, asdict
-from typing import Any
+from dataclasses import field, dataclass, asdict
+from typing import Any, Optional
 
 
 def create_any_step(type: str, *args, **kwargs):
     if type == "text":
         return StepText(*args, **kwargs)
     if type == "choice":
-        is_m_ch = args[2]["options"].get("is_multiple_choice") or False
-        pr_order = args[2].get("preserve_order") or False
-        return StepChoice( *args, is_multiple_choice=is_m_ch, preserve_order=pr_order, options=[], **kwargs )
+        return StepChoice( *args, options=[], **kwargs )
 
 
 @dataclass
@@ -26,8 +24,10 @@ class Step(ABC):
     title: str
     lesson_id: int
     body: dict
-    params: Any
-    id = asdict(params).get("id")
+    params: Optional[Any] = field(default_factory = dict)
+
+    def __post_init__(self):
+        self.id = self.params.get("id")
 
     def send(self, position: int, session):
         api_url = "https://stepik.org/api/step-sources"
@@ -78,7 +78,7 @@ class Step(ABC):
         return self._type
 
     def dict_info(self):
-        ans = { **{"title": self.title, "id": self.id}, "lesson_id": self.lesson_id, "type": self._type, **self.body, **asdict(self.params) }
+        ans = { **{"title": self.title, "id": self.id}, "lesson_id": self.lesson_id, "type": self._type, **self.body, **self.params }
         return ans
     
 
@@ -113,21 +113,17 @@ class StepChoice(Step):
     title: str
     lesson_id: int
     body: dict
-    is_multiple_choice: bool
-    preserve_order: bool
-    options: list[Option]
-    params: Any
+    options: list[Option] = field(default_factory = list)
+    params: Optional[dict] = field(default_factory = dict)
     _type = "choice"
-    id = asdict(params).get("id")
     
 
     def __post_init__(self):
+        self.id = self.params.get("id")
         self.body["text"] = f"<p>{self.body['text']}<p>"
         choices = {
-            "is_multiple_choice": self.is_multiple_choice,
             "is_always_correct": False,
             "sample_size": len(self.options),
-            "preserve_order": self.preserve_order,
             "is_html_enabled": True,
             "is_options_feedback": all([self.options[i][2] for i in range(len(self.options))])
             }
