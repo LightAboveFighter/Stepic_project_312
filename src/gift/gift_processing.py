@@ -133,9 +133,9 @@ def __data_multiple_numerical__(x:giftparser.gift.Question):
             "options":[]
             }
     }
-    for option in x.answer.numbers:
-        if x.options[0].percentage>0.95:
-            options["source"]["options"].append({"answer":option.get_number(),"max_error":option.get_error_margin()})
+    for number in x.answer.numbers:
+        if number.options[0].percentage>0.95:
+            options["source"]["options"].append({"answer":number.get_number(),"max_error":number.get_error_margin()})
     return options
 
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
