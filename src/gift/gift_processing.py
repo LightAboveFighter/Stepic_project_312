@@ -27,6 +27,8 @@ STEPIK_name_types = {"MultipleChoiceCheckbox()": "choice",
                      "TrueFalse()": "choice",
                      "Matching()":"matching",
                      "Numerical()":"number",
+                     "MultipleNumerical()":"number",
+                     "Essay()":"free-answer",
                     }
 STEPIK_sampe_size = 10
 
@@ -138,6 +140,16 @@ def __data_multiple_numerical__(x:giftparser.gift.Question):
             options["source"]["options"].append({"answer":number.get_number(),"max_error":number.get_error_margin()})
     return options
 
+def __data_essay__(x:giftparser.gift.Question):
+    return dict({ 
+      "options": None,
+      "source": {
+        "is_attachments_enabled": False,
+        "is_html_enabled": True,
+        "manual_scoring": False
+      },
+    })
+
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
     if (
@@ -155,6 +167,8 @@ def __get_question_options__(x: giftparser.gift.Question) -> dict:
         return __data_numerical__(x)
     if str(x.answer.__repr__()) == "MultipleNumerical()":
         return __data_multiple_numerical__(x)
+    if str(x.answer.__repr__()) == "Essay()":
+        return __data_essay__(x)
     else:
         return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
