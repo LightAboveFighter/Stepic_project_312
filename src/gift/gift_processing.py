@@ -13,6 +13,7 @@ Short answer DONE
 Matching DONE
 Missing word interpreted as MultipleChoice
 Numerical questions
+Multiple numerical questions -- Problem stepik cant handle
 Essay
 Description -- not a question
 '''
@@ -25,6 +26,7 @@ STEPIK_name_types = {"MultipleChoiceCheckbox()": "choice",
                      "MultipleChoiceRadio()": "choice",
                      "TrueFalse()": "choice",
                      "Matching()":"matching",
+                     "Numerical()":"number",
                     }
 STEPIK_sampe_size = 10
 
@@ -114,15 +116,6 @@ def __data_matching__(x:giftparser.gift.Question):
     return options#{"a":[str(i) for i in x.answer.options]}#{"x":x}
 
 def __data_numerical__(x:giftparser.gift.Question):
-    '''
-    self.assertEqual(self.options[0].prefix, '#')
-    self.assertEqual(self.options[0].text, '1822:5')
-    self.assertEqual(self.options[0].raw_text, '#1822:5')
-    self.assertEqual(self.options[0].percentage, 1.0)
-    self.assertEqual(self.options[0].feedback, None)
-    self.assertEqual(self.answer.get_number(), 1822.0)
-    self.assertEqual(self.answer.get_error_margin(), 5.0)
-    '''
     log.info("Numerical question will be reinterpreted as Short()")
     options = {
         "feedback_wrong": x.answer.options[0].feedback,
@@ -132,6 +125,18 @@ def __data_numerical__(x:giftparser.gift.Question):
     }
     return options
 
+def __data_multiple_numerical__(x:giftparser.gift.Question):
+    log.info("Numerical question will be reinterpreted as Short()")
+    options = {
+        "feedback_wrong": x.answer.options[0].feedback,
+        "source":{
+            "options":[]
+            }
+    }
+    for option in x.answer.numbers:
+        if x.options[0].percentage>0.95:
+            options["source"]["options"].append({"answer":option.get_number(),"max_error":option.get_error_margin()})
+    return options
 
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
@@ -146,8 +151,10 @@ def __get_question_options__(x: giftparser.gift.Question) -> dict:
         return {"source":__data_short__(x)}
     if str(x.answer.__repr__()) == "Matching()":
         return __data_matching__(x)
-    if str(x.answer.__repr__()) == "Numerical()": #FIXME MultipleNumerical neaded 
+    if str(x.answer.__repr__()) == "Numerical()": 
         return __data_numerical__(x)
+    if str(x.answer.__repr__()) == "MultipleNumerical()":
+        return __data_multiple_numerical__(x)
     else:
         return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
