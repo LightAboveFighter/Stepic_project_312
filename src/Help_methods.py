@@ -1,3 +1,5 @@
+import yaml
+
 def is_success(*r):
     """ r - (requests.post object, strict requirment, ...)
     If strict requirment = 0 - every success code will be enough """
@@ -22,3 +24,24 @@ def request_status(*r):
 
 def success_status(success: bool, text: str):
     return {"Success": success, "json": text} 
+
+
+def clean_yaml(name: str):
+    data2 = {}
+    with open(name, "r") as file:
+        data = yaml.safe_load(file)
+        data2 = data.copy()
+    clean_dict(data2)
+    with open(name, "w") as file:
+        yaml.safe_dump(data2, file)
+
+
+def clean_dict(data: dict):
+    data2 = data.copy()
+    for i in data.keys():
+        if isinstance(data[i], dict):
+            data2[i] = clean_dict(data2[i])
+        if not data[i]:
+            del data2[i]
+            continue
+    return data2

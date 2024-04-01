@@ -1,10 +1,10 @@
 import yaml
 import requests
 from src.API.OAuthSession import OAuthSession
-from Mark_requests import is_success, request_status, success_status
+from src.Help_methods import is_success, request_status, success_status, clean_dict
 import json
 import os
-from src.API.Step import Step_text, Step
+from src.API.Step import StepText, Step, create_any_step
 import pyparsing as pp
 import io
 
@@ -15,10 +15,16 @@ class Lesson:
     sect_ids: list or []
     params: dict'''
 
-    def __init__(self, lesson_path: str):
+    def __init__(self, lesson_path: str = ""):
 
-        self.sect_ids = []
-        self.params = {}
+        sect_ids = []
+        params = {}
+        title = ""
+        id = None
+        steps = []
+        if not lesson_path:
+            self.fill_args(title, id, steps, sect_ids, **params)
+            return
 
         name = pp.rest_of_line ('name')
         parse_name = pp.Suppress(pp.Keyword('#') + pp.ZeroOrMore(pp.White())) + pp.Optional(name)
@@ -31,19 +37,18 @@ class Lesson:
                                 # self.sect_ids = section_ids or []
                                 # self.params = params
 
-        with io.open(lesson_path, 'r', encoding='utf-8') as f:
+        with io.open(f"Input_files/{lesson_path}", 'r', encoding='utf-8') as f:
             # Writting down name of the lesson
-            self.title = (parse_name.parseString(f.readline())).name
+            title = (parse_name.parseString(f.readline())).name
             
             # Writting down id of the lesson 
             for id_line in f:
                 if id_line != pp.Empty():
                     # self.id = int((parse_id.parseString(id_line)).id)
-                    self.id = None                                      
-                    break
+                    id = None                                      
+                    continue
             
             # Writting down steps of the lesson
-            self.steps = []
 
             step_lines = ""
             first_cycle = True
@@ -52,19 +57,32 @@ class Lesson:
                 try:
                     new_step = parse_step.parseString(line)
                     if not first_cycle:
-                        self.steps.append(Step_text(previous_step.name, None, {"text": step_lines} ))  # for now -- only StepText
+                        self.steps.append(StepText(previous_step.name, None, {"text": step_lines} ))  # for now -- only StepText
                     step_lines = ""
                     first_cycle = False
                     previous_step = new_step
                 except pp.ParseException:
                     step_lines += line
-            self.steps.append(Step_text(previous_step.name, None, {"text": step_lines} ))
+            steps.append(StepText(previous_step.name, None, {"text": step_lines} ))
 
+        self.fill_args(title, id, steps, sect_ids, **params)
+
+    def fill_args(self, title = "", id = None, steps = list[Step], section_ids = None, **params):
+        """ **kwargs:
+        'sect_ids - section_ids - [section's id] to tie lesson without 'Course' class
+        """
+        self.title = title
+        self.steps = steps or []
+        self.id = id
+        self.sect_ids = section_ids or []
+        self.params = params
+
+    
     def _module_step(self):
-            step_type = pp.one_of(['QUIZ', 'CHOICE', 'TEXT'], as_keyword=True) ('type')
-            step_name = pp.rest_of_line() ('name')
-            parse_module = pp.Suppress(pp.Keyword('##')) + pp.Optional(step_type) + pp.Suppress(pp.ZeroOrMore(pp.White())) + pp.Optional(step_name)
-            return parse_module
+        step_type = pp.one_of(['QUIZ', 'CHOICE', 'TEXT'], as_keyword=True) ('type')
+        step_name = pp.rest_of_line() ('name')
+        parse_module = pp.Suppress(pp.Keyword('##')) + pp.Optional(step_type) + pp.Suppress(pp.ZeroOrMore(pp.White())) + pp.Optional(step_name)
+        return parse_module
 
     def dict_info(self):
         ans = { **{"Title": self.title, "id": self.id, "Steps": [], "Sect_ids": self.sect_ids }, **self.params}
@@ -72,7 +90,7 @@ class Lesson:
             ans["Steps"].append(self.steps[i].dict_info())
         return ans
 
-    def send(self, session: OAuthSession, send_all = False):
+    def send(self, session: OAuthSession):
 
         if  self.id is not None:
             return success_status(True, "Already sent")
@@ -88,10 +106,10 @@ class Lesson:
 
         if is_success(r, 201):
             self.id = id
-            if (send_all):
-                for i in range(len(self.steps)):
-                    self.steps[i].lesson_id = self.id
-                    self.steps[i].send(i, session)
+            for i in range(len(self.steps)):
+                self.steps[i].lesson_id = self.id
+            for i in range(len(self.steps)):
+                self.steps[i].send(i, session)
 
         return request_status(r, 201)
 
@@ -159,20 +177,81 @@ class Lesson:
         self.id = data["id"]
         self.sect_ids = data["Sect_ids"]
         self.steps = []
-        for i in range(len(data["Steps"])):
-            self.steps.append(Step().load_from_dict(data["Steps"][i]))
+        for i in data["Steps"]:
+            type = i["type"]
+            les_id = i["lesson_id"]
+            del i["type"]
+            del i["lesson_id"]
+            st = create_any_step(type, self.title, les_id, i)
+            self.steps.append(st)
 
         data2 = data
         del data2["Title"]
         del data2["id"]
         del data2["Sect_ids"]
         del data2["Steps"]
+        self.params = data2
         return self
+    
+    def load_from_net(self, id: int, copy: bool, session: OAuthSession):
+        url = f"https://stepik.org/api/lessons/{id}"
+
+        r = requests.get(url, headers=session.headers())
+        if not is_success(r, 0):
+            return success_status(False, "Can't get course's head")
+        
+        content = json.loads(r.text)["lessons"][0]
+        if copy:
+            self.id = None
+        else:
+            self.id = id
+        self.title = content["title"]
+        
+        if not copy:
+            self.sect_ids = content["courses"]
+        steps_ids = content["steps"]
+
+        del content["id"]
+        del content["title"]
+        del content["courses"]
+        del content["steps"]
+        params = clean_dict(content)
+
+        self.params = params
+        self.load_steps(steps_ids, copy, session)
+
+    
+    def load_steps(self, ids: list[int], copy: bool, session: OAuthSession):
+
+        ids_url = [ str(i) for i in ids]
+        ids_url = "&ids[]=".join(ids_url)
+        url = f"https://stepik.org/api/step-sources?ids[]=" + ids_url
+
+        r = requests.get(url, headers=session.headers())
+        if not is_success(r, 0):
+            return request_status(r, 0)
+        
+        steps = json.loads(r.text)["step-sources"]
+        for i in steps:
+            type = i["block"]["name"]
+            body = i["block"].copy()
+            del body["name"]
+            del i["block"]
+            i["lesson"] = self.id
+            if copy:
+                id = None
+            else:
+                id = i["id"]
+            del i["id"]
+
+            params = clean_dict(i)
+            step = create_any_step(type, f"Step_{steps.index(i)}", id, body, **params)
+            self.steps.append(step)
     
 
 class Section:
 
-    def __init__(self, title = "", position = -1, lessons = None, **params):
+    def __init__(self, title = "", lessons = None, position = -1, **params):
         self.title = title
         self.pos = position
         self.lessons = lessons or []
@@ -217,7 +296,7 @@ class Section:
             return request_status(r, 204)
         return success_status(False, "")
     
-    def send(self, course_id: int, session: OAuthSession):
+    def send(self, course_id: int, session: OAuthSession, send_all = False):
 
         if self.id is not None:
             skip = True
@@ -289,6 +368,24 @@ class Section:
         del data2["Lessons"]
         self.params = data2
         return self
+    
+    def load_lessons(self, ids: list[int], copy: bool, session: OAuthSession):
+        ids_url = [ str(i) for i in ids]
+        ids_url = "&ids[]=".join(ids_url)
+        url = f"https://stepik.org/api/units?ids[]=" + ids_url
+
+        head = session.headers()
+        head["cookie"] = session.cookie
+        r = requests.get(url, headers=head)
+        if not is_success(r, 0):
+            return request_status(r, 0)
+        
+        lessons = json.loads(r.text)["units"]
+        for i in lessons:
+            les = Lesson()
+            les.load_from_net(i["lesson"], copy, session)
+
+            self.lessons.append(les)
 
     
 class Course:
@@ -448,6 +545,61 @@ class Course:
         del data["id"]
         self.params = data
         return self
+
+    def load_from_net(self, id: int, copy: bool, session: OAuthSession):
+
+        url = f"https://stepik.org/api/courses/{id}"
+
+        r = requests.get(url, headers=session.headers())
+        if not is_success(r, 0):
+            return success_status(False, "Can't get course's head")
+        
+        content = json.loads(r.text)["courses"][0]
+        if copy:
+            self.id = None
+        else:
+            self.id = id
+        self.title = content["title"]
+        
+        sect_ids = content["sections"]
+        if  len(sect_ids) == 0:
+            return success_status(True, "Course loaded")
+        
+        self.load_sections(sect_ids, copy, session)
+
+        del content["id"]
+        del content["title"]
+        del content["sections"]
+        self.params = clean_dict(content)
+
+    def load_sections(self, ids: list[int], copy: bool, session: OAuthSession):
+        ids_url = [ str(i) for i in ids]
+        ids_url = "&ids[]=".join(ids_url)
+        url = f"https://stepik.org/api/sections?ids[]=" + ids_url
+
+        head = session.headers()
+        head["cookie"] = session.cookie
+        r = requests.get(url, headers=head)
+
+        if not is_success(r, 0):
+            return request_status(r)
+        
+        sections = json.loads(r.text)["sections"]
+        for i in sections:
+            title = i["title"]
+            if copy:
+                del i["id"]
+            lessons_ids = i["units"]
+            del i["title"]
+            del i["units"]
+            params = clean_dict(i)
+
+            sect = Section(title, **params)
+            sect.load_lessons(lessons_ids, copy, session)
+            self.sections.append(sect)
+
+            
+
 
 
     
