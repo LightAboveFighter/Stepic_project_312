@@ -5,7 +5,6 @@ class ParsingModuleSchema():
     __step_types = ['QUIZ', 'CHOICE', 'TEXT']    # Стоит добавить функция для изменения этого списка (или нет)
     __header_addons = ['lesson', 'lang']
     __body_addons = ['ANSWER', 'HINT', 'SHUFFLE']
-    __
     @staticmethod
     def lesson():
         lesson_title = pp.rest_of_line() ('title')
