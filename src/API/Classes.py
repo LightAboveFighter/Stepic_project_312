@@ -16,59 +16,7 @@ class Lesson:
     sect_ids: list or []
     params: dict'''
 
-    def __init__(self, lesson_path: str = ""):
-
-        sect_ids = []
-        params = {}
-        title = ""
-        id = None
-        steps = []
-        if not lesson_path:
-            self.fill_args(title, id, steps, sect_ids, **params)
-            return
-
-        name = pp.rest_of_line ('name')
-        parse_name = pp.Suppress(pp.Keyword('#') + pp.ZeroOrMore(pp.White())) + pp.Optional(name)
-
-        id = pp.Word(pp.nums) ('id')
-        parse_id = pp.Suppress(pp.Keyword('lesson') + pp.ZeroOrMore(pp.White()) + '=' + pp.ZeroOrMore(pp.White())) + id
-
-        parse_step = self._module_step()
-
-                                # self.sect_ids = section_ids or []
-                                # self.params = params
-
-        with io.open(f"Input_files/{lesson_path}", 'r', encoding='utf-8') as f:
-            # Writting down name of the lesson
-            title = (parse_name.parseString(f.readline())).name
-            
-            # Writting down id of the lesson 
-            for id_line in f:
-                if id_line != pp.Empty():
-                    # self.id = int((parse_id.parseString(id_line)).id)
-                    id = None                                      
-                    continue
-            
-            # Writting down steps of the lesson
-
-            step_lines = ""
-            first_cycle = True
-
-            for line in f:
-                try:
-                    new_step = parse_step.parseString(line)
-                    if not first_cycle:
-                        self.steps.append(StepText(previous_step.name, None, {"text": step_lines} ))  # for now -- only StepText
-                    step_lines = ""
-                    first_cycle = False
-                    previous_step = new_step
-                except pp.ParseException:
-                    step_lines += line
-            steps.append(StepText(previous_step.name, None, {"text": step_lines} ))
-
-        self.fill_args(title, id, steps, sect_ids, **params)
-
-    def fill_args(self, title = "", id = None, steps = list[Step], section_ids = None, **params):
+    def __init__(self, title = "", id = None, steps: list[Step] = [], section_ids = None, **params):
         """ **kwargs:
         'sect_ids - section_ids - [section's id] to tie lesson without 'Course' class
         """
@@ -78,7 +26,6 @@ class Lesson:
         self.sect_ids = section_ids or []
         self.params = params
 
-    
     def _module_step(self):
         step_type = pp.one_of(['QUIZ', 'CHOICE', 'TEXT'], as_keyword=True) ('type')
         step_name = pp.rest_of_line() ('name')
@@ -178,6 +125,56 @@ class Lesson:
             data = yaml.safe_load(file)
         return self.load_from_dict(data)
 
+    def load_from_parse(self, lesson_path: str = ""):
+
+        sect_ids = []
+        params = {}
+        title = ""
+        id = None
+        steps = []
+        if not lesson_path:
+            self.fill_args(title, id, steps, sect_ids, **params)
+            return
+
+        name = pp.rest_of_line ('name')
+        parse_name = pp.Suppress(pp.Keyword('#') + pp.ZeroOrMore(pp.White())) + pp.Optional(name)
+
+        id = pp.Word(pp.nums) ('id')
+        parse_id = pp.Suppress(pp.Keyword('lesson') + pp.ZeroOrMore(pp.White()) + '=' + pp.ZeroOrMore(pp.White())) + id
+
+        parse_step = self._module_step()
+
+                                # self.sect_ids = section_ids or []
+                                # self.params = params
+
+        with io.open(f"Input_files/{lesson_path}", 'r', encoding='utf-8') as f:
+            # Writting down name of the lesson
+            title = (parse_name.parseString(f.readline())).name
+            
+            # Writting down id of the lesson 
+            for id_line in f:
+                if id_line != pp.Empty():
+                    # self.id = int((parse_id.parseString(id_line)).id)
+                    id = None                                      
+                    continue
+            
+            # Writting down steps of the lesson
+
+            step_lines = ""
+            first_cycle = True
+
+            for line in f:
+                try:
+                    new_step = parse_step.parseString(line)
+                    if not first_cycle:
+                        self.steps.append(StepText(previous_step.name, None, {"text": step_lines} ))  # for now -- only StepText
+                    step_lines = ""
+                    first_cycle = False
+                    previous_step = new_step
+                except pp.ParseException:
+                    step_lines += line
+            steps.append(StepText(previous_step.name, None, {"text": step_lines} ))
+
     def load_from_dict(self, data: dict):
         self.title = data["Title"]
         self.id = data["id"]
@@ -196,7 +193,7 @@ class Lesson:
         del data2["id"]
         del data2["Sect_ids"]
         del data2["Steps"]
-        self.params = data2
+        self.params = Lesson_template().dump(data2)
         return self
     
     def load_from_net(self, id: int, copy: bool, session: OAuthSession):
@@ -206,7 +203,7 @@ class Lesson:
         if not is_success(r, 0):
             return success_status(False, "Can't get course's head")
         
-        content = json.loads(r.text)["lessons"][0]
+        content = Lesson_template().dump(json.loads(r.text)["lessons"][0])
         if copy:
             self.id = None
         else:
@@ -221,9 +218,8 @@ class Lesson:
         del content["title"]
         del content["courses"]
         del content["steps"]
-        params = clean_dict(content)
 
-        self.params = params
+        self.params = content
         self.load_steps(steps_ids, copy, session)
 
     
@@ -239,18 +235,18 @@ class Lesson:
         
         steps = json.loads(r.text)["step-sources"]
         for i in steps:
-            type = i["block"]["name"]
-            body = i["block"].copy()
+            params = Step_template().dump(i)
+            type = params["block"]["name"]
+            body = params["block"].copy()
             del body["name"]
-            del i["block"]
-            i["lesson"] = self.id
+            del params["block"]
+            params["lesson"] = self.id
             if copy:
                 id = None
             else:
-                id = i["id"]
-            del i["id"]
+                id = params["id"]
+            del params["id"]
 
-            params = clean_dict(i)
             step = create_any_step(type, f"Step_{steps.index(i)}", id, body, **params)
             self.steps.append(step)
     
@@ -378,7 +374,7 @@ class Section:
         del data2["Title"]
         del data2["id"]
         del data2["Lessons"]
-        self.params = data2
+        self.params = Section_template().dump(data2)
         return self
     
     def load_lessons(self, ids: list[int], copy: bool, session: OAuthSession):
@@ -588,7 +584,8 @@ class Course:
         del content["id"]
         del content["title"]
         del content["sections"]
-        self.params = clean_dict(content)
+        # self.params = clean_dict(content)
+        self.params = Course_template().dump(content)
 
     def load_sections(self, ids: list[int], copy: bool, session: OAuthSession):
         ids_url = [ str(i) for i in ids]
@@ -610,7 +607,8 @@ class Course:
             lessons_ids = i["units"]
             del i["title"]
             del i["units"]
-            params = clean_dict(i)
+            # params = clean_dict(i)
+            params = Section_template().dump(i)
 
             sect = Section(title, **params)
             sect.load_lessons(lessons_ids, copy, session)
