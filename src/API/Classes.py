@@ -7,6 +7,7 @@ import os
 from src.API.Step import StepText, Step, create_any_step
 import pyparsing as pp
 import io
+from src.API.Loading_templates import Step_template, Lesson_template, Section_template, Course_template
 
 class Lesson:
     '''title: str
@@ -89,6 +90,11 @@ class Lesson:
         for i in range(len(self.steps)):
             ans["Steps"].append(self.steps[i].dict_info())
         return ans
+    
+    def get_structure(self):
+        ans = {"id": self.id, "Steps": []}
+        for i in self.steps:
+            ans["Steps"].append(i.id)
 
     def send(self, session: OAuthSession):
 
@@ -265,6 +271,12 @@ class Section:
             ans["Lessons"].append(self.lessons[i].dict_info())
         return ans
     
+    def get_structure(self):
+        ans = {"id": self.id, "Lessons": []}
+        for i in self.lessons:
+            ans["Lessons"].append(i.get_structure())
+        return ans
+    
     def save(self):
         """ Write your section to 'Section's Title'.yaml """
         title = self.title
@@ -417,6 +429,12 @@ class Course:
             ans["Sections"].append( self.sections[i].dict_info() )
         return ans
     
+    def get_structure(self):
+        ans = {"id": self.id, "Sections": []}
+        for i in self.sections:
+            ans["Sections"].append(i.get_structure())
+        return ans
+    
     def create_section(self, section: Section):
         """ insert if position != -1 
             append if position = -1 """
@@ -475,7 +493,7 @@ class Course:
         self.sections[sect_pos].delete_local_lesson(les_pos)
     
     def delete_network_lesson(self, sect_pos: int, les_pos: int, danger = False):
-        """ danger - in case you know what are you doing """
+        """ danger - in case you know what you are doing """
         return self.sections[sect_pos].delete_network_lesson(les_pos, self.session, danger)
 
     def send_all(self):
@@ -597,10 +615,6 @@ class Course:
             sect = Section(title, **params)
             sect.load_lessons(lessons_ids, copy, session)
             self.sections.append(sect)
-
-            
-
-
 
     
     # def load_from_file(self, filename: str):
