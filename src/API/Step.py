@@ -4,17 +4,16 @@ from src.API.OAuthSession import OAuthSession
 from abc import ABC, abstractclassmethod
 import json
 import yaml
-from dataclasses import field, dataclass, asdict
+from dataclasses import field, dataclass
 from typing import Any, Optional
+from src.API.Loading_templates import Step_template
 
 
 def create_any_step(type: str, *args, **kwargs):
     if type == "text":
-        return StepText(*args, **kwargs)
+        return StepText(*args, kwargs)
     if type == "choice":
-
-        return StepChoice( *args, options=[], **kwargs)
-
+        return StepChoice( *args, options=[], params=kwargs)   #заглушка 
 
 @dataclass
 class Step(ABC):
@@ -26,13 +25,14 @@ class Step(ABC):
     lesson_id: int
     body: dict
     params: Optional[Any] = field(default_factory = dict)
+    id = None
 
     def __post_init__(self):
         self.id = self.params.get("id")
 
     def send(self, position: int, session):
         api_url = "https://stepik.org/api/step-sources"
-        optional = asdict(self.params)
+        optional = self.params
         data = {
                 "stepSource": { ** {
                                 "block": {
@@ -51,7 +51,7 @@ class Step(ABC):
         return request_status(r, 201)
     
     def save(self):
-        optional = asdict(self.params)
+        optional = self.params
         data = {
                 "stepSource": { ** {
                                 "block": {
@@ -71,11 +71,33 @@ class Step(ABC):
         yaml.safe_dump(data, file)
         file.close()
 
+    def load_from_file(self, filename):
+        data = ""
+        with open(f"src/API/{filename}", "r") as file:
+            data = yaml.safe_load(file)
+        return self.load_from_dict(data)
+    
+    def load_from_dict(self, data: dict):
+        params = Step_template().dump(data)
+        assert self._type == params["block"]["name"]
+        self.body = params["block"].copy()
+        del params["block"]
+        self.params = params
+
     def get_type(self):
         return self._type
 
     def dict_info(self):
-        ans = { **{"title": self.title, "id": self.id}, "lesson_id": self.lesson_id, "type": self._type, **self.body, **self.params }
+        ans = { 
+            "title": self.title,
+            "id": self.id,
+            "lesson": self.lesson_id,
+            "block": {
+                "name": self._type,
+                 **self.body
+                },
+            **self.params 
+            }
         return ans
     
 
@@ -86,7 +108,7 @@ class StepText(Step):
     def __post_init__(self):
         if self.body.get("text") is None:
             raise "StepText must contain text field"
-        self.body["text"] = f"<p>{self.body['text']}<p>"
+        # self.body["text"] = f"<p>{self.body['text']}<p>"
 
 
 @dataclass
@@ -117,7 +139,7 @@ class StepChoice(Step):
 
     def __post_init__(self):
         self.id = self.params.get("id")
-        self.body["text"] = f"<p>{self.body['text']}<p>"
+        # self.body["text"] = f"<p>{self.body['text']}<p>"
         choices = {
             "is_always_correct": False,
             "sample_size": len(self.options),
