@@ -12,7 +12,8 @@ def create_any_step(type: str, *args, **kwargs):
     if type == "text":
         return StepText(*args, **kwargs)
     if type == "choice":
-        return StepChoice( *args, options=[], **kwargs )
+
+        return StepChoice( *args, options=[], **kwargs)
 
 
 @dataclass
@@ -69,10 +70,6 @@ class Step(ABC):
 
         yaml.safe_dump(data, file)
         file.close()
-    
-    @abstractclassmethod
-    def set_body(self):
-        pass
 
     def get_type(self):
         return self._type
@@ -86,7 +83,7 @@ class Step(ABC):
 class StepText(Step):
     _type = "text"
     
-    def set_body(self):
+    def __post_init__(self):
         if self.body.get("text") is None:
             raise "StepText must contain text field"
         self.body["text"] = f"<p>{self.body['text']}<p>"
@@ -125,20 +122,11 @@ class StepChoice(Step):
             "is_always_correct": False,
             "sample_size": len(self.options),
             "is_html_enabled": True,
-            "is_options_feedback": all([self.options[i][2] for i in range(len(self.options))])
+            "is_options_feedback": all([i.get_option()["feedback"] for i in self.options])
             }
         if self.options:
             choices["options"] = [ i.get_option() for i in self.options ]
         else:
             choices["options"] = self.body["source"]["options"]
-        self.body["source"] = choices
-    
-    def set_body(self):
-        # self._type = "choice"
-        # # if self.body.get("source") is None:            // steel without checking
-        # #     raise "StepText must contain text field"
-        # self.body["text"] = f"<p>{self.body['text']}<p>"
-        # self.body["source"]["options"] = [ self.options[i].get_option() for i in range(len(self.options)) ]
-        # self.body["source"]["is_multiple_choice"] = self.is_multiple_choice
-        # # self.body["sample_size"] = len( self.body["source"]["options"] )
-        pass
+        for i in choices.keys():
+            self.body["source"][i] = choices[i]

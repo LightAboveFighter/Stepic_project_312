@@ -17,3 +17,6 @@ from src.API.Step import StepChoice as SC
 # print(a.send(1, auth.OAuthSession()))
 # # a.save()
 
+a = cl.Course()
+a.load_from_net(198266, False, auth.OAuthSession())
+a.save()

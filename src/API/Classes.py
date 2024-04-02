@@ -7,6 +7,7 @@ import os
 from src.API.Step import StepText, Step, create_any_step
 import pyparsing as pp
 import io
+from src.API.Loading_templates import Step_template, Lesson_template, Section_template, Course_template
 
 class Lesson:
     '''title: str
@@ -492,7 +493,7 @@ class Course:
         self.sections[sect_pos].delete_local_lesson(les_pos)
     
     def delete_network_lesson(self, sect_pos: int, les_pos: int, danger = False):
-        """ danger - in case you know what are you doing """
+        """ danger - in case you know what you are doing """
         return self.sections[sect_pos].delete_network_lesson(les_pos, self.session, danger)
 
     def send_all(self):
