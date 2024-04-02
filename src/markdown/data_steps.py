@@ -26,6 +26,7 @@ class DataStepChoice(DataStep):
     # Text before answer variants
     # text: list[str] = []
     def add_info(self, lines: list[str]):
+        # Нужно будет отпарсить все строчки находящиеся в lines
         pass
 
 # @dataclass
@@ -33,4 +34,5 @@ class DataStepQuiz(DataStep):
     # Text before answer variants
     # tex: list[str] = []
     def add_info(self, lines: list[str]):
+        # Нужно будет отпарсить все строчки находящиеся в lines
         pass

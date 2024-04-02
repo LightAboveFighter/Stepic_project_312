@@ -3,7 +3,9 @@ from data_steps import *
 
 class ParsingModuleSchema():
     __step_types = ['QUIZ', 'CHOICE', 'TEXT']    # Стоит добавить функция для изменения этого списка (или нет)
-    __addon_types = ['lesson', 'lang']
+    __header_addons = ['lesson', 'lang']
+    __body_addons = ['ANSWER', 'HINT', 'SHUFFLE']
+    __
     @staticmethod
     def lesson():
         lesson_title = pp.rest_of_line() ('title')
@@ -22,12 +24,21 @@ class ParsingModuleSchema():
     
     @staticmethod
     def header_addon():
-        addon = pp.one_of(ParsingModuleSchema.__addon_types,
+        addon = pp.one_of(ParsingModuleSchema.__header_addons,
                           as_keyword=True) ('type')  # Проверить: работает ли "=" перед keyword
         addon_value = pp.rest_of_line() ('value')
         addon_module = addon + pp.Suppress(pp.ZeroOrMore(pp.White()) \
                        + '=' + pp.ZeroOrMore(pp.White())) + addon_value
         return addon_module
+
+    @staticmethod
+    def body_addon():
+        addon = pp.one_of(ParsingModuleSchema.__body_addons,
+                          as_keyword=True) ('type')
+        addon_value = pp.rest_of_line() ('value')
+        addon_module = addon + pp.Suppress(pp.ZeroOrMore(pp.White()) \
+                       + ':' + pp.ZeroOrMore(pp.White())) + addon_value
+        return addon_module 
 
 # Not fully implemented
 class DataStepCreationSchema():
