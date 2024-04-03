@@ -38,10 +38,10 @@ def clean_yaml(name: str):
 
 def clean_dict(data: dict):
     data2 = data.copy()
-    for i in data.keys():
-        if isinstance(data[i], dict):
-            data2[i] = clean_dict(data2[i])
-        if not data[i]:
-            del data2[i]
-            continue
+    # for i in data.keys():
+    #     if isinstance(data[i], dict):
+    #         data2[i] = clean_dict(data2[i])
+    #     if not data[i]:
+    #         del data2[i]
+    #         continue
     return data2

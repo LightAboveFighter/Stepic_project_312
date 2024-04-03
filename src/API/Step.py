@@ -4,38 +4,31 @@ from src.API.OAuthSession import OAuthSession
 from abc import ABC, abstractclassmethod
 import json
 import yaml
-from dataclasses import dataclass
+from dataclasses import field, dataclass
+from typing import Any, Optional
+from src.API.Loading_templates import Step_template
 
 
 def create_any_step(type: str, *args, **kwargs):
     if type == "text":
-        return StepText(*args, **kwargs)
+        return StepText(*args, kwargs)
     if type == "choice":
-        is_m_ch = args[2]["options"].get("is_multiple_choice") or False
-        pr_order = args[2].get("preserve_order") or False
-        return StepChoice( *args, is_multiple_choice=is_m_ch, preserve_order=pr_order, options=[], **kwargs )
-
+        return StepChoice( *args, options=[], params=kwargs)   #заглушка 
 
 @dataclass
 class Step(ABC):
-
+    """ body - dict of main class parameters 
+    example: {'text':  [str],
+                'source':  [Any]}
     """
+    title: str
     lesson_id: int
-    position: int
-    (abstract) type_info: Any or tuple(Any)
-    """
-    def __init__(self, title: str, lesson_id: int, body: dict, **params):
-        """ body - dict of main class parameters 
-        example: {'text':  [str],
-                  'source':  [Any]}
-        """
+    body: dict
+    params: Optional[Any] = field(default_factory = dict)
+    id = None
 
-        self.lesson_id = lesson_id
-        self.title = title
-        self.params = params
-        self.body = body
-        self.set_body()
-        self.id = params.get("id")
+    def __post_init__(self):
+        self.id = self.params.get("id")
 
     def send(self, position: int, session):
         api_url = "https://stepik.org/api/step-sources"
@@ -77,27 +70,45 @@ class Step(ABC):
 
         yaml.safe_dump(data, file)
         file.close()
+
+    def load_from_file(self, filename):
+        data = ""
+        with open(f"src/API/{filename}", "r") as file:
+            data = yaml.safe_load(file)
+        return self.load_from_dict(data)
     
-    @abstractclassmethod
-    def set_body(self):
-        pass
+    def load_from_dict(self, data: dict):
+        params = Step_template().dump(data)
+        assert self._type == params["block"]["name"]
+        self.body = params["block"].copy()
+        del params["block"]
+        self.params = params
 
     def get_type(self):
         return self._type
 
     def dict_info(self):
-        ans = { **{"title": self.title, "id": self.id}, "lesson_id": self.lesson_id, "type": self._type, **self.body, **self.params}
+        ans = { 
+            "title": self.title,
+            "id": self.id,
+            "lesson": self.lesson_id,
+            "block": {
+                "name": self._type,
+                 **self.body
+                },
+            **self.params 
+            }
         return ans
     
 
 @dataclass(init=False)
 class StepText(Step):
+    _type = "text"
     
-    def set_body(self):
-        self._type = "text"
+    def __post_init__(self):
         if self.body.get("text") is None:
             raise "StepText must contain text field"
-        self.body["text"] = f"<p>{self.body['text']}<p>"
+        # self.body["text"] = f"<p>{self.body['text']}<p>"
 
 
 @dataclass
@@ -117,33 +128,27 @@ class StepChoice(Step):
                 "text": self.text,
                 "feedback": self.feedback
                 }
-
-    def __init__(self, title: str, lesson_id: int, body: dict, is_multiple_choice: bool, preserve_order: bool, options: list[Option], **params):
-        self._type = "choice"
-        add_body = body.copy()
-        add_body["text"] = f"<p>{body['text']}<p>"
-        choices = {
-            "is_multiple_choice": is_multiple_choice,
-            "is_always_correct": False,
-            "sample_size": len(options),
-            "preserve_order": preserve_order,
-            "is_html_enabled": True,
-            "is_options_feedback": all([options[i][2] for i in range(len(options))])
-            }
-        if options:
-            choices["options"] = [ i.get_option() for i in options ]
-        else:
-            choices["options"] = body["source"]["options"]
-        add_body["source"] = choices
-
-        super().__init__(title, lesson_id, add_body, **params)
+        
+    title: str
+    lesson_id: int
+    body: dict
+    options: list[Option] = field(default_factory = list)
+    params: Optional[dict] = field(default_factory = dict)
+    _type = "choice"
     
-    def set_body(self):
-        # self._type = "choice"
-        # # if self.body.get("source") is None:            // steel without checking
-        # #     raise "StepText must contain text field"
+
+    def __post_init__(self):
+        self.id = self.params.get("id")
         # self.body["text"] = f"<p>{self.body['text']}<p>"
-        # self.body["source"]["options"] = [ self.options[i].get_option() for i in range(len(self.options)) ]
-        # self.body["source"]["is_multiple_choice"] = self.is_multiple_choice
-        # # self.body["sample_size"] = len( self.body["source"]["options"] )
-        pass
+        choices = {
+            "is_always_correct": False,
+            "sample_size": len(self.options),
+            "is_html_enabled": True,
+            "is_options_feedback": all([i.get_option()["feedback"] for i in self.options])
+            }
+        if self.options:
+            choices["options"] = [ i.get_option() for i in self.options ]
+        else:
+            choices["options"] = self.body["source"]["options"]
+        for i in choices.keys():
+            self.body["source"][i] = choices[i]
