@@ -40,7 +40,7 @@ def test_single_choice():
     }
     '''
     questions = get_gift_dicts_from_text(text)
-    q = questions[0]
+    q = questions[0].dict_info()
     assert q == json.loads(expected_json)
 
 
@@ -52,7 +52,7 @@ def test_single_choice_feedback():
     { =yellow # right; good! ~red # wrong, it's yellow ~blue # wrong, it's yellow }
     '''
     questions = get_gift_dicts_from_text(text)
-    q = questions[0]
+    q = questions[0].dict_info()
     assert q['source']['options'][0]['feedback'] == 'right; good!'
     assert q['source']['options'][1]['feedback'] == "wrong, it\'s yellow"
     assert q['source']['options'][2]['feedback'] == "wrong, it\'s yellow"
@@ -69,7 +69,7 @@ def test_is_multiple_choise_value():
     ::Q2:: What's between orange and green in the spectrum? 
     { ~%50%yellow # right; good! ~%-100%red # wrong, it's yellow ~%50%yellow2 # it's yellow }
     '''
-    questions = [get_gift_dicts_from_text(text_single)[0], get_gift_dicts_from_text(text_multiple)[0]]
+    questions = [get_gift_dicts_from_text(text_single)[0].dict_info(), get_gift_dicts_from_text(text_multiple)[0].dict_info()]
     assert questions[0]['source']['is_multiple_choice'] == False
     assert questions[1]['source']['is_multiple_choice'] == True
 
@@ -79,7 +79,7 @@ def test_true_false_generation():
     text = '''
     ::Q1:: 1+1=2 {T}
     '''
-    question = get_gift_dicts_from_text(text)[0]
+    question = get_gift_dicts_from_text(text)[0].dict_info()
     expected_json = '''
     {
         "name": "choice",
@@ -111,9 +111,9 @@ def test_function_short_generator():
    text1 = 'Two plus two equals {=four =4 =\"четыре\"}' 
    text2 = 'Two plus two equals {=four =4 =\'четыре\'}' 
    text3 = 'Two plus two equals {=four =4 ="четыре"}' 
-   question = [get_gift_dicts_from_text(text1)[0],
-               get_gift_dicts_from_text(text2)[0],
-               get_gift_dicts_from_text(text3)[0]]
+   question = [get_gift_dicts_from_text(text1)[0].dict_info(),
+               get_gift_dicts_from_text(text2)[0].dict_info(),
+               get_gift_dicts_from_text(text3)[0].dict_info()]
    for block in question:
         namspace = types.SimpleNamespace()
         exec(block["source"]["code"],namspace.__dict__)
