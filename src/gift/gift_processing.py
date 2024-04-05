@@ -31,6 +31,7 @@ STEPIK_name_types = {"MultipleChoiceCheckbox()": "choice",
                      "Numerical()":"number",
                      "MultipleNumerical()":"number",
                      "Essay()":"free-answer",
+                     "Description()":"text",
                     }
 STEPIK_sampe_size = 10
 
@@ -152,25 +153,30 @@ def __data_essay__(x:giftparser.gift.Question):
       },
     })
 
+def __data_description__(x:giftparser.gift.Question):
+    return dict({"options": None})
+
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
     if (
         str(x.answer.__repr__()) == "MultipleChoiceRadio()"
         or str(x.answer.__repr__()) == "MultipleChoiceCheckbox()"
     ):
-        return create_any_step("choice","", 0, {"source":__data_multiple_choice__(x)})
+        return {"source":__data_multiple_choice__(x)}
     if str(x.answer.__repr__()) == "TrueFalse()":
-        return create_any_step("choice","", 0, {"source":__data_true_false__(x)})
+        return {"source":__data_true_false__(x)}
     if str(x.answer.__repr__()) == "Short()":
-        return create_any_step("string","", 0, __data_short__(x))
+        return __data_short__(x)
     if str(x.answer.__repr__()) == "Matching()":
-        return create_any_step("matching","", 0, __data_matching__(x))
+        return __data_matching__(x)
     if str(x.answer.__repr__()) == "Numerical()": 
-        return create_any_step("number","", 0, __data_numerical__(x))
+        return __data_numerical__(x)
     if str(x.answer.__repr__()) == "MultipleNumerical()":
-        return create_any_step("number","", 0, __data_multiple_numerical__(x))
+        return __data_multiple_numerical__(x)
     if str(x.answer.__repr__()) == "Essay()":
-        return create_any_step("free-answer","", 0, __data_essay__(x))
+        return __data_essay__(x)
+    if str(x.answer.__repr__()) == "Description()":
+        return __data_description__(x)
     return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
 
@@ -184,8 +190,12 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
         question_data["name"] = STEPIK_name_types[question.answer.__repr__()]
     question_data["text"] = question.text + (' _______ ' + question.text_continue if question.text_continue else '')
     options: dict = __get_question_options__(question)
-    #question_data = question_data | options # FIXME from config
-    return options
+    question_data = question_data | options # FIXME from config
+    question_type = question_data["name"]
+    title = question.name
+    if title in question_data["text"]:
+        log.info(f'title \"{title}\" title is contained in question, maby title is incorrect!')
+    return create_any_step(question_type, title if title else "", 0, question_data)
 
 
 def get_gift_dicts(filename: str) -> list:
@@ -241,5 +251,7 @@ if __name__ == "__main__":
     args = parse_input_arguments()
     for i in get_gift_dicts(args.file):  
         #print("\n\n",type(i))
+        if not i:
+            continue
         print(json.dumps(i.dict_info(), indent=4))
 
