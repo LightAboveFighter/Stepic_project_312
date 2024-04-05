@@ -1,9 +1,11 @@
 from pygiftparser import parser as giftparser
+import pprint
 import json
 import sys
 import logging as log
 sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
 #from src.API.Classes import Step_text #FIXME 
+from src.API.Step import create_any_step
 
 from logs.project_logger import activate_logger
 
@@ -74,7 +76,7 @@ def __data_true_false__(x: giftparser.gift.Question):
     return options
 
 
-def __function_short_generator__(x : giftparser.gift.Question): #FIXME make a more "smart" check
+def __function_short_generator__(x : giftparser.gift.Question): #FIXME make a more "smart" check198266
     checker = ""
     for i in x.answer.options:
         if i.percentage > 0.95:
@@ -156,21 +158,20 @@ def __get_question_options__(x: giftparser.gift.Question) -> dict:
         str(x.answer.__repr__()) == "MultipleChoiceRadio()"
         or str(x.answer.__repr__()) == "MultipleChoiceCheckbox()"
     ):
-        return {"source":__data_multiple_choice__(x)}
+        return create_any_step("choice","", 0, {"source":__data_multiple_choice__(x)})
     if str(x.answer.__repr__()) == "TrueFalse()":
-        return {"source":__data_true_false__(x)}
+        return create_any_step("choice","", 0, {"source":__data_true_false__(x)})
     if str(x.answer.__repr__()) == "Short()":
-        return {"source":__data_short__(x)}
+        return create_any_step("string","", 0, __data_short__(x))
     if str(x.answer.__repr__()) == "Matching()":
-        return __data_matching__(x)
+        return create_any_step("matching","", 0, __data_matching__(x))
     if str(x.answer.__repr__()) == "Numerical()": 
-        return __data_numerical__(x)
+        return create_any_step("number","", 0, __data_numerical__(x))
     if str(x.answer.__repr__()) == "MultipleNumerical()":
-        return __data_multiple_numerical__(x)
+        return create_any_step("number","", 0, __data_multiple_numerical__(x))
     if str(x.answer.__repr__()) == "Essay()":
-        return __data_essay__(x)
-    else:
-        return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
+        return create_any_step("free-answer","", 0, __data_essay__(x))
+    return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
 
 
@@ -183,8 +184,8 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
         question_data["name"] = STEPIK_name_types[question.answer.__repr__()]
     question_data["text"] = question.text + (' _______ ' + question.text_continue if question.text_continue else '')
     options: dict = __get_question_options__(question)
-    question_data = question_data | options # FIXME from config
-    return question_data
+    #question_data = question_data | options # FIXME from config
+    return options
 
 
 def get_gift_dicts(filename: str) -> list:
@@ -217,7 +218,7 @@ def get_gift_dicts_from_text(text: str) -> list:
             + CEND
         )
         raise RuntimeError
-    questions: list = [__get_question_data__(i) for i in parse_result.questions]
+    questions: list = [ __get_question_data__(i) for i in parse_result.questions]
     return questions
 
 
@@ -239,6 +240,6 @@ if __name__ == "__main__":
 
     args = parse_input_arguments()
     for i in get_gift_dicts(args.file):  
-        print("\n\n",i['name'])
-        print(json.dumps(i, indent=4))
+        #print("\n\n",type(i))
+        print(json.dumps(i.dict_info(), indent=4))
 
