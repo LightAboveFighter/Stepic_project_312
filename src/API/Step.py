@@ -6,27 +6,25 @@ import json
 import yaml
 from dataclasses import field, dataclass
 from typing import Any, Optional
-from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique
+from src.API.Loading_templates import Step_template, Step_block_template, ChoiceUnique, CodeUnique
 from enum import Enum
 
 
 def create_any_step(type: str, *args, **kwargs):
 
     if type == "text":
-        kwargs.pop("unique")
+        kwargs.pop("unique", None)
         
         title, lesson_id, body = ( args[i] if i < len(args) else None for i in range(3) )
         args_corr = (kwargs.get("title") or title, kwargs.get("lesson") or lesson_id, kwargs.get("block") or body)
         kwargs.pop("title", None)
         kwargs.pop("lesson", None)
         kwargs.pop("block", None)
-        return StepText(*args_corr, kwargs)
+        return StepText(*args_corr, params=kwargs)
 
     title, lesson_id, body, unique = ( args[i] if i < len(args) else None for i in range(4) )
-    title = kwargs.get("title") or title
-    lesson_id = kwargs.get("lesson_id") or lesson_id
-    body = kwargs.get("body") or body
-    unique = kwargs.get("source") or unique
+
+    unique = kwargs.get("unique") or unique
 
     args_corr = (kwargs.get("title") or title, kwargs.get("lesson") or lesson_id, kwargs.get("block") or body)
     kwargs.pop("title", None)
@@ -105,8 +103,8 @@ class Step(ABC):
     def load_from_dict(self, data: dict):
         params = Step_template().dump(data)
         assert self._type == params["block"]["name"]
+        del params["block"]["name"]
         self.body = params["block"]
-        print(self.body)
         del params["block"]
         self.params = params
 
@@ -127,12 +125,16 @@ class Step(ABC):
         return ans
     
 
-@dataclass(init=False)
+@dataclass()
 class StepText(Step):
+
+    title: str
+    lesson_id: int
+    body: dict
+    params: Optional[Any] = field(default_factory = dict)
     _type = "text"
     
     def __post_init__(self):
-        print(self.unique, self.body, self.params)
         if self.body.get("text") is None:
             raise "StepText must contain text field"
         # self.body["text"] = f"<p>{self.body['text']}<p>"
@@ -165,7 +167,8 @@ class StepChoice(Step):
         options: list[tuple] = field(default_factory= list)
 
         def __post_init__(self):
-            self.options = [ Option(*i) for i in self.options if isinstance(i, tuple) ]
+            self.options = [ self.Option(*i) if isinstance(i, tuple) else self.Option(**i) for i in self.options  ]
+
         def get_dict(self):
             return {
                 "preserve_order": self.preserve_order,
@@ -174,20 +177,16 @@ class StepChoice(Step):
 
     def __post_init__(self):
         self.id = self.params.get("id")
-        # self.body["text"] = f"<p>{self.body['text']}<p>"
         source = self.unique.get_dict()
-        choices = {
+        choices = { **{
             "is_always_correct": False,
             "sample_size": len(self.unique.options),
-            "preserve_order": self.unique.preserve_order,
             "is_html_enabled": True,
             "is_options_feedback": all([i.get_option()["feedback"] for i in self.unique.options]),
-            "source": source
+            },
+             **source,
             }
-        # if self.unique.options:
-        #     choices["options"] = [ i.get_option() for i in self.unique.options ]
-        # else:
-        #     choices["options"] = self.body["source"]["options"]
+
         for i in choices.keys():
             self.body["source"][i] = choices[i]
 

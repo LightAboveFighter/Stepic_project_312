@@ -7,19 +7,3 @@ from src.API.Step import StepChoice as SC
     pytest -m local  -  запустит тесты функций не требующих подключение к интернету
     pytest -m network  -  запустит тесты требующие подключение к интернету
 """
-
-# a = cl.Lesson("2_7_global.md")
-# a.save()
-# a.send(auth.OAuthSession(), send_all=True)
-# a.save()
-
-# a = SC("Choice title", 1243955, {"text": "Choose one of this variants:"}, True, [SC.Option(True, "Text 1 tutu"), SC.Option(False, "Text 2 fls", ":("), SC.Option(False, "dgdrg", "srgsgsdf")], cost=19)
-# print(a.send(1, auth.OAuthSession()))
-# # a.save()
-
-a = cl.Course()
-# a.load_from_net(198266, True, auth.OAuthSession())
-# a.save()
-a.load_from_file("Py Course.yaml")
-a.auth(auth.OAuthSession())
-a.send_all()

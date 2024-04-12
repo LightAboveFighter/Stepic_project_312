@@ -183,8 +183,6 @@ class Lesson:
         for i in data["Steps"]:
             type = i["block"]["name"]
             unique = i["block"]["source"].copy()
-            del i["block"]["name"]
-            del i["block"]["source"]
 
             st = create_any_step(type, **i, unique=unique)
 
