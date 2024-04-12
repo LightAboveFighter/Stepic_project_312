@@ -18,5 +18,8 @@ from src.API.Step import StepChoice as SC
 # # a.save()
 
 a = cl.Course()
-a.load_from_net(198266, False, auth.OAuthSession())
-a.save()
+# a.load_from_net(198266, True, auth.OAuthSession())
+# a.save()
+a.load_from_file("Py Course.yaml")
+a.auth(auth.OAuthSession())
+a.send_all()

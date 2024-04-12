@@ -181,14 +181,16 @@ class Lesson:
         self.sect_ids = data["Sect_ids"]
         self.steps = []
         for i in data["Steps"]:
-            type = i["type"]
-            les_id = i["lesson_id"]
-            del i["type"]
-            del i["lesson_id"]
-            st = create_any_step(type, self.title, les_id, i)
+            type = i["block"]["name"]
+            unique = i["block"]["source"].copy()
+            del i["block"]["name"]
+            del i["block"]["source"]
+
+            st = create_any_step(type, **i, unique=unique)
+
             self.steps.append(st)
 
-        data2 = data
+        data2 = data.copy()
         del data2["Title"]
         del data2["id"]
         del data2["Sect_ids"]
@@ -247,7 +249,9 @@ class Lesson:
                 id = params["id"]
             del params["id"]
 
-            step = create_any_step(type, f"Step_{steps.index(i)}", id, body, **params)
+            unique = body["source"]
+            
+            step = create_any_step(type, f"Step_{steps.index(i)}", id, body, unique, **params)
             self.steps.append(step)
     
 

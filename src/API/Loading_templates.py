@@ -4,6 +4,26 @@ class Base(Schema):
     id = fields.Integer(required=True)
     title = fields.String(required=True)
 
+
+class ChoiceUnique(Schema):
+
+    class Options(Schema):
+        text = fields.Str()
+        is_correct = fields.Bool()
+        feedback = fields.Str()
+
+    preserve_order = fields.Bool()
+    options = fields.Nested("Options", many=True)
+
+class CodeUnique(Schema):
+
+    code = fields.Str()
+    execution_time_limit = fields.Int()
+    execution_memory_limit = fields.Int()
+    templates_data = fields.Str()
+    test_cases = fields.List(fields.List(fields.Str()))
+
+
 class Step_block_template(Schema):
     text = fields.Str()
     name = fields.Str(required=True)
@@ -13,6 +33,7 @@ class Step_block_template(Schema):
 class Step_template(Schema):
     id = fields.Integer(required=True)
     cost = fields.Int()
+    lesson = fields.Int()
     block = fields.Nested("Step_block_template")
 
 class Lesson_template(Base):  
