@@ -6,7 +6,7 @@ import json
 import yaml
 from dataclasses import field, dataclass
 from typing import Any, Optional
-from src.API.Loading_templates import Step_template, Step_block_template, ChoiceUnique, CodeUnique
+from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique
 from enum import Enum
 
 
@@ -155,7 +155,7 @@ class StepChoice(Step):
             text: str
             is_correct: bool = False
             feedback: str = ""
-
+        
             def get_option(self):
                 return {
                     "is_correct": self.is_correct,
@@ -202,10 +202,16 @@ class StepCode(Step):
         execution_memory_limit: int
         templates_data: str
         test_cases: list[list[str]]
+        samples_count: int = None          #amount if tests you will show to student
+        is_time_limit_scaled: bool = False
+        is_memory_limit_scaled: bool = False
+        manual_time_limits: list = field(default_factory=list)
+        manual_memory_limits: list = field(default_factory=list)
 
         def __post_init__(self):
             for i in self.test_cases:
                 assert len(i) == 2   # TestCase must have two fields: question and answer
+            self.samples_count = self.samples_count or len(self.test_cases)
 
         def get_dict(self):
             return {
@@ -213,7 +219,13 @@ class StepCode(Step):
                 "execution_time_limit": self.execution_time_limit,
                 "execution_memory_limit": self.execution_memory_limit,
                 "templates_data": self.templates_data,
-                "test_cases": self.test_cases
+                "test_cases": self.test_cases,
+                "samples_count": self.samples_count,
+                "is_time_limit_scaled": self.is_time_limit_scaled,
+                "test_archive": [],        #for sending files
+                "is_memory_limit_scaled": self.is_memory_limit_scaled,
+                "manual_time_limits": self.manual_time_limits,
+                "manual_memory_limits": self.manual_memory_limits
             }
 
     def __post_init__(self):

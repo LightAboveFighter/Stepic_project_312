@@ -21,6 +21,8 @@ class CodeUnique(Schema):
     execution_time_limit = fields.Int()
     execution_memory_limit = fields.Int()
     templates_data = fields.Str()
+    is_time_limit_scaled = fields.Bool(required=True)
+    samples_count = fields.Int()
     test_cases = fields.List(fields.List(fields.Str()), required=True)
 
 
