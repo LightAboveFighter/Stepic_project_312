@@ -1,10 +1,11 @@
 import pyparsing as pp
-from data_steps import *
+
 
 class ParsingModuleSchema():
     __step_types = ['QUIZ', 'CHOICE', 'TEXT']    # Стоит добавить функция для изменения этого списка (или нет)
     __header_addons = ['lesson', 'lang']
     __body_addons = ['ANSWER', 'HINT', 'SHUFFLE']
+    __choice_types = ['+', '-']
     @staticmethod
     def lesson():
         lesson_title = pp.rest_of_line() ('title')
@@ -39,33 +40,10 @@ class ParsingModuleSchema():
                        + ':' + pp.ZeroOrMore(pp.White())) + addon_value
         return addon_module 
 
-# Not fully implemented
-class DataStepCreationSchema():
     @staticmethod
-    def create_step(type,
-                    name,
-                    id = None
-    ) -> DataStep:   # пока что не знаю что мне делать с id
-        if type == pp.Empty():
-            type = 'TEXT'
-        match type:
-            case 'TEXT':
-                return DataStepText(name)
-            case 'QUIZ':
-                return DataStepQuiz(name)
-            case 'CHOICE':
-                return DataStepChoice(name)
-            case _:
-                raise Exception('Unexpected step type.')
-
-    @staticmethod
-    def text():
-        pass
-
-    @staticmethod
-    def choice():
-        pass
-
-    @staticmethod
-    def quiz():
-        pass
+    def choice_variant():
+        choicevar_type = pp.one_of(ParsingModuleSchema.__choice_types) ('type')
+        choicevar_value = pp.rest_of_line() ('value')
+        choicevar_module = choicevar_type + pp.Suppress(')' \
+                           + pp.ZeroOrMore(pp.White())) + choicevar_value
+        return choicevar_module

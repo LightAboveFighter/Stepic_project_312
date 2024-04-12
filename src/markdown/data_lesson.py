@@ -2,7 +2,6 @@
 from data_steps import *
 from schemas import *
 import pyparsing as pp
-from abc import ABC
 import io
 
 class DataLesson:
@@ -28,7 +27,6 @@ class DataLesson:
                         addon = ParsingModuleSchema.header_addon().parseString(addon_line)
                         self.params[str(addon.type)] = (addon.value).strip()
                         
-            
             # Writting down steps of the lesson
             self.steps = []
             step_lines = []
