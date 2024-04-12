@@ -1,4 +1,4 @@
-# from dataclasses import dataclass
+from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from schemas import *
 
@@ -28,35 +28,51 @@ class DataStepText(DataStep):
 class DataStepChoice(DataStep):
     # Text before answer variants
     '''text: list[str]
-    correct: dict
-    incorrect: dict
+    variants: list[variant_data]
     step_addons: dict'''
-    def add_variant(self, variant):
-        match (variant.type):
-            case '+':
-                self.correct[variant.value] = None
-            case '-':
-                self.incorrect[variant.value] = None
-            case _:
-                raise Exception('Undefined type of choice variant.')
+    # option 
+    # {
+    #   text 
+    #   is_correct
+    # feedback
+    # }
 
-    def add_feedback(self, variant, feedback):
+    class variant:
+        def __init__(self, text: str, is_correct: str, feedback: str = None):
+            self.text = text
+            if is_correct == '+':
+                self.is_correct = True
+            elif is_correct == '-':
+                self.is_correct = False
+            else:
+                raise Exception('Undefined type of variant_data.')
+            self.feedback = feedback
+
+    def add_variant(self, variant_data):
+        match (variant_data.type):
+            case '+':
+                self.correct[variant_data.value] = None
+            case '-':
+                self.incorrect[variant_data.value] = None
+            case _:
+                raise Exception('Undefined type of choice variant_data.')
+
+    def add_feedback(self, variant_data, feedback):
         if feedback.type != 'HINT':
             raise Exception('Wrong feedback type.')
 
-        match (variant.type):
+        match (variant_data.type):
             case '+':
-                self.correct[variant.value] = feedback.value
+                self.correct[variant_data.value] = feedback.value
             case '-':
-                self.incorrect[variant.value] = feedback.value
+                self.incorrect[variant_data.value] = feedback.value
             case _:
-                raise Exception('Undefined type of choice variant.')
+                raise Exception('Undefined type of choice variant_data.')
 
     def add_info(self, lines: list[str]):
         self.text = []
-        self.correct = {}
-        self.incorrect = {}
-        self.step_addons = {'SHUFFLE' : 'false'}
+        self.variants = []
+        self.step_addons = {'SHUFFLE' : 'true'}
 
         getting_text = True
         getting_variants = False
@@ -65,15 +81,16 @@ class DataStepChoice(DataStep):
         for l in lines:
             if getting_text:
                 try:
-                    variant = ParsingModuleSchema.choice_variant().parseString(l)
-                    self.add_variant(variant)
+                    variant_data = ParsingModuleSchema.choice_variant().parseString(l)
+                    # add_variant
+                    self.variants.append(DataStepChoice.variant(variant_data.value, variant_data.type))
                     getting_text = False
                     getting_variants = True
                     continue
                 except pp.ParseException:
                     self.text.append(l)
                     continue
-
+                    
             if getting_variants:
                 try:
                     feedback = ParsingModuleSchema.body_addon().parseString(l)
@@ -82,11 +99,13 @@ class DataStepChoice(DataStep):
                         getting_variants = False
                         getting_end = True
                         continue
-                    self.add_feedback(variant, feedback)
+                    # self.add_feedback(variant_data, feedback)
+                    self.variants[-1].feedback = feedback.value
                 except pp.ParseException:
                     if l != pp.Empty():
-                        variant = variant = ParsingModuleSchema.choice_variant().parseString(l)
-                        self.add_variant(variant)
+                        variant_data = ParsingModuleSchema.choice_variant().parseString(l)
+                        # self.add_variant(variant_data)
+                        self.variants.append(DataStepChoice.variant(variant_data.value, variant_data.type))
                     continue
                     
             if getting_end:
