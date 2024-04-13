@@ -5,3 +5,8 @@ watch_token.py
 something.txt
 something2.txt
 2_users.txt
+.pytest_cache
+__pycache__
+Seminars
+*.yaml
+.*

@@ -1,0 +1,2 @@
+
+DELETE "https://stepik.org/api/courses/{course_id}"

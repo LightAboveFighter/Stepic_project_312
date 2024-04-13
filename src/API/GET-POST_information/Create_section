@@ -1,0 +1,90 @@
+
+POST https://stepik.org/api/sections
+{
+    "section": {
+                                                "schedule_type": null,
+                                                "begin_date": null,
+                                                "begin_date_source": null,
+                                                "end_date": null,
+                                                "end_date_source": null,
+                                                "grading_policy": null,
+                                                "grading_policy_source": null,
+                                                "hard_deadline": null,
+                                                "hard_deadline_source": null,
+                                                "soft_deadline": null,
+                                                "soft_deadline_source": null,
+                                                "has_progress": false,
+                                                "progress_id": null,
+                                                "discounting_policy": "no_discount",
+        "position": 1,
+        "required_percent": 100,
+                                                "slug": null,
+        "title": "Новый модуль",
+        "description": "Dop description LLLLLLLLL",
+        "course": "198026",
+        "is_exam": false,                 - экзаминационный ли модуль. Если да, то настройки экзамена:
+            "is_exam_without_progress": false,
+            "is_random_exam": false,
+            "random_exam_problems_count": 20,
+            "has_proctor_session": false,
+            "is_requirement_satisfied": false,
+            "is_proctoring_can_be_scheduled": false,
+            "exam_duration_minutes": 120,
+            "proctor_session": null,
+                                                "progress": null,
+                                                "required_section": null,
+                                                "exam_session": null,
+                                                "random_exam_problems_course": null
+    }
+}
+
+В ответ получаем следующую форму:
+id = ans["sections"]["id"]
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "sections": [
+        {
+            "id": 393863,
+            "course": 198026,
+            "units": [],
+            "position": 1,
+            "discounting_policy": "no_discount",
+            "progress": "79-393863",
+            "actions": {
+                "test_section": "#"
+            },
+            "required_section": null,
+            "required_percent": 100,
+            "is_requirement_satisfied": true,
+            "is_exam": false,
+            "is_exam_without_progress": false,
+            "is_random_exam": false,
+            "exam_duration_minutes": 120,
+            "random_exam_problems_course": null,
+            "random_exam_problems_count": 20,
+            "exam_session": null,
+            "proctor_session": null,
+            "description": "Dop description LLLLLLLLL",
+            "is_proctoring_can_be_scheduled": false,
+            "title": "\u041d\u043e\u0432\u044b\u0439 \u043c\u043e\u0434\u0443\u043b\u044c",
+            "slug": "\u041d\u043e\u0432\u044b\u0439-\u043c\u043e\u0434\u0443\u043b\u044c-393863",
+            "begin_date": null,
+            "end_date": null,
+            "soft_deadline": null,
+            "hard_deadline": null,
+            "grading_policy": "no_deadlines",
+            "begin_date_source": null,
+            "end_date_source": null,
+            "soft_deadline_source": null,
+            "hard_deadline_source": null,
+            "grading_policy_source": null,
+            "is_active": true,
+            "create_date": "2024-02-24T20:57:16.925Z",
+            "update_date": "2024-02-24T20:57:16.925Z"
+        }
+    ]
+}

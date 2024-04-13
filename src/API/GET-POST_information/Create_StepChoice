@@ -1,0 +1,61 @@
+
+
+POST - https://stepik.org/api/step-sources
+
+{
+    "stepSource": {
+        // "reason_of_failure": null,
+        // "instruction_id": null,
+        // "has_instruction": false,
+        // "cost": 1,
+        // "is_solutions_unlocked": false,
+        // "solutions_unlocked_attempts": 3,
+        // "max_submissions_count": 3,
+        // "has_submissions_restrictions": false,
+        // "create_date": null,
+        "block": {
+            "text": "Вы можете изменить условие задания в этом поле и указать настройки ниже. <br><br> Чему равняется 1004 разделить на 2?",
+            "name": "choice",
+            // "video": null,
+            // "options": null,
+            "source": {
+                "is_multiple_choice": false,
+                "is_always_correct": false,
+                "sample_size": 4,
+                "preserve_order": false,
+                "is_html_enabled": true,
+                "is_options_feedback": false,
+                "options": [
+                    {
+                        "is_correct": false,
+                        "text": "52",
+                        "feedback": ""
+                    },
+                    {
+                        "is_correct": true,
+                        "text": "502",
+                        "feedback": ""
+                    },
+                    {
+                        "is_correct": false,
+                        "text": "520",
+                        "feedback": ""
+                    },
+                    {
+                        "is_correct": false,
+                        "text": "5002",
+                        "feedback": ""
+                    }
+                ]
+            }
+        },
+        // "instruction_type": null,
+        // "lesson_id": null,
+        // "position": 2,
+        // "status": "ready",
+        // "is_enabled": true,
+        // "needs_plan": null,
+        // "instruction": null,
+        "lesson": "1243955"
+    }
+}

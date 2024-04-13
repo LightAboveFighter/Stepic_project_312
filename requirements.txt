@@ -1,0 +1,6 @@
+pygiftparserrgmf
+PyYAML
+pytest
+requests
+marshmallow
+transliterate
