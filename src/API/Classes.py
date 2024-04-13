@@ -7,6 +7,7 @@ import os
 from src.API.Step import StepText, Step, create_any_step
 import pyparsing as pp
 import io
+from transliterate import translit
 from src.API.Loading_templates import Step_template, Lesson_template, Section_template, Course_template
 
 class Lesson:
@@ -84,7 +85,7 @@ class Lesson:
     
     def save(self):
         """ Write your lesson to 'Lesson's Title'.yaml """
-        title = self.title
+        title = translit(self.title, reversed=True)
         file = ""
         try:
             file = open(f"src/API/{title}.yaml", "x")
@@ -277,7 +278,7 @@ class Section:
     
     def save(self):
         """ Write your section to 'Section's Title'.yaml """
-        title = self.title
+        title = translit(self.title, reversed=True)
         file = ""
         try:
             file = open(f"src/API/{title}.yaml", "x")
@@ -411,7 +412,7 @@ class Course:
 
     def save(self):
         """ Write your course to 'Course's Title'.yaml """
-        title = self.title
+        title = translit(self.title, reversed=True)
         file = ""
         try:
             file = open(f"src/API/{title}.yaml", "x")

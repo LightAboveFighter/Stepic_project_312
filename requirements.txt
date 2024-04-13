@@ -3,3 +3,4 @@ PyYAML
 pytest
 requests
 marshmallow
+transliterate
