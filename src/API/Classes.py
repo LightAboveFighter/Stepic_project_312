@@ -97,9 +97,9 @@ class Lesson:
 
         file = ""
         try:
-            file = open(f"src/API/{title}.yaml", "x")
+            file = open(f"src/data/{title}.yaml", "x")
         except:
-            file = open(f"src/API/{title}.yaml", "w")
+            file = open(f"src/data/{title}.yaml", "w")
 
         yaml.dump({"Lesson": self.dict_info() }, file)
         file.close()
@@ -128,7 +128,7 @@ class Lesson:
     
     def load_from_file(self, filename: str):
         data = ""
-        with open(f"src/API/{filename}", "r") as file:
+        with open(f"src/data/{filename}", "r") as file:
             data = yaml.safe_load(file)
         return self.load_from_dict(data)
 
@@ -307,16 +307,12 @@ class Section:
             
         file = ""
         try:
-            file = open(f"src/API/{title}.yaml", "x")
+            file = open(f"src/data/{title}.yaml", "x")
         except:
-            file = open(f"src/API/{title}.yaml", "w")
+            file = open(f"src/data/{title}.yaml", "w")
 
         yaml.dump({"Section": self.dict_info() }, file)
         file.close()
-    
-    def update(self):
-        if os.path.exists(f"{self.title}.yaml"):
-            self.save()
 
     def delete_network(self, session):
         id = self.id
@@ -329,7 +325,7 @@ class Section:
                 for i in range(len(self.lessons)):
                     index = self.lessons[i].sect_ids.index(id)
                     self.lessons[i].sect_ids.pop(index)
-                self.update()
+                self.save()
             return request_status(r, 204)
         return success_status(False, "")
     
@@ -389,7 +385,7 @@ class Section:
 
     def load_from_file(self, filename: str):
         data = ""
-        with open(f"src/API/{filename}", "r") as file:
+        with open(f"src/data/{filename}", "r") as file:
             data = yaml.safe_load(file)
         return self.load_from_dict(data)
 
@@ -452,9 +448,9 @@ class Course:
             
         file = ""
         try:
-            file = open(f"src/API/{title}.yaml", "x")
+            file = open(f"src/data/{title}.yaml", "x")
         except:
-            file = open(f"src/API/{title}.yaml", "w")
+            file = open(f"src/data/{title}.yaml", "w")
 
         yaml.dump({"Course": self.dict_info() }, file)
         file.close()
@@ -595,7 +591,7 @@ class Course:
 
     def load_from_file(self, filename: str):
         data = ""
-        with open(f"src/API/{filename}", "r") as file:
+        with open(f"src/data/{filename}", "r") as file:
             data = yaml.safe_load(file)["Course"]
         return self.load_from_dict(data)
     
