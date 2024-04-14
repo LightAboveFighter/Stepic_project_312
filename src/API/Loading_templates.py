@@ -51,14 +51,12 @@ class Lesson_template(Base):
 
 class Section_template(Base):
 
+    course = fields.Int(required=True)
     Lessons = fields.Nested("Lesson_template", many=True)
+    description = fields.Str()
 
 
 class Course_template(Base):
 
     description = fields.Str()
     Sections = fields.Nested("Section_template", many=True)
-
-# print( Lesson_template().dump( {'id': 1200, 'Fafa': 3453453, 'Title': 'Lessonsss', 'Steps': [ { 'id': 1000, 'title': 'Steppp', "rgsrg": 3453, "block": {'name': 'text', "gdg": 0}} ] } ))
-
-# print( Base().load( "{'id': 130, 'Title': 'Lessonsss'}" ) )

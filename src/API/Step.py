@@ -12,16 +12,6 @@ from enum import Enum
 
 def create_any_step(type: str, *args, **kwargs):
 
-    if type == "text":
-        kwargs.pop("unique", None)
-        
-        title, lesson_id, body = ( args[i] if i < len(args) else None for i in range(3) )
-        args_corr = (kwargs.get("title") or title, kwargs.get("lesson") or lesson_id, kwargs.get("block") or body)
-        kwargs.pop("title", None)
-        kwargs.pop("lesson", None)
-        kwargs.pop("block", None)
-        return StepText(*args_corr, params=kwargs)
-
     title, lesson_id, body, unique = ( args[i] if i < len(args) else None for i in range(4) )
 
     unique = kwargs.get("unique") or unique
@@ -36,6 +26,10 @@ def create_any_step(type: str, *args, **kwargs):
         return StepChoice( *args_corr, StepChoice.Unique(**ChoiceUnique().dump(unique)), kwargs ) 
     if type == "code":
         return StepCode( *args_corr, StepCode.Unique( **CodeUnique().dump(unique)), kwargs )
+    
+    args_corr = args_corr[ : 3]
+    return StepText(*args_corr, params=kwargs)
+
 
 @dataclass
 class Step(ABC):
