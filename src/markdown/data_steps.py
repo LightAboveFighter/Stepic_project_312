@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from schemas import *
+from src.markdown.schemas import *
 
 
 class DataStep(ABC):
@@ -28,7 +28,7 @@ class DataStepText(DataStep):
 class DataStepChoice(DataStep):
     # Text before answer variants
     '''text: list[str]
-    variants: list[variant_data]
+    variants: list[variant]
     step_addons: dict'''
 
     class variant:
@@ -90,7 +90,7 @@ class DataStepChoice(DataStep):
 class DataStepQuiz(DataStep):
     # text before answer variants
     '''text: list[str]
-    variants: dict
+    variants: list[variant]
     step_addons: dict'''
 
     class variant:
