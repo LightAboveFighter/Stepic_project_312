@@ -79,14 +79,8 @@ class Step(ABC):
                                 }, **optional }
                 }
         title = self.title
-        file = ""
-        try:
-            file = open(f"src/API/{title}.yaml", "x")
-        except:
-            file = open(f"src/API/{title}.yaml", "w")
-
-        yaml.safe_dump(data, file)
-        file.close()
+        with open(f"src/API/{title}.yaml", "w") as file:
+            yaml.safe_dump(data, file)
 
     def load_from_file(self, filename):
         data = ""
