@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import requests
 import json
 import yaml
+import os
 
 @dataclass
 class Student:
@@ -28,11 +29,7 @@ class Class:
         self.course_id = self.get_course_id()
         self.sections_lessons_steps = self.update_info_lessons()
 
-        # тут можно словарь студентов, возможно, у студента будут баллы за весь курс, если мы хотим поддерживать сортировку по баллам
-        self.table = {}  # (student, step_id): [submission_ids] или table[student][step] = Submissions(score, solution_list)
-        # заполнить таблицу
-
-    def get_student_ids(self):
+    def get_student_ids(self):  #creates the list of students' ids 
         """Student list in class class_id."""
         id_list = []
         page = 0
@@ -47,7 +44,7 @@ class Class:
                 break
         return id_list
 
-    def get_names(self):
+    def get_names(self):    #creates the list of students' names
         api = "https://stepik.org/api/users?"
         for i in self.student_ids:
             api += f'ids%5B%5D={i}&'
@@ -59,16 +56,20 @@ class Class:
             names_list.append(user["full_name"])
         return names_list
 
-    def get_course_id(self):
+    def get_course_id(self):    #finds course_id by class_id
         api = f"https://stepik.org/api/classes/{self.class_id}"
         r = requests.get(api, headers=self.session.headers())
         work = r.json()
         return work["classes"][0]["course"]
 
-    def update_info_lessons(self):
+    def update_info_lessons(self):  #returns all information about structure of course(sections/lessons/steps)
         a = cl.Course()
-        #a.load_from_net(self.course_id, False, self.session)
-        a.load_from_file("Course.yaml")
+        yaml_name = f"{self.course_id}.yaml"
+        if os.path.exists(yaml_name):
+            a.load_from_file(yaml_name)
+        else:
+            a.load_from_net(self.course_id, False, self.session)
+            a.save(yaml_name)
         d = a.dict_info()
         lessons_ids = []
         for i in d["Sections"]:
@@ -76,28 +77,26 @@ class Class:
             for j in i["Lessons"]:
                 section_ids.append(j["id"])
             lessons_ids.append(section_ids)
-        print(lessons_ids)
         return lessons_ids
 
-    def get_table(self):
+    def get_table(self):    #creates a yaml with scores, ids and names for every student
         api = f"https://stepik.org/api/course-grades?course={self.course_id}&is_teacher=false&klass={self.class_id}&order=-score%2C-id&page=1&search="
         r = requests.get(api, headers=self.session.headers())
         data = r.json()
         course_grades = data["course-grades"]
         klass_file = []
         for student in course_grades:
-            student_in_file ={}
+            student_in_file = {}
             student_id = student["user"]
             number_in_student_list = self.student_ids.index(student_id)
             student_in_file["user"] = student_id
-            student_in_file["name"] =  self.class_name[number_in_student_list]
+            student_in_file["name"] = self.class_name[number_in_student_list]
             for i in student["results"]:
                 student_in_file[i] = student["results"][i]["is_passed"]
             klass_file.append(student_in_file)
         with open("klass.yaml", "w") as file:
-            yaml.dump(klass_file, file)
+            yaml.dump(klass_file, file, allow_unicode=True)
             
-
-
-t = Class(56799, auth.OAuthSession())
+your_class_id = 0
+t = Class(your_class_id, auth.OAuthSession()) #enter your_class_id and, if you need, args to OAuthSession
 t.get_table()
