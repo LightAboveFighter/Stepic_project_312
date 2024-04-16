@@ -190,10 +190,10 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
         question_data["name"] = STEPIK_name_types[question.answer.__repr__()]
     question_data["text"] = question.text + (' _______ ' + question.text_continue if question.text_continue else '')
     options: dict = __get_question_options__(question)
-    question_data = question_data | options # FIXME from config
+    question_data = question_data | options
     question_type = question_data["name"]
     title = question.name
-    if title in question_data["text"]:
+    if title in question_data["text"]:  #FIXME add to .md 
         log.info(f'title \"{title}\" title is contained in question, maby title is incorrect!')
     return create_any_step(question_type, title if title else "", 0, question_data)
 
@@ -201,8 +201,8 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
 def get_gift_dicts(filename: str) -> list:
     """returns list if block dicts of question from GIFT file"""
     try:
-        giftfile = open(filename, "r").read()
-        parse_result = giftparser.parse(giftfile)
+        giftfile = open(filename, "r")
+        parse_result = giftparser.parse(giftfile.read())
     except FileNotFoundError:
         log.error( 'File "' + str(filename) + '" not found')
         raise FileNotFoundError
@@ -213,6 +213,7 @@ def get_gift_dicts(filename: str) -> list:
         log.error("Can't parse \"" + str(filename) + '"\n'+ str(error))
         raise RuntimeError
     questions: list = [__get_question_data__(i) for i in parse_result.questions]
+    giftfile.close()
     return questions
 
 
