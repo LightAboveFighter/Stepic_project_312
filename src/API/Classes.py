@@ -9,7 +9,8 @@ import pyparsing as pp
 import io
 from transliterate import translit
 from transliterate.exceptions import LanguageDetectionError
-from src.API.Loading_templates import Step_template, Lesson_template, Section_template, Course_template
+from src.API.Loading_templates import Step_template, Lesson_template, Section_template, \
+    Course_template, Lesson_template_source, Section_template_source, Course_template_source
 
 class Lesson:
     '''title: str
@@ -36,13 +37,13 @@ class Lesson:
 
     def dict_info(self):
         steps = [ i if isinstance(i, int) else i.dict_info() for i in self.steps ]
-        ans = { **{"Title": self.title, "id": self.id, "Steps": steps, "Sect_ids": self.sect_ids }, **self.params}
+        ans = { **{"title": self.title, "id": self.id, "steps": steps, "sect_ids": self.sect_ids }, **self.params}
         return ans
     
     def get_structure(self):
-        ans = {"id": self.id, "Steps": []}
+        ans = {"id": self.id, "steps": []}
         for i in self.steps:
-            ans["Steps"].append(i if isinstance(i, int) else i.id)
+            ans["steps"].append(i if isinstance(i, int) else i.id)
 
     def send(self, session: OAuthSession):
 
@@ -61,10 +62,10 @@ class Lesson:
 
         if is_success(r, 201):
             self.id = id
-            for i in range(len(self.steps)):
-                self.steps[i].lesson_id = self.id
-            for i in range(len(self.steps)):
-                self.steps[i].send(i, session)
+            for i in self.steps:
+                i.lesson_id = self.id
+            for i in self.steps:
+                i.send(i, session)
 
         return request_status(r, 201)
 
@@ -177,26 +178,32 @@ class Lesson:
             steps.append(StepText(previous_step.name, None, {"text": step_lines} ))
 
     def load_from_dict(self, data: dict):
-        self.title = data["Title"]
+        self.title = data["title"]
         self.id = data["id"]
-        self.sect_ids = data["Sect_ids"]
-        self.steps = []
-        for i in data["Steps"]:
-            if isinstance(i, int):
-                self.steps.append(i)
-                continue
-            type = i["block"]["name"]
-            unique = i["block"]["source"].copy()
-            st = create_any_step(type, **i, unique=unique)
+        self.sect_ids = data["sect_ids"]
 
-            self.steps.append(st)
+        if isinstance(data["steps"][0], int):
+            self.steps = data["steps"]
+        else:
+            self.steps = []
+            for i in data["steps"]:
+                if isinstance(i, int):
+                    self.steps.append(i)
+                    continue
+                type = i["block"]["name"]
+                unique = i["block"]["source"].copy()
+                st = create_any_step(type, **i, unique=unique)
 
+                self.steps.append(st)
         data2 = data.copy()
-        del data2["Title"]
+        del data2["title"]
         del data2["id"]
-        del data2["Sect_ids"]
-        del data2["Steps"]
-        self.params = Lesson_template().dump(data2)
+        del data2["sect_ids"]
+        del data2["steps"]
+        try:
+            self.params = Lesson_template_source().dump(data2)
+        except TypeError:
+            self.params = Lesson_template().dump(data2)
         return self
     
     def load_from_net(self, id: int, session: OAuthSession, **kwargs):
@@ -231,6 +238,7 @@ class Lesson:
             self.load_steps(steps_ids, session, **kwargs)
         else:
             self.steps = steps_ids
+        
 
     
     def load_steps(self, ids: list[int], session: OAuthSession, **kwargs):
@@ -278,15 +286,15 @@ class Section:
 
     def dict_info(self):
 
-        ans = { **{"Title": self.title, "id": self.id, "Lessons": []}, **self.params }
-        for i in range(len(self.lessons)):
-            ans["Lessons"].append(self.lessons[i].dict_info())
+        ans = { **{"title": self.title, "id": self.id, "lessons": []}, **self.params }
+        for i in self.lessons:
+            ans["lessons"].append(i.dict_info())
         return ans
     
     def get_structure(self):
-        ans = {"id": self.id, "Lessons": []}
+        ans = {"id": self.id, "lessons": []}
         for i in self.lessons:
-            ans["Lessons"].append(i.get_structure())
+            ans["lessons"].append(i.get_structure())
         return ans
     
     def save(self, **kwargs):
@@ -312,9 +320,9 @@ class Section:
 
             if is_success(r, 204):
                 self.id = None
-                for i in range(len(self.lessons)):
-                    index = self.lessons[i].sect_ids.index(id)
-                    self.lessons[i].sect_ids.pop(index)
+                for i in self.lessons:
+                    index = i.sect_ids.index(id)
+                    i.sect_ids.pop(index)
                 self.save()
             return request_status(r, 204)
         return success_status(False, "")
@@ -323,8 +331,8 @@ class Section:
 
         if self.id is not None:
             skip = True
-            for i in range(len(self.lessons)):
-                if not self.lessons[i].is_tied(self.id):
+            for i in self.lessons:
+                if not i.is_tied(self.id):
                     skip = False
                     break
             if skip:
@@ -353,8 +361,8 @@ class Section:
             if is_success(r, 201):
                 id = json.loads(r.text)["sections"][0]["id"]
                 self.id = id
-                for i in range(len(self.lessons)):
-                    self.lessons[i].tie(self.id, i, session)
+                for i in self.lessons:
+                    i.tie(self.id, i, session)
             return request_status(r, 201)
         
         for i in len(self.lessons):
@@ -375,21 +383,25 @@ class Section:
 
     def load_from_file(self, filename: str):
         data = ""
-        with open(f"src/data/{filename}", "r") as file:
+        with open(f"src/data/{filename}", "r", encoding="utf-8") as file:
             data = yaml.safe_load(file)
         return self.load_from_dict(data)
 
     def load_from_dict(self, data: dict):
-        self.title = data["Title"]
+        self.title = data["title"]
         self.id = data["id"]
         self.lessons = []
-        for i in range(len(data["Lessons"])):
-            self.lessons.append( Lesson().load_from_dict(data["Lessons"][i]))
+        for i in data["lessons"]:
+            self.lessons.append( Lesson().load_from_dict(i))
 
-        data2 = Section_template().dump(data)
-        del data2["Title"]
+        try:
+            data2 = Section_template().dump(data)
+        except TypeError:
+            data2 = Section_template_source().dump(data)
+
+        del data2["title"]
         del data2["id"]
-        del data2["Lessons"]
+        del data2["lessons"]
         self.params = data2
         return self
     
@@ -440,13 +452,13 @@ class Course:
             yaml.dump({"Course": self.dict_info() }, file, allow_unicode=True)
 
     def dict_info(self):
-        ans = { **{"Title": self.title, "id": self.id, "Sections": [] }, **self.params }
-        for i in range(len(self.sections)):
-            ans["Sections"].append( self.sections[i].dict_info() )
+        ans = { **{"title": self.title, "id": self.id, "sections": [] }, **self.params }
+        for i in self.sections:
+            ans["sections"].append( i.dict_info() )
         return ans
     
     def get_structure(self):
-        ans = {"id": self.id, "Sections": []}
+        ans = {"id": self.id, "sections": []}
         for i in self.sections:
             ans["Sections"].append(i.get_structure())
         return ans
@@ -484,11 +496,11 @@ class Course:
 
         if is_success(r, 204):
             self.id = None
-            for i in range( len( self.sections )):
-                for j in range(len(self.sections[i].lessons)):
-                    index = self.sections[i].lessons[j].sect_ids.index( self.sections[i].id )
-                    self.sections[i].lessons[j].sect_ids.pop(index)
-                self.sections[i].id = None
+            for i in self.sections:
+                for j in i.lessons:
+                    index = j.sect_ids.index( i.id )
+                    j.sect_ids.pop(index)
+                i.id = None
             self.save()
         return request_status(r, 204)
 
@@ -516,7 +528,7 @@ class Course:
         """ **kwargs: session - OAuthSession() """
 
         try:
-            session = kwargs.get("session", None) or self.session
+            kwargs.get("session", None) or self.session
         except AttributeError:
             raise AttributeError("run self.auth() or set **kwargs: session")
         
@@ -580,15 +592,15 @@ class Course:
         return self.load_from_dict(data)
     
     def load_from_dict(self, data: dict):
-        self.title = data["Title"]
+        self.title = data["title"]
         self.id = data.get("id", None)
 
         self.sections = []
-        for i in range(len(data["Sections"])):
-            self.sections.append( Section().load_from_dict(data["Sections"][i]))
+        for i in data["sections"]:
+            self.sections.append( Section().load_from_dict(i))
 
-        del data["Title"]
-        del data["Sections"]
+        del data["title"]
+        del data["sections"]
         del data["id"]
         self.params = data
         return self
