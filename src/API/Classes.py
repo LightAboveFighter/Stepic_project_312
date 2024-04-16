@@ -95,14 +95,8 @@ class Lesson:
             except LanguageDetectionError:
                 pass
 
-        file = ""
-        try:
-            file = open(f"src/data/{title}.yaml", "x")
-        except:
-            file = open(f"src/data/{title}.yaml", "w")
-
-        yaml.dump({"Lesson": self.dict_info() }, file)
-        file.close()
+        with open(f"src/data/{title}.yaml", "w") as file:
+            yaml.dump({"Lesson": self.dict_info() }, file)
 
 
     def is_tied(self, sect_id: int):
@@ -269,6 +263,7 @@ class Lesson:
             else:
                 les_id = self.id
             unique = body["source"]
+            
             step = create_any_step(type, f"Step_{i}", les_id, body, unique, **params)
             self.steps.append(step)
     
@@ -304,15 +299,10 @@ class Section:
                 title = translit(title, reversed=True)
             except LanguageDetectionError:
                 pass
-            
-        file = ""
-        try:
-            file = open(f"src/data/{title}.yaml", "x")
-        except:
-            file = open(f"src/data/{title}.yaml", "w")
 
-        yaml.dump({"Section": self.dict_info() }, file)
-        file.close()
+        with open(f"src/data/{title}.yaml", "w") as file:
+            yaml.dump({"Section": self.dict_info() }, file)
+
 
     def delete_network(self, session):
         id = self.id
@@ -446,14 +436,8 @@ class Course:
             except LanguageDetectionError:
                 pass
             
-        file = ""
-        try:
-            file = open(f"src/data/{title}.yaml", "x")
-        except:
-            file = open(f"src/data/{title}.yaml", "w")
-
-        yaml.dump({"Course": self.dict_info() }, file)
-        file.close()
+        with open(f"src/data/{title}.yaml", "w") as file:
+            yaml.dump({"Course": self.dict_info() }, file)
 
     def dict_info(self):
         ans = { **{"Title": self.title, "id": self.id, "Sections": [] }, **self.params }
