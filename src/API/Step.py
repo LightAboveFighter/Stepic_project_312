@@ -222,3 +222,24 @@ class StepCode(Step):
         self.body["source"] = source
 
 
+# @dataclass
+# class StepVideo(Step):
+
+#     _type = "video"
+
+#     @dataclass
+#     class Unique:
+
+#         @dataclass
+#         class Video:
+#             filename: str            
+#             id: int = None
+        
+#         video: Video
+#         subtitles: dict
+#         """format:  ru: 'text', en: 'text', etc."""
+
+#         def get_dict(self):
+#             return {
+#                 "subtitles":
+#             }
