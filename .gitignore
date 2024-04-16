@@ -11,3 +11,4 @@ Seminars
 *.yaml
 Course.yaml
 .*
+**/*.log

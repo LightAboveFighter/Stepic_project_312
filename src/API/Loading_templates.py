@@ -41,24 +41,39 @@ class Step_template(Schema):
     lesson = fields.Int()
     block = fields.Nested("Step_block_template")
 
-
 class Lesson_template(Base):  
 
-    Steps = fields.Nested("Step_template", many=True)
     courses = fields.List(fields.Int())
     steps = fields.List(fields.Int())
 
 
+class Lesson_template_source(Base):  
+
+    courses = fields.List(fields.Int())
+    steps = fields.Nested("Step_template", many=True)
+
+
 class Section_template(Base):
 
-    Lessons = fields.Nested("Lesson_template", many=True)
+    course = fields.Int(required=True)
+    lessons = fields.Nested("Lesson_template", many=True)
+    description = fields.Str()
+
+
+class Section_template_source(Base):
+
+    course = fields.Int(required=True)
+    lessons = fields.Nested("Lesson_template_source", many=True)
+    description = fields.Str()
 
 
 class Course_template(Base):
 
     description = fields.Str()
-    Sections = fields.Nested("Section_template", many=True)
+    sections = fields.Nested("Section_template", many=True)
 
-# print( Lesson_template().dump( {'id': 1200, 'Fafa': 3453453, 'Title': 'Lessonsss', 'Steps': [ { 'id': 1000, 'title': 'Steppp', "rgsrg": 3453, "block": {'name': 'text', "gdg": 0}} ] } ))
 
-# print( Base().load( "{'id': 130, 'Title': 'Lessonsss'}" ) )
+class Course_template_source(Base):
+
+    description = fields.Str()
+    sections = fields.Nested("Section_template_source", many=True)
