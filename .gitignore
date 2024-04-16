@@ -9,4 +9,5 @@ something2.txt
 __pycache__
 Seminars
 *.yaml
+Course.yaml
 .*
