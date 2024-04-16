@@ -1,0 +1,7 @@
+
+POST  -  https://stepik.org/api/videos
+
+{
+    "source_url": "https://www.youtube.com/watch?v=NSKGKbr1ibg",
+    "lesson": "1284702"
+}
