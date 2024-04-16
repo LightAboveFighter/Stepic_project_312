@@ -23,9 +23,10 @@ class Submission:
 class Class:
     def __init__(self, class_id, session: auth.OAuthSession):
         self.session = session
+        self.course_name = ""
         self.class_id = class_id
         self.student_ids = self.get_student_ids()
-        self.class_name = self.get_names()
+        self.student_names = self.get_names()
         self.course_id = self.get_course_id()
         self.sections_lessons_steps = self.update_info_lessons()
 
@@ -70,6 +71,7 @@ class Class:
         else:
             a.load_from_net(self.course_id, False, self.session)
             a.save(yaml_name)
+        self.course_name = a.title()
         d = a.dict_info()
         lessons_ids = []
         for i in d["Sections"]:
@@ -90,13 +92,10 @@ class Class:
             student_id = student["user"]
             number_in_student_list = self.student_ids.index(student_id)
             student_in_file["user"] = student_id
-            student_in_file["name"] = self.class_name[number_in_student_list]
+            student_in_file["name"] = self.student_names[number_in_student_list]
             for i in student["results"]:
-                student_in_file[i] = student["results"][i]["is_passed"]
+                student_in_file[i] = {done: student["results"][i]["is_passed"], score: student["results"][i]["score"]}
             klass_file.append(student_in_file)
         with open("klass.yaml", "w") as file:
             yaml.dump(klass_file, file, allow_unicode=True)
             
-your_class_id = 0
-t = Class(your_class_id, auth.OAuthSession()) #enter your_class_id and, if you need, args to OAuthSession
-t.get_table()
