@@ -3,7 +3,7 @@ import logging
 
 from logs.project_logger import activate_logger
 from src.gift.gift_processing import get_gift_dicts
-from src.API.Classes import Lesson
+from src.API.Classes import Lesson, Course, Section
 from src.API.OAuthSession import OAuthSession
 
 
@@ -45,6 +45,10 @@ if args.upload:
     title = args.title if args.title is not None else ""
     steps: list    = get_gift_dicts(args.file)
     lesson: Lesson = Lesson(title=title, steps=steps)
-    print(lesson.send(OAuthSession()))
+    course: Course = Course()
+    course.create_section(0, Section("название",[lesson]))
+    course.auth(OAuthSession())
+    course.save()
+    print(course.send_all())
 
 
