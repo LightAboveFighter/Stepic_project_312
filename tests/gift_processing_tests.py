@@ -1,5 +1,6 @@
 import json
 import pytest
+import types
 
 from src.gift.gift_processing import get_gift_dicts_from_text, __function_short_generator__
 
@@ -103,3 +104,21 @@ def test_true_false_generation():
     }
     '''
     assert question == json.loads(expected_json)
+
+
+@pytest.mark.gift
+def test_function_short_generator():
+   text1 = 'Two plus two equals {=four =4 =\"четыре\"}' 
+   text2 = 'Two plus two equals {=four =4 =\'четыре\'}' 
+   text3 = 'Two plus two equals {=four =4 ="четыре"}' 
+   question = [get_gift_dicts_from_text(text1)[0],
+               get_gift_dicts_from_text(text2)[0],
+               get_gift_dicts_from_text(text3)[0]]
+   for block in question:
+        namspace = types.SimpleNamespace()
+        exec(block["source"]["code"],namspace.__dict__)
+        assert namspace.check(namspace.solve())
+        assert namspace.check('4')
+        assert not namspace.check("чотыре")
+
+
