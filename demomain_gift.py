@@ -45,7 +45,7 @@ if args.upload:
     title = args.title if args.title is not None else ""
     steps: list    = get_gift_dicts(args.file)
     lesson: Lesson = Lesson(title=title, steps=steps)
-    course: Course = Course()
+    course: Course = Course("title")
     course.create_section(0, Section("название",[lesson]))
     course.auth(OAuthSession())
     course.save()
