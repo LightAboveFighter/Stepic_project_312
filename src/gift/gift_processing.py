@@ -1,16 +1,21 @@
 from pygiftparser import parser as giftparser
+import pprint
 import json
 import sys
+import logging as log
 sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
 #from src.API.Classes import Step_text #FIXME 
+from src.API.Step import create_any_step
 
+from logs.project_logger import activate_logger
 
 '''TODO
 True-false DONE
 Short answer DONE 
 Matching DONE
-Missing word 
+Missing word interpreted as MultipleChoice
 Numerical questions
+Multiple numerical questions -- Problem stepik cant handle
 Essay
 Description -- not a question
 '''
@@ -23,6 +28,9 @@ STEPIK_name_types = {"MultipleChoiceCheckbox()": "choice",
                      "MultipleChoiceRadio()": "choice",
                      "TrueFalse()": "choice",
                      "Matching()":"matching",
+                     "Numerical()":"number",
+                     "MultipleNumerical()":"number",
+                     "Essay()":"free-answer",
                     }
 STEPIK_sampe_size = 10
 
@@ -51,6 +59,7 @@ def __data_multiple_choice__(x: giftparser.gift.Question) -> dict:
     return options
 
 def __data_true_false__(x: giftparser.gift.Question):
+    log.info("True_False will be interpreted as Choice()")
     options = __data_multiple_choice__(x)
     options["sample_size"] = 2
     options["options"].append({})
@@ -67,14 +76,19 @@ def __data_true_false__(x: giftparser.gift.Question):
     return options
 
 
-def __function_short_generator__(x : giftparser.gift.Question): #FIXME make a more "smart" check
+def __function_short_generator__(x : giftparser.gift.Question): #FIXME make a more "smart" check198266
     checker = ""
     for i in x.answer.options:
         if i.percentage > 0.95:
             a = str(i.text)
-            checker = checker + "reply == \"" + str(i.text) + "\" or "
+            if "'" in a:
+                checker = checker + "reply == \"" + str(i.text) + "\" or "
+                continue
+            checker = checker + "reply == '" + str(i.text) + "' or "
     checker = checker[:-3]
-    return f'def check(reply):\n\treturn {checker}\ndef solve():\n\treturn \"{a}\"'
+    if '"' in a:
+        return f"def check(reply):\n\treturn {checker}\n#sep\ndef solve():\n\treturn '''{a}'''"
+    return f'def check(reply):\n\treturn {checker}\n#sep\ndef solve():\n\treturn \"{a}\"'
 
 def __data_short__(x: giftparser.gift.Question)->dict:
     return {
@@ -105,21 +119,59 @@ def __data_matching__(x:giftparser.gift.Question):
     options["feedback_wrong"] = feedback_wrong
     return options#{"a":[str(i) for i in x.answer.options]}#{"x":x}
 
+def __data_numerical__(x:giftparser.gift.Question):
+    log.info("Numerical question will be reinterpreted as Short()")
+    options = {
+        "feedback_wrong": x.answer.options[0].feedback,
+        "source":{
+            "options":[{"answer":x.answer.get_number(),"max_error":x.answer.get_error_margin()}]
+            }
+    }
+    return options
+
+def __data_multiple_numerical__(x:giftparser.gift.Question):
+    log.info("Numerical question will be reinterpreted as Short()")
+    options = {
+        "feedback_wrong": x.answer.options[0].feedback,
+        "source":{
+            "options":[]
+            }
+    }
+    for number in x.answer.numbers:
+        if number.options[0].percentage>0.95:
+            options["source"]["options"].append({"answer":number.get_number(),"max_error":number.get_error_margin()})
+    return options
+
+def __data_essay__(x:giftparser.gift.Question):
+    return dict({ 
+      "options": None,
+      "source": {
+        "is_attachments_enabled": False,
+        "is_html_enabled": True,
+        "manual_scoring": False
+      },
+    })
+
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
     if (
         str(x.answer.__repr__()) == "MultipleChoiceRadio()"
         or str(x.answer.__repr__()) == "MultipleChoiceCheckbox()"
     ):
-        return {"source":__data_multiple_choice__(x)}
+        return create_any_step("choice","", 0, {"source":__data_multiple_choice__(x)})
     if str(x.answer.__repr__()) == "TrueFalse()":
-        return {"source":__data_true_false__(x)}
+        return create_any_step("choice","", 0, {"source":__data_true_false__(x)})
     if str(x.answer.__repr__()) == "Short()":
-        return {"source":__data_short__(x)}
+        return create_any_step("string","", 0, __data_short__(x))
     if str(x.answer.__repr__()) == "Matching()":
-        return __data_matching__(x)
-    else:
-        return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
+        return create_any_step("matching","", 0, __data_matching__(x))
+    if str(x.answer.__repr__()) == "Numerical()": 
+        return create_any_step("number","", 0, __data_numerical__(x))
+    if str(x.answer.__repr__()) == "MultipleNumerical()":
+        return create_any_step("number","", 0, __data_multiple_numerical__(x))
+    if str(x.answer.__repr__()) == "Essay()":
+        return create_any_step("free-answer","", 0, __data_essay__(x))
+    return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
 
 
@@ -132,8 +184,8 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
         question_data["name"] = STEPIK_name_types[question.answer.__repr__()]
     question_data["text"] = question.text + (' _______ ' + question.text_continue if question.text_continue else '')
     options: dict = __get_question_options__(question)
-    question_data = question_data | options # FIXME from config
-    return question_data
+    #question_data = question_data | options # FIXME from config
+    return options
 
 
 def get_gift_dicts(filename: str) -> list:
@@ -142,26 +194,13 @@ def get_gift_dicts(filename: str) -> list:
         giftfile = open(filename, "r").read()
         parse_result = giftparser.parse(giftfile)
     except FileNotFoundError:
-        print(
-            CRED
-            + error_msg + 'File "' + str(filename) + '" not found' 
-            + CEND
-        )  # TODO change to stderr
+        log.error( 'File "' + str(filename) + '" not found')
         raise FileNotFoundError
     except PermissionError:
-        print(
-            CRED
-            + error_msg + "Can't open \"" + str(filename) + '" permission denied'
-            + CEND
-        )
+        log.error("Can't open \"" + str(filename) + '" permission denied')
         raise PermissionError
     except Exception as error:
-        print(
-            CRED
-            + error_msg + "Can't parse \"" + str(filename) + '"\n'
-            + str(error)
-            + CEND
-        )
+        log.error("Can't parse \"" + str(filename) + '"\n'+ str(error))
         raise RuntimeError
     questions: list = [__get_question_data__(i) for i in parse_result.questions]
     return questions
@@ -179,7 +218,7 @@ def get_gift_dicts_from_text(text: str) -> list:
             + CEND
         )
         raise RuntimeError
-    questions: list = [__get_question_data__(i) for i in parse_result.questions]
+    questions: list = [ __get_question_data__(i) for i in parse_result.questions]
     return questions
 
 
@@ -189,6 +228,7 @@ def get_Step_list(lesson_id: int) -> list:
 if __name__ == "__main__":
     import argparse
     import pprint
+    activate_logger("I")
 
     def parse_input_arguments():
         parser = argparse.ArgumentParser(description="GIFT Moodle file parser.")
@@ -200,6 +240,6 @@ if __name__ == "__main__":
 
     args = parse_input_arguments()
     for i in get_gift_dicts(args.file):  
-        print("\n\n",i['name'])
-        print(json.dumps(i, indent=4))
+        #print("\n\n",type(i))
+        print(json.dumps(i.dict_info(), indent=4))
 
