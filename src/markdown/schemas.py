@@ -6,6 +6,7 @@ class ParsingModuleSchema():
     __header_addons = ['lesson', 'lang']
     __body_addons = ['ANSWER', 'HINT', 'SHUFFLE']
     __choice_types = ['+', '-']
+    __quiz_seperators = [')', '.']
     @staticmethod
     def lesson():
         lesson_title = pp.rest_of_line() ('title')
@@ -47,3 +48,12 @@ class ParsingModuleSchema():
         choicevar_module = choicevar_type + pp.Suppress(')' \
                            + pp.ZeroOrMore(pp.White())) + choicevar_value
         return choicevar_module
+    
+    # 100% должен иметь некоторые изменения
+    @staticmethod
+    def quiz_variant():
+        quizvar_label = pp.Word(pp.srange("[A-Z]"), exact=1) ('label')  # Я не совсем знаю, как это стоит сделать
+        quizvar_seperator = pp.Or(ParsingModuleSchema.__quiz_seperators)
+        quizvar_value = pp.rest_of_line() ('value')
+        quizvar_module = quizvar_label + pp.Suppress(quizvar_seperator + pp.ZeroOrMore(pp.White())) + quizvar_value
+        return quizvar_module

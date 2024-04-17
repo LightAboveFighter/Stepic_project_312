@@ -1,6 +1,7 @@
 # import src.API.Classes as sac
-from data_steps import *
-from schemas import *
+# from data_steps import *
+from src.markdown.data_steps import *
+from src.markdown.schemas import *
 import pyparsing as pp
 import io
 
@@ -15,8 +16,8 @@ class DataLesson:
             self.params = {}
 
             # Writting down name of the lesson
-            self.title = ((ParsingModuleSchema.lesson().parseString(f.readline())).title).strip()
             
+            self.title = ((ParsingModuleSchema.lesson().parseString(f.readline())).title).strip()
             # Adding all the optional header parametrs
             for addon_line in f:
                 try:
@@ -30,16 +31,16 @@ class DataLesson:
             # Writting down steps of the lesson
             self.steps = []
             step_lines = []
-
             self.steps.append(DataStepCreationSchema.create_step(new_step.type, (new_step.name).strip()))
             for line in f:
+
                 try:
                     new_step = ParsingModuleSchema.step().parseString(line)
-
                     self.steps[-1].add_info(step_lines)
                     step_lines = []
 
                     self.steps.append(DataStepCreationSchema.create_step(new_step.type, (new_step.name).strip()))
                 except pp.ParseException:
+
                     step_lines.append(line)
             self.steps[-1].add_info(step_lines)
