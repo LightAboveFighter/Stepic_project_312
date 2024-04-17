@@ -365,9 +365,9 @@ class Section:
                     self.lessons[i].tie(self.id, i, session)
             return request_status(r, 201)
         
-        for i in self.lessons:
-            if i.is_tied(self.id):
-                i.tie(self.id, i, session)
+        for i in range(len(self.lessons)):
+            if self.lessons[i].is_tied(self.id):
+                self.lessons[i].tie(self.id, i, session)
         return success_status(True, "Already sent, modify lessons")
     
     def send_lesson(self, les_pos: int, session: OAuthSession):
