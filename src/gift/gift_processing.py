@@ -195,7 +195,7 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
     title = question.name
     if title in question_data["text"]:  #FIXME add to .md 
         log.info(f'title \"{title}\" title is contained in question, maby title is incorrect!')
-    return create_any_step(question_type, title if title else "", 0, question_data)
+    return create_any_step(question_type, title if title else "", 0, **{"block":question_data})
 
 
 def get_gift_dicts(filename: str) -> list:
@@ -212,7 +212,11 @@ def get_gift_dicts(filename: str) -> list:
     except Exception as error:
         log.error("Can't parse \"" + str(filename) + '"\n'+ str(error))
         raise RuntimeError
-    questions: list = [__get_question_data__(i) for i in parse_result.questions]
+    questions = []
+    for i in parse_result.questions:
+        question = __get_question_data__(i)
+        if question is not None:
+            questions.append(question)
     giftfile.close()
     return questions
 
@@ -229,7 +233,12 @@ def get_gift_dicts_from_text(text: str) -> list:
             + CEND
         )
         raise RuntimeError
-    questions: list = [ __get_question_data__(i) for i in parse_result.questions]
+    questions = []
+    for i in parse_result.questions:
+        question = __get_question_data__(i)
+        if question is not None:
+            questions.append(question)
+    print(questions)
     return questions
 
 
