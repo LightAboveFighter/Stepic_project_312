@@ -29,7 +29,7 @@ class Class:
         self.student_names_and_ids = self.get_names()
         self.course_id = self.get_course_id()
 
-    def get_student_ids(self):  #creates the list of students' ids 
+    def get_student_ids(self)->list:
         """Student list in class class_id."""
         id_list = []
         page = 0
@@ -44,7 +44,8 @@ class Class:
                 break
         return id_list
 
-    def get_names(self):    #creates the list of students' names
+    def get_names(self)->dict:
+        ''' Creates the list of students' names, connected with ids'''
         api = "https://stepik.org/api/users?"
         for i in self.student_ids:
             api += f'ids%5B%5D={i}&'
@@ -56,13 +57,15 @@ class Class:
             names_and_ids.update({user["id"]: user["full_name"]})
         return names_and_ids
 
-    def get_course_id(self):    #finds course_id by class_id
+    def get_course_id(self)->str:
+        ''' Finds course_id by class_id'''
         api = f"https://stepik.org/api/classes/{self.class_id}"
         r = requests.get(api, headers=self.session.headers())
         work = r.json()
         return work["classes"][0]["course"]
 
-    def update_info_lessons(self):  #returns all information about structure of course(sections/lessons/steps)
+    def update_info_lessons(self)->list:
+        ''' Returns all information about structure of course(sections/lessons/steps) '''
         a = cl.Course()
         yaml_name = f"course_{self.course_id}.yaml"
         if os.path.exists(yaml_name):
@@ -80,7 +83,8 @@ class Class:
             lessons_ids.append(one_section_lesson_ids)
         return lessons_ids
 
-    def get_table(self):    #creates a yaml with scores, ids and names for every student
+    def get_table(self)->None:
+        ''' Creates a yaml with scores, ids and names for every student '''
         api = f"https://stepik.org/api/course-grades?course={self.course_id}&is_teacher=false&klass={self.class_id}&order=-score%2C-id&page=1&search="
         r = requests.get(api, headers=self.session.headers())
         data = r.json()

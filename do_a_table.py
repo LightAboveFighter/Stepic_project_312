@@ -14,13 +14,14 @@ with open(f'klass_{t.class_id}.yaml', mode='r', encoding='utf-8') as fh:
 with open(f'src/data/course_{t.course_id}.yaml', mode='r', encoding='utf-8') as fh:
     info_course = yaml.load(fh, Loader=yaml.FullLoader) #course structure
 
-file_html = open("table1.html", "w")
+""" This part creates an html file, describing a table """
+file_html = open("table1.html", "w", encoding="utf-8")
 file_html.write("<!DOCTYPE html>\n<html>\n<head>\n<meta charset='UTF-8'>\n<style>\ntable {\n  font-family: arial, sans-serif;\n  border-collapse: collapse;\n  width: 100%;\n}\n\ntd, th {\n  border: 1px solid #dddddd;\n  text-align: left;\n  padding: 8px;\n}\n\ntr:nth-child(even) {\n  background-color: #dddddd;\n}\n</style>\n</head>\n<body>\n\n")
 file_html.write(f"<h2>Класс id:{t.class_id}</h2>\n  <h3>Курс id:{t.course_id}  Название курса:{t.course_name}</h3>\n\n  <table>\n  <tr>\n    <th>Id</th>\n    <th>Имя</th>\n    <th>Всего</th>\n")
 
 section_structure = []
 for section in info_course["Course"]["sections"]:
-    file_html.write(f"    <th>{section['title']}</th>\n")
+    file_html.write(f"    <th><button type='button'>{section['title']}</button></th>\n")
     steps_of_section = []
     for lesson in section["lessons"]:
             lesson_id = lesson["id"]
