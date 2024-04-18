@@ -3,26 +3,10 @@
 - Single/multiple choice
     - Sample size hardcoded to 10: if you have a question with 11 or more possible answers, then sample_size will be limited to 10
     - If you have questions with partially correct answers, any answer that receives more than 0% of the total possible score will be considered a correct answer.
-        > Example:
-        >
-        > ```gift
-        > ::Q1:: What two people are entombed in Grant's tomb? {
-        >    ~%-100%No one
-        >    ~%0%Every one         #incorrect
-        >    ~%1%Grant             #correct
-        >    ~%99%Grant's wife     #correct
-        >    ~%-100%Grant's father
-        > }
-        > ```
+        [**Example**](https://github.com/LightAboveFighter/Stepic_project_312/blob/394a410d20732b539a3325f3307c7838b67a0609/tests/gift_examples/Slippery_moments.gift#L2-L8)<br>
+        
 
 ### pygiftparserrgmf lib
 - matching
     - if you have 2 or fewer items to match, the question will be treated as Short().
-        > Example:
-        >
-        > ```gift
-        > Which animal eats which food? { 
-        >    =cat -> cat food
-        >    =dog -> dog food
-        > }
-        > ```
+        [**Example**](https://github.com/LightAboveFighter/Stepic_project_312/blob/394a410d20732b539a3325f3307c7838b67a0609/tests/gift_examples/Slippery_moments.gift#L10-L13)<br>
