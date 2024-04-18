@@ -1,0 +1,7 @@
+Rofslsadfsdfas asd adfsad
+
+// multiple choice with specified feedback for right and wrong answers
+::Q2:: What's between orange and green in the spectrum? 
+{ =yellow # right; good! ~red # wrong, it's yellow ~blue # wrong, it's yellow }
+
+
