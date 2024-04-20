@@ -1,7 +1,7 @@
 import yaml
 import requests
 from src.API.OAuthSession import OAuthSession
-from src.Help_methods import is_success, request_status, success_status, clean_dict
+from src.Help_methods import is_success, request_status, success_status
 import json
 import os
 from src.API.Step import StepText, Step, create_any_step
@@ -87,16 +87,16 @@ class Lesson:
     
     def save(self, **kwargs):
         """ Write your lesson to 'Lesson's Title'.yaml
-        **kwargs: filename - custom file's name"""
+        **kwargs: filename - custom file's name and path"""
 
-        title = kwargs.get("filename", self.title)
+        title = kwargs.get("filename", f"{self.title}.yaml")
         if title != kwargs.get("filename", None):
             try:
                 title = translit(title, reversed=True)
             except LanguageDetectionError:
                 pass
 
-        with open(f"src/data/{title}.yaml", "w", encoding="utf-8") as file:
+        with open(title, "w", encoding="utf-8") as file:
             yaml.dump({"Lesson": self.dict_info() }, file, allow_unicode=True)
 
 
@@ -123,8 +123,8 @@ class Lesson:
     
     def load_from_file(self, filename: str):
         data = ""
-        with open(f"src/data/{filename}", "r") as file:
-            data = yaml.safe_load(file)
+        with open(filename, "r", encoding="utf-8") as file:
+            data = yaml.safe_load(file)["Lesson"]
         return self.load_from_dict(data)
 
     def load_from_parse(self, lesson_path: str = ""):
@@ -299,16 +299,16 @@ class Section:
     
     def save(self, **kwargs):
         """ Write your section to 'Section's Title'.yaml
-        **kwargs: filename - custom file's name"""
+        **kwargs: filename - custom file's name and path"""
 
-        title = kwargs.get("filename", self.title)
+        title = kwargs.get("filename", f"{self.title}.yaml")
         if title != kwargs.get("filename", None):
             try:
                 title = translit(title, reversed=True)
             except LanguageDetectionError:
                 pass
 
-        with open(f"src/data/{title}.yaml", "w", encoding="utf-8") as file:
+        with open(title, "w", encoding="utf-8") as file:
             yaml.dump({"Section": self.dict_info() }, file, allow_unicode=True)
 
 
@@ -383,8 +383,8 @@ class Section:
 
     def load_from_file(self, filename: str):
         data = ""
-        with open(f"src/data/{filename}", "r", encoding="utf-8") as file:
-            data = yaml.safe_load(file)
+        with open(filename, "r", encoding="utf-8") as file:
+            data = yaml.safe_load(file)["Section"]
         return self.load_from_dict(data)
 
     def load_from_dict(self, data: dict):
@@ -439,16 +439,16 @@ class Course:
 
     def save(self, **kwargs):
         """ Write your course to 'Course's Title'.yaml
-        **kwargs: filename - custom file's name"""
+        **kwargs: filename - custom file's name and path"""
 
-        title = kwargs.get("filename", self.title)
+        title = kwargs.get("filename", f"{self.title}.yaml")
         if title != kwargs.get("filename", None):
             try:
                 title = translit(title, reversed=True)
             except LanguageDetectionError:
                 pass
             
-        with open(f"src/data/{title}.yaml", "w", encoding="utf-8") as file:
+        with open(title, "w", encoding="utf-8") as file:
             yaml.dump({"Course": self.dict_info() }, file, allow_unicode=True)
 
     def dict_info(self):
@@ -587,7 +587,7 @@ class Course:
 
     def load_from_file(self, filename: str):
         data = ""
-        with open(f"src/data/{filename}", "r") as file:
+        with open(filename, "r", encoding="utf-8") as file:
             data = yaml.safe_load(file)["Course"]
         return self.load_from_dict(data)
     
