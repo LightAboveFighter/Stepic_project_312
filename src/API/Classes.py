@@ -47,20 +47,25 @@ class Lesson:
 
     def send(self, session: OAuthSession):
 
-        if  self.id is not None:
-            return success_status(True, "Already sent")
-
         api_url = 'https://stepik.org/api/lessons'
+        if  self.id:
+            api_url += f"/{self.id}"
+
         data = {
             'lesson': { **{
                 'title': self.title,
+                'id': self.id,
                 "steps": [ i if isinstance(i, int) else i.id for i in self.steps ]
             }, **self.params }
         }
-        r = requests.post(api_url, headers=session.headers(), json=data)
+
+        if self.id:
+            r = requests.put(api_url, headers=session.headers(), json=data)
+        else:
+            r = requests.post(api_url, headers=session.headers(), json=data)
         id = r.json()['lessons'][0]['id']
 
-        if is_success(r, 201):
+        if is_success(r, 0):
             self.id = id
             for i in self.steps:
                 i.lesson_id = self.id
@@ -329,46 +334,39 @@ class Section:
     
     def send(self, course_id: int, position: int, session: OAuthSession):
 
-        if self.id is not None:
-            skip = True
-            for i in self.lessons:
-                if not i.is_tied(self.id):
-                    skip = False
-                    break
-            if skip:
-                return success_status(True, "Already sent")
-        else:
-            title = self.title
+        api_url = "https://stepik.org/api/sections"
+        if self.id:
+            api_url += f"/{self.id}"
 
-            api_url = "https://stepik.org/api/sections"
-            payload = json.dumps( 
-                {
-                    "section": 
-                    { 
-                        **{
-                        "position": position + 1,
-                        "required_percent": 100,
-                        "title": title,
-                        "course": course_id
-                        }, **self.params
-                    }
+        payload = json.dumps( 
+            {
+                "section": 
+                { 
+                    **{
+                    "position": position + 1,
+                    "required_percent": 100,
+                    "title": self.title,
+                    "id": self.id,
+                    "course": course_id
+                    }, **self.params
                 }
-            )
-            head = session.headers()
-            head["Cookie"] = session.cookie
-
+            }
+        )
+        head = session.headers()
+        head["Cookie"] = session.cookie
+        if self.id:
+            r = requests.put(api_url, headers=head, data=payload)
+        else:
             r = requests.post(api_url, headers=head, data=payload)
-            if is_success(r, 201):
-                id = json.loads(r.text)["sections"][0]["id"]
-                self.id = id
-                for i in range(len(self.lessons)):
+
+        if is_success(r, 0):
+            id = json.loads(r.text)["sections"][0]["id"]
+            self.id = id
+            for i in range(len(self.lessons)):
+                self.lessons[i].send(session)
+                if not self.lessons[i].is_tied(self.id):
                     self.lessons[i].tie(self.id, i, session)
-            return request_status(r, 201)
-        
-        for i in range(len(self.lessons)):
-            if self.lessons[i].is_tied(self.id):
-                self.lessons[i].tie(self.id, i, session)
-        return success_status(True, "Already sent, modify lessons")
+        return request_status(r, 201)
     
     def send_lesson(self, les_pos: int, session: OAuthSession):
         self.lessons[les_pos].send(session)
@@ -535,8 +533,6 @@ class Course:
         self.send_heading(**kwargs)
         for i in range(len(self.sections)):
             self.send_section(i, **kwargs)
-            for j in range(len(self.sections[i].lessons)):
-                self.send_lesson(i, j, **kwargs)
         self.save()
 
     def send_heading(self, **kwargs):
@@ -547,22 +543,25 @@ class Course:
         except AttributeError:
             raise AttributeError("run self.auth() or set **kwargs: session")
 
-        if not self.id is None:
-
-            return {"Success": True, "json": {"Status": "Already sent"}}
-
         api_url = "https://stepik.org/api/courses"
+        if self.id:
+            api_url += f"/{self.id}"
+
         payload = json.dumps( 
             {
                 "course": { **{
                     "title": self.title,
+                    "id": self.id
                     }, **self.params }
                 }
         )
         head = session.headers()
         head["Cookie"] = session.cookie
 
-        r = requests.post(api_url, headers=head, data=payload)
+        if self.id:
+            r = requests.put(api_url, headers=head, data=payload)
+        else:
+            r = requests.post(api_url, headers=head, data=payload)
 
         if is_success(r, 201):
             id = json.loads(r.text)['enrollments'][0]['id']

@@ -48,7 +48,12 @@ class Step(ABC):
         self.id = self.params.get("id")
 
     def send(self, position: int, session):
+
+
         api_url = "https://stepik.org/api/step-sources"
+        if self.params.get("id", False):
+            api_url += f"/{self.id}"
+        
         optional = self.params
         data = {
                 "stepSource": { ** {
@@ -57,11 +62,16 @@ class Step(ABC):
                                     **self.body
                                     },
                                 "lesson": self.lesson_id,
-                                "position": position
+                                "position": position+1
                                 }, **optional }
                 }
         
-        r = requests.post(api_url, headers=session.headers(), json=data)
+        if self.params.get("id", False):
+            r = requests.put(api_url, headers=session.headers(), json=data)
+            print(r.text)
+            print(data)
+        else:
+            r = requests.post(api_url, headers=session.headers(), json=data)
 
         if is_success(r, 201):
             self.id = json.loads(r.text)["step-sources"][0]["id"]
