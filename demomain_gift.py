@@ -1,3 +1,4 @@
+#!python3
 import argparse
 import logging
 
@@ -13,8 +14,6 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('-u', '--upload', action='store_true',
                     help="mode for upload lesson")
-parser.add_argument('-s', '--sync', action='store_true',
-                    help="mode for update an existing lesson")
 parser.add_argument('-G', '--GIFT',
                     action='store_true',
                     help='export from GIFT file')
@@ -38,14 +37,11 @@ if args.debug:
     activate_logger("D")
 else:
     activate_logger("W")
-if args.upload and args.sync:
-    logging.error("You cant upload and sync at the same time!")
-    exit(1)
 if args.upload:
     title = args.title if args.title is not None else ""
     steps: list    = get_gift_dicts(args.file)
     lesson: Lesson = Lesson(title=title, steps=steps)
-    course: Course = Course("title_Rofls")
+    course: Course = Course("title_NEw")
     course.create_section(0, Section("название",[lesson]))
     course.auth(OAuthSession())
     course.save()
