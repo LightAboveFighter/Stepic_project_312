@@ -48,16 +48,6 @@ class Step(ABC):
         if self.params:
             self.id = self.params.get("id")
 
-    def __eq__(self, step: any):
-        if not isinstance(step, Step):
-            return False
-        if self.title != step.title or self.lesson_id != step.lesson_id or self.body != step.body or self.unique != step.unique or self.params != step.params:
-            return False
-        return True
-    
-    def __ne__(self, step: any):
-        return not self.__eq__(step)
-
     def send(self, position: int, session):
         """ Create or update Step on Stepic.org.
         If self.id is None - Step will be created, otherwise it will be updated """
