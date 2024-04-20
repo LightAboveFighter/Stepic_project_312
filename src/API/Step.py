@@ -1,16 +1,16 @@
 import requests
-from src.Help_methods import is_success, request_status, success_status
-from src.API.OAuthSession import OAuthSession
+from src.Help_methods import is_success, request_status
 from abc import ABC
 import json
 import yaml
 from dataclasses import field, dataclass
 from typing import Any, Optional
 from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique
-from enum import Enum
 
 
 def create_any_step(type: str, *args, **kwargs):
+    """ Creates needable Step with type
+    *args, **kwargs: abstract Step's arguments """
 
     title, lesson_id, body, unique = ( args[i] if i < len(args) else None for i in range(4) )
 
@@ -33,22 +33,29 @@ def create_any_step(type: str, *args, **kwargs):
 
 @dataclass
 class Step(ABC):
-    """ body - dict of main class parameters 
-    example: {'text':  [str],
-                'source':  [Any]}
-    """
-    title: str
-    lesson_id: int
-    body: dict
+    """ body - block field of Step's API request
+    Unique: StepAnyType.Unique() Can be filled with Loading_templates module
+    P.S: id can be set in params """
+
+    title: str = ""
+    lesson_id: int = None
+    body: dict = None
     unique: Any = None
     params: Optional[Any] = field(default_factory = dict)
     id = None
 
     def __post_init__(self):
-        self.id = self.params.get("id")
+        if self.params:
+            self.id = self.params.get("id")
 
     def send(self, position: int, session):
+        """ Create or update Step on Stepic.org.
+        If self.id is None - Step will be created, otherwise it will be updated """
+
         api_url = "https://stepik.org/api/step-sources"
+        if self.params.get("id", False):
+            api_url += f"/{self.id}"
+        
         optional = self.params
         data = {
                 "stepSource": { ** {
@@ -57,17 +64,23 @@ class Step(ABC):
                                     **self.body
                                     },
                                 "lesson": self.lesson_id,
-                                "position": position
+                                "position": position+1
                                 }, **optional }
                 }
         
-        r = requests.post(api_url, headers=session.headers(), json=data)
+        if self.params.get("id", False):
+            r = requests.put(api_url, headers=session.headers(), json=data)
+        else:
+            r = requests.post(api_url, headers=session.headers(), json=data)
 
         if is_success(r, 201):
             self.id = json.loads(r.text)["step-sources"][0]["id"]
         return request_status(r, 201)
     
-    def save(self):
+    def save(self, **kwargs):
+        """ Save your Step to {Step's name}.yaml in root directory.
+        **kwargs: filename: custom file's name, type and path """
+
         optional = self.params
         data = {
                 "stepSource": { ** {
@@ -78,28 +91,48 @@ class Step(ABC):
                                 "lesson": self.lesson_id
                                 }, **optional }
                 }
-        title = self.title
-        with open(f"src/API/{title}.yaml", "w") as file:
+        if kwargs.get("copy", False):
+            data["lesson"] = None
+            data["id"] = None
+
+        title = f"{self.title}.yaml" if not kwargs.get("filename", False) else kwargs["filename"]
+        with open(title, "w") as file:
             yaml.safe_dump(data, file)
 
-    def load_from_file(self, filename):
+    def load_from_file(self, filename, **kwargs):
+        """ Fill all Step's fields with content from file.
+        **kwargs: if copy: delete all ids """
+
         data = ""
-        with open(f"src/API/{filename}", "r") as file:
+        with open(filename, "r") as file:
             data = yaml.safe_load(file)
-        return self.load_from_dict(data)
+        return self.load_from_dict(data, **kwargs)
     
-    def load_from_dict(self, data: dict):
+    def load_from_dict(self, data: dict, **kwargs):
+        """ Fill all Step's fields with content from dictionary.
+        **kwargs: if copy: delete all ids """
+
         params = Step_template().dump(data)
+        if kwargs.get("copy", False):
+            params["id"] = None
+            params["lesson"] = None
+
         assert self._type == params["block"]["name"]
         del params["block"]["name"]
+        self.title = data["title"]
         self.body = params["block"]
         del params["block"]
         self.params = params
+        return self
 
     def get_type(self):
+        """ Return Step's type """
         return self._type
 
-    def dict_info(self):
+    def dict_info(self, **kwargs):
+        """ Returns Step in the dictionary view.
+        **kwargs: if copy: delete all ids """
+
         ans = { 
             "title": self.title,
             "id": self.id,
@@ -110,33 +143,38 @@ class Step(ABC):
                 },
             **self.params 
             }
+        if kwargs.get("copy", False):
+            ans["id"] = None
+            ans["lesson"] = None
         return ans
     
 
-@dataclass()
+@dataclass(init=True)
 class StepText(Step):
-
-    title: str
-    lesson_id: int
-    body: dict
-    params: Optional[Any] = field(default_factory = dict)
+    """ body - block field of Step's API request
+    Unique: None
+        P.S: id can be set in params """
+        
     _type = "text"
     
     def __post_init__(self):
-        if self.body.get("text") is None:
-            raise "StepText must contain text field"
-        # self.body["text"] = f"<p>{self.body['text']}<p>"
+        if self.body:
+            if self.body.get("text") is None:
+                raise "StepText must contain text field"
 
 
 @dataclass
 class StepChoice(Step):
-    """ body:  Step's body + source: [ {is_correct, text, feedback: Optional }, ...],
-        is_multiple_choice """
+    """ body - block field of Step's API request body.
+    Unique: StepChoice.Unique() Can be filled with Loading_templates.ChoiceUnique()
+        P.S: id can be set in params 
+    Body can be set as: body["source"]: { [ {is_correct, text, feedback: Optional }, ...], is_multiple_choice }"""
     
     _type = "choice"
     
     @dataclass
     class Unique:
+        """ options: [ { is_correct, text, feedback } ]"""
 
         @dataclass
         class Option:
@@ -179,6 +217,22 @@ class StepChoice(Step):
             self.body["source"][i] = choices[i]
 
 class StepCode(Step):
+    """ body - block field of Step's API request body.
+    Unique: StepCode.Unique() Can be filled with Loading_templates.CodeUnique()
+        P.S: id can be set in params 
+    Body can be set as: body["source"]: {
+        "code": str,
+        "execution_time_limit": int,
+        "execution_memory_limit": int,
+        "templates_data": str,
+        "test_cases": [[str]],   
+        "samples_count": int,
+        "is_time_limit_scaled": bool,
+        "test_archive": [],
+        "is_memory_limit_scaled": bool,
+        "manual_time_limits": [],
+        "manual_memory_limits": []
+    }"""
 
     _type = "code"
 
