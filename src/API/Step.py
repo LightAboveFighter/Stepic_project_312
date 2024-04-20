@@ -37,15 +37,26 @@ class Step(ABC):
     Unique: StepAnyType.Unique() Can be filled with Loading_templates module
     P.S: id can be set in params """
 
-    title: str
-    lesson_id: int
-    body: dict
+    title: str = ""
+    lesson_id: int = None
+    body: dict = None
     unique: Any = None
     params: Optional[Any] = field(default_factory = dict)
     id = None
 
     def __post_init__(self):
-        self.id = self.params.get("id")
+        if self.params:
+            self.id = self.params.get("id")
+
+    def __eq__(self, step: any):
+        if not isinstance(step, Step):
+            return False
+        if self.title != step.title or self.lesson_id != step.lesson_id or self.body != step.body or self.unique != step.unique or self.params != step.params:
+            return False
+        return True
+    
+    def __ne__(self, step: any):
+        return not self.__eq__(step)
 
     def send(self, position: int, session):
         """ Create or update Step on Stepic.org.
@@ -118,9 +129,11 @@ class Step(ABC):
 
         assert self._type == params["block"]["name"]
         del params["block"]["name"]
+        self.title = data["title"]
         self.body = params["block"]
         del params["block"]
         self.params = params
+        return self
 
     def get_type(self):
         """ Return Step's type """
@@ -146,22 +159,18 @@ class Step(ABC):
         return ans
     
 
-@dataclass()
+@dataclass(init=True)
 class StepText(Step):
     """ body - block field of Step's API request
-    Unique: StepAnyType.Unique() Can be filled with Loading_templates module
+    Unique: None
         P.S: id can be set in params """
         
-    title: str
-    lesson_id: int
-    body: dict
-    params: Optional[Any] = field(default_factory = dict)
     _type = "text"
     
     def __post_init__(self):
-        if self.body.get("text") is None:
-            raise "StepText must contain text field"
-        # self.body["text"] = f"<p>{self.body['text']}<p>"
+        if self.body:
+            if self.body.get("text") is None:
+                raise "StepText must contain text field"
 
 
 @dataclass

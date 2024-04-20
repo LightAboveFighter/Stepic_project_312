@@ -278,6 +278,7 @@ class Lesson:
             self.load_steps(steps_ids, session)
         else:
             self.steps = steps_ids
+        return self
         
 
     
@@ -745,6 +746,7 @@ class Course:
         del content["title"]
         del content["sections"]
         self.params = Course_template().dump(content)
+        return self
 
     def load_sections(self, ids: list[int], **kwargs):
         """ Fill Course.sections with content from Stepic.org.
