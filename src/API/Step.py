@@ -77,7 +77,10 @@ class Step(ABC):
             self.id = json.loads(r.text)["step-sources"][0]["id"]
         return request_status(r, 201)
     
-    def save(self):
+    def save(self, **kwargs):
+        """ **kwargs: if copy: delete all ids 
+        filename: custom file's name and path """
+
         optional = self.params
         data = {
                 "stepSource": { ** {
@@ -88,18 +91,30 @@ class Step(ABC):
                                 "lesson": self.lesson_id
                                 }, **optional }
                 }
-        title = self.title
-        with open(f"src/API/{title}.yaml", "w") as file:
+        if kwargs.get("copy", False):
+            data["lesson"] = None
+            data["id"] = None
+
+        title = f"{self.title}.yaml" if not kwargs.get("filename", False) else kwargs["filename"]
+        with open(title, "w") as file:
             yaml.safe_dump(data, file)
 
-    def load_from_file(self, filename):
+    def load_from_file(self, filename, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
         data = ""
-        with open(f"src/API/{filename}", "r") as file:
+        with open(filename, "r") as file:
             data = yaml.safe_load(file)
-        return self.load_from_dict(data)
+        return self.load_from_dict(data, **kwargs)
     
-    def load_from_dict(self, data: dict):
+    def load_from_dict(self, data: dict, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
         params = Step_template().dump(data)
+        if kwargs.get("copy", False):
+            params["id"] = None
+            params["lesson"] = None
+
         assert self._type == params["block"]["name"]
         del params["block"]["name"]
         self.body = params["block"]
@@ -109,7 +124,9 @@ class Step(ABC):
     def get_type(self):
         return self._type
 
-    def dict_info(self):
+    def dict_info(self, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
         ans = { 
             "title": self.title,
             "id": self.id,
@@ -120,6 +137,9 @@ class Step(ABC):
                 },
             **self.params 
             }
+        if kwargs.get("copy", False):
+            ans["id"] = None
+            ans["lesson"] = None
         return ans
     
 

@@ -35,15 +35,33 @@ class Lesson:
         parse_module = pp.Suppress(pp.Keyword('##')) + pp.Optional(step_type) + pp.Suppress(pp.ZeroOrMore(pp.White())) + pp.Optional(step_name)
         return parse_module
 
-    def dict_info(self):
-        steps = [ i if isinstance(i, int) else i.dict_info() for i in self.steps ]
-        ans = { **{"title": self.title, "id": self.id, "steps": steps, "sect_ids": self.sect_ids }, **self.params}
+    def dict_info(self, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
+        copy = kwargs.get("copy", False)
+        steps = [ i if isinstance(i, int) else i.dict_info(copy=copy) for i in self.steps ]
+
+        if copy:
+            for i in range(len(steps)):
+                if isinstance(steps[i], int):
+                    steps[i] = None
+        print(steps)
+        
+        id = self.id if not copy else None
+        sect_ids = self.sect_ids if not copy else []
+
+        ans = { **{"title": self.title, "id": id, "steps": steps, "sect_ids": sect_ids }, **self.params}
         return ans
     
-    def get_structure(self):
-        ans = {"id": self.id, "steps": []}
-        for i in self.steps:
-            ans["steps"].append(i if isinstance(i, int) else i.id)
+    def get_structure(self, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
+        copy = kwargs.get("copy", False)
+        id = self.id if not copy else None
+        ans = {"id": id, "steps": []}
+        if not copy:
+            for i in self.steps:
+                ans["steps"].append(i if isinstance(i, int) else i.id)
 
     def send(self, session: OAuthSession):
 
@@ -92,7 +110,8 @@ class Lesson:
     
     def save(self, **kwargs):
         """ Write your lesson to 'Lesson's Title'.yaml
-        **kwargs: filename - custom file's name and path"""
+        **kwargs: filename - custom file's name and path;
+        if copy: delete all ids """
 
         title = kwargs.get("filename", f"{self.title}.yaml")
         if title != kwargs.get("filename", None):
@@ -100,9 +119,11 @@ class Lesson:
                 title = translit(title, reversed=True)
             except LanguageDetectionError:
                 pass
+        
+        content = self.dict_info(copy=kwargs.get("copy", False))
 
         with open(title, "w", encoding="utf-8") as file:
-            yaml.dump({"Lesson": self.dict_info() }, file, allow_unicode=True)
+            yaml.dump({"Lesson": content }, file, allow_unicode=True)
 
 
     def is_tied(self, sect_id: int):
@@ -126,11 +147,13 @@ class Lesson:
             return request_status(r2, 0)
         return success_status(True, "Already tied")
     
-    def load_from_file(self, filename: str):
+    def load_from_file(self, filename: str, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
         data = ""
         with open(filename, "r", encoding="utf-8") as file:
             data = yaml.safe_load(file)["Lesson"]
-        return self.load_from_dict(data)
+        return self.load_from_dict(data, **kwargs)
 
     def load_from_parse(self, lesson_path: str = ""):
 
@@ -182,24 +205,33 @@ class Lesson:
                     step_lines += line
             steps.append(StepText(previous_step.name, None, {"text": step_lines} ))
 
-    def load_from_dict(self, data: dict):
+    def load_from_dict(self, data: dict, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
+        copy = kwargs.get("copy", False)
         self.title = data["title"]
-        self.id = data["id"]
-        self.sect_ids = data["sect_ids"]
+        self.id = data["id"] if not copy else None
+        self.sect_ids = data["sect_ids"] if not copy else []
 
         if isinstance(data["steps"][0], int):
-            self.steps = data["steps"]
+            self.steps = data["steps"] if not copy else []
         else:
             self.steps = []
             for i in data["steps"]:
                 if isinstance(i, int):
-                    self.steps.append(i)
+                    if not copy:
+                        self.steps.append(i)
                     continue
+                if copy:
+                    i["id"] = None
+                    i["lesson"] = None
+
                 type = i["block"]["name"]
                 unique = i["block"]["source"].copy()
                 st = create_any_step(type, **i, unique=unique)
 
                 self.steps.append(st)
+
         data2 = data.copy()
         del data2["title"]
         del data2["id"]
@@ -212,7 +244,7 @@ class Lesson:
         return self
     
     def load_from_net(self, id: int, session: OAuthSession, **kwargs):
-        """ **kwargs: if copy: delete all ids, if source: load steps's content """
+        """ **kwargs: if source: load steps's content """
 
         url = f"https://stepik.org/api/lessons/{id}"
 
@@ -222,15 +254,10 @@ class Lesson:
         
         content = Lesson_template().dump(json.loads(r.text)["lessons"][0])
 
-        copy = kwargs.get("copy", False)
-        if copy:
-            self.id = None
-        else:
-            self.id = id
+        self.id = id
         self.title = content["title"]
         
-        if not copy:
-            self.sect_ids = content["courses"]
+        self.sect_ids = content["courses"]
         steps_ids = content["steps"]
 
         del content["id"]
@@ -240,14 +267,13 @@ class Lesson:
 
         self.params = content
         if kwargs.get("source", False):
-            self.load_steps(steps_ids, session, **kwargs)
+            self.load_steps(steps_ids, session)
         else:
             self.steps = steps_ids
         
 
     
-    def load_steps(self, ids: list[int], session: OAuthSession, **kwargs):
-        """ **kwargs: if copy: delete all ids """
+    def load_steps(self, ids: list[int], session: OAuthSession):
 
         ids_url = [ str(i) for i in ids]
         ids_url = "&ids[]=".join(ids_url)
@@ -270,11 +296,7 @@ class Lesson:
             del params["block"]
             params["lesson"] = self.id
 
-            if kwargs.get("copy", False):
-                les_id = None
-                del params["id"]
-            else:
-                les_id = self.id
+            les_id = self.id
             unique = body["source"]
             
             step = create_any_step(type, f"Step_{i}", les_id, body, unique, **params)
@@ -289,22 +311,34 @@ class Section:
         self.id = None
         self.params = params
 
-    def dict_info(self):
+    def dict_info(self, **kwargs):
+        """ **kwargs: if copy: delete all ids """
 
-        ans = { **{"title": self.title, "id": self.id, "lessons": []}, **self.params }
+        copy = kwargs.get("copy", False)
+        title = self.title if not copy else None
+        id = self.id if not copy else None
+        params = self.params
+        if copy:
+            params["course"] = None
+        ans = { **{"title": title, "id": id, "lessons": []}, **params }
         for i in self.lessons:
-            ans["lessons"].append(i.dict_info())
+            ans["lessons"].append(i.dict_info(**kwargs))
         return ans
     
-    def get_structure(self):
-        ans = {"id": self.id, "lessons": []}
+    def get_structure(self, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
+        id = self.id if not kwargs.get("copy", False) else None
+        ans = {"id": id, "lessons": []}
         for i in self.lessons:
-            ans["lessons"].append(i.get_structure())
+            ans["lessons"].append(i.get_structure(**kwargs))
         return ans
     
     def save(self, **kwargs):
         """ Write your section to 'Section's Title'.yaml
-        **kwargs: filename - custom file's name and path"""
+        **kwargs: filename - custom file's name and path
+        if copy: delete all ids """
+
 
         title = kwargs.get("filename", f"{self.title}.yaml")
         if title != kwargs.get("filename", None):
@@ -314,7 +348,7 @@ class Section:
                 pass
 
         with open(title, "w", encoding="utf-8") as file:
-            yaml.dump({"Section": self.dict_info() }, file, allow_unicode=True)
+            yaml.dump({"Section": self.dict_info(copy=kwargs.get("copy", False)) }, file, allow_unicode=True)
 
 
     def delete_network(self, session):
@@ -379,18 +413,23 @@ class Section:
     def delete_network_lesson(self, les_pos, session: OAuthSession, danger = False):
         return self.lessons[les_pos].delete_network(session, danger)
 
-    def load_from_file(self, filename: str):
+    def load_from_file(self, filename: str, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
         data = ""
         with open(filename, "r", encoding="utf-8") as file:
             data = yaml.safe_load(file)["Section"]
-        return self.load_from_dict(data)
+        return self.load_from_dict(data, **kwargs)
 
-    def load_from_dict(self, data: dict):
+    def load_from_dict(self, data: dict, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
+        copy = kwargs.get("copy", False)
         self.title = data["title"]
-        self.id = data["id"]
+        self.id = data["id"] if not copy else None
         self.lessons = []
         for i in data["lessons"]:
-            self.lessons.append( Lesson().load_from_dict(i))
+            self.lessons.append( Lesson().load_from_dict(i, **kwargs))
 
         try:
             data2 = Section_template().dump(data)
@@ -400,11 +439,13 @@ class Section:
         del data2["title"]
         del data2["id"]
         del data2["lessons"]
+        if copy:
+            data2["course"] = None
         self.params = data2
         return self
     
     def load_lessons(self, ids: list[int], session: OAuthSession, **kwargs):
-        """ **kwargs: if copy: delete all ids, if source: load steps's content """
+        """ **kwargs: if source: load steps's content """
 
         ids_url = [ str(i) for i in ids]
         ids_url = "&ids[]=".join(ids_url)
@@ -437,7 +478,8 @@ class Course:
 
     def save(self, **kwargs):
         """ Write your course to 'Course's Title'.yaml
-        **kwargs: filename - custom file's name and path"""
+        **kwargs: filename - custom file's name and path
+        if copy: delete all ids """
 
         title = kwargs.get("filename", f"{self.title}.yaml")
         if title != kwargs.get("filename", None):
@@ -447,18 +489,26 @@ class Course:
                 pass
             
         with open(title, "w", encoding="utf-8") as file:
-            yaml.dump({"Course": self.dict_info() }, file, allow_unicode=True)
+            yaml.dump({"Course": self.dict_info(copy=kwargs.get("copy", False)) }, file, allow_unicode=True)
 
-    def dict_info(self):
-        ans = { **{"title": self.title, "id": self.id, "sections": [] }, **self.params }
+    def dict_info(self, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
+        copy = kwargs.get("copy", False)
+        id = self.id if not copy else None
+        ans = { **{"title": self.title, "id": id, "sections": [] }, **self.params }
         for i in self.sections:
-            ans["sections"].append( i.dict_info() )
+            ans["sections"].append( i.dict_info(copy=copy) )
         return ans
     
-    def get_structure(self):
-        ans = {"id": self.id, "sections": []}
+    def get_structure(self, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
+        copy = kwargs.get("copy", False)
+        id = self.id if not copy else None
+        ans = {"id": id, "sections": []}
         for i in self.sections:
-            ans["Sections"].append(i.get_structure())
+            ans["Sections"].append(i.get_structure(copy=copy))
         return ans
     
     def create_section(self, position: int, section: Section):
@@ -584,19 +634,24 @@ class Course:
             raise AttributeError("run self.auth() or set **kwargs: session")
         self.sections[sect_pos].send_lesson(les_pos, session)
 
-    def load_from_file(self, filename: str):
+    def load_from_file(self, filename: str, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
         data = ""
         with open(filename, "r", encoding="utf-8") as file:
             data = yaml.safe_load(file)["Course"]
-        return self.load_from_dict(data)
+        return self.load_from_dict(data, **kwargs)
     
-    def load_from_dict(self, data: dict):
+    def load_from_dict(self, data: dict, **kwargs):
+        """ **kwargs: if copy: delete all ids """
+
+        copy = kwargs.get("copy", False)
         self.title = data["title"]
-        self.id = data.get("id", None)
+        self.id = data.get("id", None) if not copy else None
 
         self.sections = []
         for i in data["sections"]:
-            self.sections.append( Section().load_from_dict(i))
+            self.sections.append( Section().load_from_dict(i, copy=copy))
 
         del data["title"]
         del data["sections"]
@@ -605,8 +660,8 @@ class Course:
         return self
 
     def load_from_net(self, id: int, **kwargs):
-        """ **kwargs: if copy: delete all ids, if source: load steps's content
-        session - OAuthSession() """
+        """ **kwargs: if source: load steps's content;
+        session: use given OAuthSession() """
 
         url = f"https://stepik.org/api/courses/{id}"
 
@@ -621,11 +676,7 @@ class Course:
         
         content = json.loads(r.text)["courses"][0] 
 
-        copy = kwargs.get("copy", False)
-        if copy:
-            self.id = None
-        else:
-            self.id = id
+        self.id = id
         self.title = content["title"]
         
         sect_ids = content["sections"]
@@ -641,7 +692,7 @@ class Course:
 
     def load_sections(self, ids: list[int], **kwargs):
         """ Add group of sections from net
-        **kwargs: if copy: delete all ids, if source: load steps's content """
+        **kwargs: if source: load steps's content """
 
         ids_url = [ str(i) for i in ids]
         ids_url = "&ids[]=".join(ids_url)
@@ -664,10 +715,6 @@ class Course:
             content = i
             title = content["title"]
 
-            copy = kwargs.get("copy", False)
-            if copy:
-                del content["id"]
-                del content["course"]
             lessons_ids = content["units"]
             del content["title"]
             del content["units"]
