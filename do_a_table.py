@@ -2,7 +2,7 @@ import yaml
 from information_for_table import Class
 import src.API.OAuthSession as auth
 
-your_class_id = 56799
+your_class_id = 0
 t = Class(your_class_id, auth.OAuthSession())   #enter your_class_id and, if you need, args to OAuthSession
 #t.update_info_lessons()
 t.get_table()
