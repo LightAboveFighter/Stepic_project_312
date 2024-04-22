@@ -3,8 +3,9 @@ import pprint
 import json
 import sys
 import logging as log
+
 sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
-#from src.API.Classes import Step_text #FIXME 
+from src.API.Classes import Lesson 
 from src.API.Step import create_any_step
 
 from logs.project_logger import activate_logger
@@ -195,7 +196,7 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
     title = question.name
     if title in question_data["text"]:  #FIXME add to .md 
         log.info(f'title \"{title}\" title is contained in question, maby title is incorrect!')
-    return create_any_step(question_type, title if title else "", 0, **{"block":question_data})
+    return create_any_step(question_type, title if title else "", 0, **{"block":question_data},unique ={"options": (question_data["source"]["options"] if "source" in question_data.keys() else None)})
 
 
 def get_gift_dicts(filename: str) -> list:
@@ -242,8 +243,8 @@ def get_gift_dicts_from_text(text: str) -> list:
     return questions
 
 
-def get_Step_list(lesson_id: int) -> list:
-    pass
+def get_Lesson() -> Lesson:
+    return
 
 if __name__ == "__main__":
     import argparse
