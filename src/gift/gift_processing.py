@@ -196,7 +196,7 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
     title = question.name
     if title in question_data["text"]:  #FIXME add to .md 
         log.info(f'title \"{title}\" title is contained in question, maby title is incorrect!')
-    return create_any_step(question_type, title if title else "", 0, **{"block":question_data},unique ={"options": (question_data["source"]["options"] if "source" in question_data.keys() else None)})
+    return create_any_step(question_type, title if title else "", 0, **{"block":question_data},unique ={"options": (question_data["source"]["options"] if "source" in question_data.keys() else dict())})
 
 
 def get_gift_dicts(filename: str) -> list:
