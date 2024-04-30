@@ -12,6 +12,8 @@ from transliterate.exceptions import LanguageDetectionError
 from src.API.Loading_templates import Step_template, Lesson_template, Section_template, \
     Course_template, Lesson_template_source, Section_template_source, Course_template_source
 
+from random import randint
+
 
 class Lesson:
 
@@ -123,7 +125,7 @@ class Lesson:
                 pass
         
         content = self.dict_info(copy=kwargs.get("copy", False))
-
+        title = title.replace(os.getcwd(), "./")
         with open(title, "w", encoding="utf-8") as file:
             yaml.dump({"Lesson": content }, file, allow_unicode=True)
 
@@ -156,6 +158,7 @@ class Lesson:
         **kwargs: if copy: delete all ids """
 
         data = ""
+        filename = filename.replace(os.getcwd(), "./")
         with open(filename, "r", encoding="utf-8") as file:
             data = yaml.safe_load(file)["Lesson"]
         return self.load_from_dict(data, **kwargs)
@@ -323,7 +326,8 @@ class Section:
 
     def dict_info(self, **kwargs):
         """ Returns Section in the dictionary view.
-        **kwargs: if copy: delete all ids """
+        **kwargs: if copy: delete all ids
+        path - path to saving lessons"""
 
         copy = kwargs.get("copy", False)
         title = self.title if not copy else None
@@ -333,8 +337,10 @@ class Section:
             params["course"] = None
         ans = { **{"title": title, "id": id, "lessons": []}, **params }
         for i in self.lessons:
-            ans["lessons"].append({"id": i.id, "title": i.title, "file": f"{i.title}.yaml"})
-            i.save(**kwargs)
+            filename = kwargs.get("path", ".")
+            filename += f"/{i.title}.yaml"
+            i.save(filename=filename, copy=kwargs.get("copy", False))
+            ans["lessons"].append({"id": i.id, "title": i.title, "file": filename})
         return ans
     
     def get_structure(self, **kwargs):
@@ -349,9 +355,9 @@ class Section:
     
     def save(self, **kwargs):
         """ Save your Section to {Section's name}.yaml in root directory.
+        All Section's lessons will be saved to same directory as {Section's Title}.yaml
         **kwargs: filename - custom file's name, type and path;
             if copy: delete all ids """
-
 
         title = kwargs.get("filename", f"{self.title}.yaml")
         if title != kwargs.get("filename", None):
@@ -359,9 +365,14 @@ class Section:
                 title = translit(title, reversed=True)
             except LanguageDetectionError:
                 pass
-
+        title = title.replace(os.getcwd(), "./")
         with open(title, "w", encoding="utf-8") as file:
-            yaml.dump({"Section": self.dict_info(copy=kwargs.get("copy", False)) }, file, allow_unicode=True)
+            path = kwargs.get("filename", "")
+            path = path.split(r"/")
+            if path[-1] != ".":
+                del path[-1]
+            path = os.getcwd() + "/".join(path)
+            yaml.dump({"Section": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True)
 
 
     def delete_network(self, session: OAuthSession):
@@ -453,7 +464,7 @@ class Section:
         self.id = data["id"] if not copy else None
         self.lessons = []
         for i in data["lessons"]:
-            self.lessons.append( Lesson().load_from_dict(i, **kwargs))
+            self.lessons.append( Lesson().load_from_file(i["file"], **kwargs))
 
         try:
             data2 = Section_template().dump(data)
@@ -507,6 +518,7 @@ class Course:
 
     def save(self, **kwargs):
         """ Write your Course to {Course's Title}.yaml in root directory
+        All Sections' lessons will be saved to same directory as {Course's Title}.yaml
         **kwargs: filename - custom file's name, type and path;
             if copy: delete all ids """
 
@@ -518,17 +530,23 @@ class Course:
                 pass
             
         with open(title, "w", encoding="utf-8") as file:
-            yaml.dump({"Course": self.dict_info(copy=kwargs.get("copy", False)) }, file, allow_unicode=True)
+            path = kwargs.get("filename", "")
+            path = path.split(r"/")
+            if path[-1] != ".":
+                del path[-1]
+            path = os.getcwd() + "/".join(path)
+            yaml.dump({"Course": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True)
 
     def dict_info(self, **kwargs):
         """ Returns Course in the dictionary view.
-        **kwargs: if copy: delete all ids """
+        **kwargs: if copy: delete all ids
+        path - path to save Sections' lessons"""
 
         copy = kwargs.get("copy", False)
         id = self.id if not copy else None
         ans = { **{"title": self.title, "id": id, "sections": [] }, **self.params }
         for i in self.sections:
-            ans["sections"].append( i.dict_info(copy=copy) )
+            ans["sections"].append( i.dict_info(**kwargs) )
         return ans
     
     def get_structure(self, **kwargs):
@@ -693,6 +711,7 @@ class Course:
         **kwargs: if copy: delete all ids """
 
         data = ""
+        filename = filename.replace(os.getcwd(), ".")
         with open(filename, "r", encoding="utf-8") as file:
             data = yaml.safe_load(file)["Course"]
         return self.load_from_dict(data, **kwargs)
