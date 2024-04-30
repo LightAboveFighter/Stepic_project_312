@@ -333,7 +333,8 @@ class Section:
             params["course"] = None
         ans = { **{"title": title, "id": id, "lessons": []}, **params }
         for i in self.lessons:
-            ans["lessons"].append(i.dict_info(**kwargs))
+            ans["lessons"].append({"id": i.id, "title": i.title, "file": f"{i.title}.yaml"})
+            i.save(**kwargs)
         return ans
     
     def get_structure(self, **kwargs):
