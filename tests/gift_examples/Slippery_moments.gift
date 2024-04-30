@@ -1,0 +1,13 @@
+ 
+::Q1:: What two people are entombed in Grant's tomb? {
+   ~%-100%No one
+   ~%0%Every one         #incorrect
+   ~%1%Grant             #correct
+   ~%99%Grant's wife     #correct
+   ~%-100%Grant's father
+}
+
+::Q2:: Which animal eats which food? { 
+   =cat -> cat food
+   =dog -> dog food
+}

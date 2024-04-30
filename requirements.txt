@@ -4,3 +4,5 @@ pytest
 requests
 marshmallow
 transliterate
+pyparsing
+
