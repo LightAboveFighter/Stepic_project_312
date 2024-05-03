@@ -7,12 +7,11 @@ import os
 from src.API.Step import StepText, Step, create_any_step
 import pyparsing as pp
 import io
+from dataclasses import dataclass
 from transliterate import translit
 from transliterate.exceptions import LanguageDetectionError
 from src.API.Loading_templates import Step_template, Lesson_template, Section_template, \
     Course_template, Lesson_template_source, Section_template_source, Course_template_source
-
-from random import randint
 
 
 class Lesson:
@@ -137,21 +136,8 @@ class Lesson:
     def tie(self, sect_id: int, position: int, session: OAuthSession):
         """ Tie Lesson to Section with Section's id """
 
-        if not self.is_tied(sect_id):
-            api_url = 'https://stepik.org/api/units'
-            data = {
-                "unit": {
-                    "position": position,
-                    "lesson": self.id,
-                    "section": sect_id
-                }
-            }
-
-            r2 = requests.post(api_url, headers=session.headers(), json=data)
-            if is_success(r2, 0):
-                self.sect_ids.append(sect_id)
-            return request_status(r2, 0)
-        return success_status(True, "Already tied")
+        unit = Unit(Section(id=sect_id), self, position)
+        return unit.tie(session)
     
     def load_from_file(self, filename: str, **kwargs):
         """ Fill all Lesson's fields with content from file.
@@ -314,15 +300,62 @@ class Lesson:
             
             step = create_any_step(type, f"Step_{i}", les_id, body, unique, **params)
             self.steps.append(step)
+
+
+class Section:
+    pass
+
+
+@dataclass
+class Unit:
+    section: Section
+    lesson: Lesson
+    position: int = -1
+
+    def tie(self, session: OAuthSession):
+
+        if self.lesson.is_tied(self.section.id):
+            return success_status(True, "Already tied")
+        
+        api_url = 'https://stepik.org/api/units'
+        data = {
+            "unit": {
+                **self.dict_info()
+            }
+        }
+
+        r2 = requests.post(api_url, headers=session.headers(), json=data)
+        if is_success(r2, 0):
+            self.lesson.sect_ids.append(self.section.id)
+        return request_status(r2, 0)
+
+
+    def dict_info(self):
+        return {
+            "section": self.section.id,
+            "lesson": self.lesson.id,
+            "position": self.position
+        }
     
 
 class Section:
 
     def __init__(self, title: str = "", lessons: list[Lesson] = None, **params):
         self.title = title
-        self.lessons = lessons or []
+        lessons = lessons or []
         self.id = None
         self.params = params
+        for lesson in lessons:
+            self.__add_unit__(lesson)
+
+    def __add_unit__(self, lesson: Lesson, position: int = -1):
+        """ append if position == -1
+        else: insert """
+
+        if position == -1:
+            self.units.append( Unit(self, lesson, len(self.units)) )
+        else:
+            self.units.insert( Unit(self, lesson, position), position)
 
     def dict_info(self, **kwargs):
         """ Returns Section in the dictionary view.
@@ -336,11 +369,11 @@ class Section:
         if copy:
             params["course"] = None
         ans = { **{"title": title, "id": id, "lessons": []}, **params }
-        for i in self.lessons:
+        for i in self.units:
             filename = kwargs.get("path", ".")
-            filename += f"/{i.title}.yaml"
-            i.save(filename=filename, copy=kwargs.get("copy", False))
-            ans["lessons"].append({"id": i.id, "title": i.title, "file": filename})
+            filename += f"/{i.lesson.title}.yaml"
+            i.lesson.save(filename=filename, copy=kwargs.get("copy", False))
+            ans["lessons"].append({"id": i.lesson.id, "title": i.lesson.title, "file": filename})
         return ans
     
     def get_structure(self, **kwargs):
@@ -349,8 +382,8 @@ class Section:
 
         id = self.id if not kwargs.get("copy", False) else None
         ans = {"id": id, "lessons": []}
-        for i in self.lessons:
-            ans["lessons"].append(i.get_structure(**kwargs))
+        for i in self.units:
+            ans["lessons"].append(i.lesson.get_structure(**kwargs))
         return ans
     
     def save(self, **kwargs):
@@ -384,9 +417,9 @@ class Section:
 
             if is_success(r, 204):
                 self.id = None
-                for i in self.lessons:
-                    index = i.sect_ids.index(id)
-                    i.sect_ids.pop(index)
+                for i in self.units:
+                    index = i.lesson.sect_ids.index(id)
+                    i.lesson.sect_ids.pop(index)
                 self.save()
             return request_status(r, 204)
         return success_status(False, "")
@@ -424,27 +457,27 @@ class Section:
         if is_success(r, 0):
             id = json.loads(r.text)["sections"][0]["id"]
             self.id = id
-            for i in range(len(self.lessons)):
-                self.lessons[i].send(session)
-                if not self.lessons[i].is_tied(self.id):
-                    self.lessons[i].tie(self.id, i, session)
+            for i in range(len(self.units)):
+                self.units[i].lesson.send(session)
+                if not self.units[i].lesson.is_tied(self.id):
+                    self.units[i].lesson.tie(self.id, i, session)
         return request_status(r, 201)
     
-    def send_lesson(self, les_pos: int, session: OAuthSession):
-        """ Likewise Lesson().send() """
-        self.lessons[les_pos].send(session)
-        self.lessons[les_pos].tie(self.id, les_pos, session)
+    # def send_lesson(self, les_pos: int, session: OAuthSession):
+    #     """ Likewise Lesson().send() """
+    #     self.units[les_pos].lesson.send(session)
+    #     self.units[les_pos].tie(session)
 
     def delete_local_lesson(self, les_pos: int):
-        """ Delete Lesson from self.lessons """
-        if self.lessons[les_pos].id is None:
-            self.lessons.pop(les_pos)
+        """ Delete Lesson from self.units.lesson """
+        if self.units[les_pos].lesson.id is None:
+            self.units.pop(les_pos)
 
     def delete_network_lesson(self, les_pos, session: OAuthSession, danger = False):
         """ Likewise Lesson().delete_network()
         if danger: delete Lesson even if it's part of any courses """
 
-        return self.lessons[les_pos].delete_network(session, danger)
+        return self.units[les_pos].lesson.delete_network(session, danger)
 
     def load_from_file(self, filename: str, **kwargs):
         """ Fill all Section's fields with content from file.
@@ -462,9 +495,9 @@ class Section:
         copy = kwargs.get("copy", False)
         self.title = data["title"]
         self.id = data["id"] if not copy else None
-        self.lessons = []
-        for i in data["lessons"]:
-            self.lessons.append( Lesson().load_from_file(i["file"], **kwargs))
+        self.units = []
+        for i in range(len(data["lessons"])):
+            self.__add_unit__( Lesson().load_from_file(data["lessons"][i]["file"], **kwargs) ) 
 
         try:
             data2 = Section_template().dump(data)
@@ -494,11 +527,11 @@ class Section:
             return request_status(r, 0)
         
         lessons = json.loads(r.text)["units"]
-        for i in lessons:
+        for i in range(len(lessons)):
             les = Lesson()
-            les.load_from_net(i["lesson"], session, **kwargs)
+            les.load_from_net(lessons[i]["lesson"], session, **kwargs)
 
-            self.lessons.append(les)
+            self.__add_unit__(les)
 
     
 class Course:
@@ -571,14 +604,14 @@ class Course:
             self.sections.append( section )
     
     def create_lesson(self, les: Lesson, sect_pos: int, position: int = -1):
-        """ Add your Lesson to Course's sections' lessons ( self.sections[sect_pos].lessons ):
+        """ Add your Lesson to Course's sections' lessons ( self.sections[sect_pos].units ):
         insert if position != -1 
-        append if position = -1 """
+        append if position == -1 """
         
         if position != -1:
-            self.sections[sect_pos].lessons.insert( position, les)
+            self.sections[sect_pos].__add_unit__(les, position)
         else:
-            self.sections[sect_pos].lessons.append( les )
+            self.sections[sect_pos].__add_unit__(les) 
 
     def delete_local(self):
         """ Clear all fields """
@@ -605,9 +638,9 @@ class Course:
         if is_success(r, 204):
             self.id = None
             for i in self.sections:
-                for j in i.lessons:
-                    index = j.sect_ids.index( i.id )
-                    j.sect_ids.pop(index)
+                for j in i.units:
+                    index = j.lesson.sect_ids.index( i.id )
+                    j.lesson.sect_ids.pop(index)
                 i.id = None
             self.save()
         return request_status(r, 204)
@@ -673,6 +706,7 @@ class Course:
                     }, **self.params }
                 }
         )
+
         head = session.headers()
         head["Cookie"] = session.cookie
 
