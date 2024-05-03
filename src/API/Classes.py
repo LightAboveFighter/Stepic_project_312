@@ -311,20 +311,27 @@ class Unit:
     section: Section
     lesson: Lesson
     position: int = -1
+    id: int = None
 
     def tie(self, session: OAuthSession):
 
-        if self.lesson.is_tied(self.section.id):
-            return success_status(True, "Already tied")
+            
         
         api_url = 'https://stepik.org/api/units'
+        if id:
+            api_url += f"/{self.id}"
+
         data = {
             "unit": {
                 **self.dict_info()
             }
         }
 
-        r2 = requests.post(api_url, headers=session.headers(), json=data)
+        if id:
+            r2 = requests.put(api_url, headers=session.headers(), json=data)
+        else:
+            r2 = requests.post(api_url, headers=session.headers(), json=data)
+            
         if is_success(r2, 0):
             self.lesson.sect_ids.append(self.section.id)
         return request_status(r2, 0)
@@ -348,7 +355,7 @@ class Section:
         for lesson in lessons:
             self.__add_unit__(lesson)
 
-    def __add_unit__(self, lesson: Lesson, position: int = -1):
+    def __add_unit__(self, lesson: Lesson, position: int = -1, id: int = None):
         """ append if position == -1
         else: insert """
 
@@ -420,7 +427,6 @@ class Section:
                 for i in self.units:
                     index = i.lesson.sect_ids.index(id)
                     i.lesson.sect_ids.pop(index)
-                self.save()
             return request_status(r, 204)
         return success_status(False, "")
     
@@ -513,7 +519,7 @@ class Section:
         return self
     
     def load_lessons(self, ids: list[int], session: OAuthSession, **kwargs):
-        """ Fill self.steps with content from Stepic.org.
+        """ Fill self.units with content from Stepic.org.
         **kwargs: if source: load steps's content, otherwise: only ids """
 
         ids_url = [ str(i) for i in ids]
@@ -526,12 +532,12 @@ class Section:
         if not is_success(r, 0):
             return request_status(r, 0)
         
-        lessons = json.loads(r.text)["units"]
-        for i in range(len(lessons)):
+        units = json.loads(r.text)["units"]
+        for i in range(len(units)):
             les = Lesson()
-            les.load_from_net(lessons[i]["lesson"], session, **kwargs)
+            les.load_from_net(units[i]["lesson"], session, **kwargs)
 
-            self.__add_unit__(les)
+            self.__add_unit__(les, id = units[i]["id"])
 
     
 class Course:
@@ -567,7 +573,7 @@ class Course:
             path = path.split(r"/")
             if path[-1] != ".":
                 del path[-1]
-            path = os.getcwd() + "/".join(path)
+            path = os.getcwd() + "/" + "/".join(path)
             yaml.dump({"Course": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True)
 
     def dict_info(self, **kwargs):
@@ -619,7 +625,6 @@ class Course:
         self.id = None
         self.params = {}
         self.sections = []
-        self.save()
 
     def delete_network(self, **kwargs):
         """ Delete your Course from Stepic.org
@@ -642,7 +647,6 @@ class Course:
                     index = j.lesson.sect_ids.index( i.id )
                     j.lesson.sect_ids.pop(index)
                 i.id = None
-            self.save()
         return request_status(r, 204)
 
 
@@ -656,7 +660,6 @@ class Course:
         res = self.sections[sect_pos].delete_network(self.session)
         if res["Success"]:
             self.delete_local_section(sect_pos)
-            self.save()
         return res
     
     def delete_local_lesson(self, sect_pos: int, les_pos: int):
@@ -682,7 +685,6 @@ class Course:
         self.send_heading(**kwargs)
         for i in range(len(self.sections)):
             self.send_section(i, **kwargs)
-        self.save()
 
     def send_heading(self, **kwargs):
         """ Create or update Section's heading on Stepic.org.
@@ -829,7 +831,7 @@ class Course:
             content = i
             title = content["title"]
 
-            lessons_ids = content["units"]
+            units_ids = content["units"]
             del content["title"]
             del content["units"]
             params = Section_template().dump(content)
@@ -838,5 +840,5 @@ class Course:
             kwargs = kwargs.copy()
             if kwargs.get("session", False):
                 del kwargs["session"]
-            sect.load_lessons(lessons_ids, session, **kwargs)
+            sect.load_lessons(units_ids, session, **kwargs)
             self.sections.append(sect)
