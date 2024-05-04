@@ -23,12 +23,13 @@ def do_a_site_with_tables(your_class_id: int, update: bool)->None:
 
     course_structure = get_course_structure(info_course, info_klass)
 
+    templateLoader = jinja2.FileSystemLoader(searchpath="templates/")
+    templateEnv = jinja2.Environment(loader=templateLoader)
     html_name = f"table_{t.class_id}.html"
     open_flag = "w" if os.path.exists(html_name) else "x"
-    with open(html_name, open_flag, encoding="utf-8") as file_html:
-        file_html.write(do_course_table(t, info_course, info_klass, course_structure))
-        for section in range(len(info_course['Course']['sections'])):
-            file_html.write(do_section_table(section, t, info_course, info_klass, course_structure))
+    with open(html_name, open_flag, encoding='utf-8') as fh:
+        outputText = do_course_table(t, info_course, info_klass, course_structure, templateEnv) + do_section_tables(t, info_course, info_klass, course_structure, templateEnv)
+        fh.write(outputText)
 
 
 def get_course_structure(info_course: dict, info_klass: list)->list:
@@ -46,127 +47,93 @@ def get_course_structure(info_course: dict, info_klass: list)->list:
     return course_structure
 
 
-def do_course_table(t: Class, info_course: dict, info_klass: list, course_structure: list)->str:
+def do_course_table(t: Class, info_course: dict, info_klass: list, course_structure: list, templateEnv)->str:
     """Does the main table with section scores in order of highest score"""
 
-    template = jinja2.Template("""<!DOCTYPE html>
-<html>
-<head>
-<meta charset='UTF-8'>
-    <style>
-    table {
-      font-family: arial, sans-serif;
-      border-collapse: collapse;
-      width: 100%;
-    }
-    td, th {
-      border: 1px solid #dddddd;
-      text-align: left;
-      padding: 8px;
-    }
-    tr:nth-child(even) {
-      background-color: #dddddd;
-    }
-    </style>
-</head>
-<body>
-  <h1>Курс:{{course_name}}</h1>
-  <h2>Курс id:{{course_id}}</h2>
-  <h2>Класс id:{{class_id}}</h2>
-  <table>
-    <tr>
-      <th>Id</th>
-      <th>Имя</th>
-      <th>Всего</th>
-{{section_names}}
-    </tr>
-{{students_with_section_scores}}
-  </table>
-""")
-    section_names = ""
+    section_names = []
     for section in info_course['Course']['sections']:
-        section_names += f"      <th>{section['title']}</th>\n"
-    student_section_scores = ""
+        section_names.append(section['title'])
+    student_names = []
+    course_results = []
+    all_section_results = []
     for student in range(len(info_klass)):  #forming one string of main table
         course_result = 0
-        student_section_scores += f"    <tr>\n      <td>{info_klass[student].get('id')}</td>\n      <td>{info_klass[student].get('name')}</td>\n"
-        results_one_student = ""
+        student_names.append(info_klass[student].get('name'))
+        results_one_student = []
         for section in range(len(info_course['Course']['sections'])):
             section_result = 0
             for step in course_structure[section]:
                 if info_klass[student].get(str(step)):
                     section_result += info_klass[student][str(step)]['score']
-            course_result += section_result        
-            results_one_student += f"      <td>{int(section_result)}</td>\n"  #student's total course score
-        student_section_scores += f"      <td>{int(course_result)}</td>\n" + results_one_student + "    </tr>\n"    #section results
+            course_result += section_result
+            results_one_student.append(int(section_result))
+        course_results.append(int(course_result))
+        all_section_results.append(results_one_student)
+
+    template = templateEnv.get_template("main_template.html")
     return template.render(
+        title=t.class_id,
         course_name=info_course['Course']['title'],
         course_id=t.course_id,
         class_id=t.class_id,
-        section_names=section_names[:-1],   #removes extra line break
-        students_with_section_scores=student_section_scores)
+        section_names=section_names,
+        student_ids=t.student_ids,
+        student_names=student_names,
+        course_results=course_results,
+        all_section_results=all_section_results)
 
 
-def do_section_table(section: int, t: Class, info_course: dict, info_klass: list, course_structure: list)->str:
+def do_section_tables(t: Class, info_course: dict, info_klass: list, course_structure: list, templateEnv)->str:
     """Does a table with step scores of one section in order of highest course score"""
+    section_tables = ''
+    for section in range(len(info_course['Course']['sections'])):
+        template = templateEnv.get_template("section_template.html")
 
-    template = jinja2.Template("""
-<details>
-  <summary><big><big>{{section_name}}</big></big></summary>
-  <table>
-    <tr>
-      <th rowspan='2'>Id</th>
-      <th rowspan='2'>Имя</th>
-      <th rowspan='2'>Всего</th>
-{{lesson_names}}
-    </tr>
-    <tr>
-{{title_steps}}
-    </tr>
-    {{students_with_step_scores}}
-  </table>
-</details>""")
-    title_steps_info = "" 
-    title_lessons_info = ""
-    steps_info = ""
-    for lesson in range(len(info_course['Course']['sections'][section]['lessons'])):    #title part of the table
-        flag = 0
-        amount_steps_in_lesson = 0
-        for step in range(1, len(info_course['Course']['sections'][section]['lessons'][lesson]["steps"])+1):
-            lesson_step = str(info_course['Course']['sections'][section]['lessons'][lesson]['id']) + "-" + str(step)
-            if lesson_step in course_structure[section]:
-                amount_steps_in_lesson += 1
-                title_steps_info += f"    <th>Step {step}</th>\n"
-                flag = 1
-        if flag == 1:
-            lesson_name = jinja2.Template("      <th colspan={{amount_steps}} text-align='center'>{{lesson_name}}</th>")
-            title_lessons_info += lesson_name.render(amount_steps=amount_steps_in_lesson, lesson_name=info_course['Course']['sections'][section]['lessons'][lesson]['title']) + "\n"        
-    for step in course_structure[section]:
-        steps_info += f"  <th>{step}</th>\n"
-    table_info = ""
-    for student in range(len(info_klass)):  #score part of the table
-        section_score = 0
-        student_score_info = ""
+        title_steps = []
+        steps_in_section = []
+        lesson_names = []
+        for lesson in range(len(info_course['Course']['sections'][section]['lessons'])):    #title part of the table
+            flag = 0
+            amount_steps_in_lesson = 0
+            for step in range(1, len(info_course['Course']['sections'][section]['lessons'][lesson]["steps"])+1):
+                lesson_step = str(info_course['Course']['sections'][section]['lessons'][lesson]['id']) + "-" + str(step)
+                if lesson_step in course_structure[section]:
+                    amount_steps_in_lesson += 1
+                    flag = 1
+            if flag == 1:
+                lesson_names.append(info_course['Course']['sections'][section]['lessons'][lesson]['title'])
+                steps_in_section.append(amount_steps_in_lesson)  #to know width of lesson_name cell     
         for step in course_structure[section]:
-            step_score = 0
-            if info_klass[student].get(str(step)):
-                step_score = int(info_klass[student][step].get('score'))
-            section_score += step_score
-            student_score_info += f"      <td>{step_score}</td>\n"
-        student_info = jinja2.Template("""<tr>
-      <td>{{student_id}}</td>
-      <td>{{student_name}}</td>
-      <td>{{section_score}}</td>
-{{student_score_info}}
-    </tr>
-    """)
-        table_info += student_info.render(student_id=info_klass[student].get('id'),
-        student_name=info_klass[student].get('name'),
-        section_score=section_score,
-        student_score_info=student_score_info[:-1])   #removes extra line break
+            title_steps.append(step[step.index("-")+1:]) #only step number, without lesson
 
+        student_names = []
+        section_scores = []
+        section_steps_scores = []
+        for student in range(len(info_klass)):  #score part of the table
+            section_score = 0
+            student_score_info = []
+            for step in course_structure[section]:
+                if info_klass[student].get(str(step)):
+                    step_score = int(info_klass[student][step].get('score'))
+                section_score += step_score
+                student_score_info.append(step_score)
+            student_names.append(info_klass[student].get('name'))
+            section_scores.append(section_score)
+            section_steps_scores.append(student_score_info)
+
+        section_template = templateEnv.get_template("section_template.html")
+        section_tables += section_template.render(
+            section_name=info_course['Course']['sections'][section]['title'],
+            lesson_names=lesson_names,
+            amount_steps=steps_in_section,
+            section_steps=title_steps,
+            student_ids=t.student_ids,
+            student_names=student_names,
+            section_scores=section_scores,
+            section_steps_scores=section_steps_scores) + "\n"
+
+
+    template = templateEnv.get_template("dop_template.html")
     return template.render(
-        section_name=info_course['Course']['sections'][section]['title'],
-        lesson_names=title_lessons_info[:-1],   #removes extra line break
-        title_steps=title_steps_info[:-1],   #removes extra line break
-        students_with_step_scores=table_info)
+        section_tables=section_tables)
+
