@@ -8,7 +8,6 @@ def do_a_site_with_tables(your_class_id: int, update: bool)->None:
     """Creates an html file, which shows score tables of your class divided into sections
     If you need to update information about course or scores, use update=True"""
 
-    """Here i prepare everything needed"""
     t = Class(your_class_id, auth.OAuthSession())   #enter args to OAuthSession, if you need
     if update:
         t.update_info_lessons()
@@ -19,13 +18,13 @@ def do_a_site_with_tables(your_class_id: int, update: bool)->None:
         info_klass = yaml.load(fh, Loader=yaml.FullLoader)  #klass grades
 
     with open(f'src/data/course_{t.course_id}.yaml', mode='r', encoding='utf-8') as fh:
-        info_course = yaml.load(fh, Loader=yaml.FullLoader) #course structure
+        info_course = yaml.load(fh, Loader=yaml.FullLoader) #default course structure
 
-    course_structure = get_course_structure(info_course, info_klass)
+    course_structure = get_course_structure(info_course, info_klass)    #more cofortable course structure
 
     templateLoader = jinja2.FileSystemLoader(searchpath="templates/")
     templateEnv = jinja2.Environment(loader=templateLoader)
-    html_name = f"table_{t.class_id}.html"
+    html_name = f"table_{t.class_id}.html"  #main file with the site
     open_flag = "w" if os.path.exists(html_name) else "x"
     with open(html_name, open_flag, encoding='utf-8') as fh:
         outputText = do_course_table(t, info_course, info_klass, course_structure, templateEnv) + do_section_tables(t, info_course, info_klass, course_structure, templateEnv)
@@ -33,15 +32,20 @@ def do_a_site_with_tables(your_class_id: int, update: bool)->None:
 
 
 def get_course_structure(info_course: dict, info_klass: list)->list:
-    """Mentions only functional step of the course to evaluate them"""
+    """Mentions only functional steps of the course to evaluate them"""
     course_structure = []
     for section in info_course['Course']['sections']:
         steps_of_section = []
         for lesson in section['lessons']:
                 lesson_id = lesson['id']
                 for step in range(len(lesson['steps'])):
-                    name_step = str(lesson_id)+"-"+str(step+1)
-                    if info_klass[0].get(name_step):
+                    name_step = str(lesson_id)+"-"+str(step+1)  #it is how they writen in received course_grades files
+                    flag = 0
+                    for student in info_klass:
+                        if student.get(name_step):
+                            flag = 1
+                            break
+                    if flag == 1:
                         steps_of_section.append(name_step)
         course_structure.append(steps_of_section)
     return course_structure
@@ -56,7 +60,7 @@ def do_course_table(t: Class, info_course: dict, info_klass: list, course_struct
     student_names = []
     course_results = []
     all_section_results = []
-    for student in range(len(info_klass)):  #forming one string of main table
+    for student in range(len(info_klass)):  #score part of main table
         course_result = 0
         student_names.append(info_klass[student].get('name'))
         results_one_student = []
@@ -85,10 +89,9 @@ def do_course_table(t: Class, info_course: dict, info_klass: list, course_struct
 
 def do_section_tables(t: Class, info_course: dict, info_klass: list, course_structure: list, templateEnv)->str:
     """Does a table with step scores of one section in order of highest course score"""
+
     section_tables = ''
     for section in range(len(info_course['Course']['sections'])):
-        template = templateEnv.get_template("section_template.html")
-
         title_steps = []
         steps_in_section = []
         lesson_names = []
@@ -97,14 +100,14 @@ def do_section_tables(t: Class, info_course: dict, info_klass: list, course_stru
             amount_steps_in_lesson = 0
             for step in range(1, len(info_course['Course']['sections'][section]['lessons'][lesson]["steps"])+1):
                 lesson_step = str(info_course['Course']['sections'][section]['lessons'][lesson]['id']) + "-" + str(step)
-                if lesson_step in course_structure[section]:
+                if lesson_step in course_structure[section]:    #to know if this lesson containes some functional steps
                     amount_steps_in_lesson += 1
                     flag = 1
             if flag == 1:
                 lesson_names.append(info_course['Course']['sections'][section]['lessons'][lesson]['title'])
                 steps_in_section.append(amount_steps_in_lesson)  #to know width of lesson_name cell     
         for step in course_structure[section]:
-            title_steps.append(step[step.index("-")+1:]) #only step number, without lesson
+            title_steps.append(step[step.index("-")+1:]) #only step numbers, without mentioning lessons
 
         student_names = []
         section_scores = []
@@ -114,11 +117,16 @@ def do_section_tables(t: Class, info_course: dict, info_klass: list, course_stru
             student_score_info = []
             for step in course_structure[section]:
                 if info_klass[student].get(str(step)):
-                    step_score = int(info_klass[student][step].get('score'))
+                    step_score = info_klass[student][step].get('score')
+                    if str(step_score) == str(int(step_score)):
+                        student_score_info.append("-")  #if student hasn't tryed to complete the step
+                    else:
+                        student_score_info.append(int(step_score))  #if he/she/they has some score, even 0
+                else:
+                    student_score_info.append("-")
                 section_score += step_score
-                student_score_info.append(step_score)
             student_names.append(info_klass[student].get('name'))
-            section_scores.append(section_score)
+            section_scores.append(int(section_score))
             section_steps_scores.append(student_score_info)
 
         section_template = templateEnv.get_template("section_template.html")
@@ -131,7 +139,6 @@ def do_section_tables(t: Class, info_course: dict, info_klass: list, course_stru
             student_names=student_names,
             section_scores=section_scores,
             section_steps_scores=section_steps_scores) + "\n"
-
 
     template = templateEnv.get_template("dop_template.html")
     return template.render(
