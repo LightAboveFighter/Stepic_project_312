@@ -4,6 +4,7 @@ from src.API.OAuthSession import OAuthSession
 from src.Help_methods import is_success, request_status, success_status
 import json
 import os
+from enum import Enum
 from src.API.Step import StepText, Step, create_any_step
 import pyparsing as pp
 import io
@@ -13,6 +14,10 @@ from transliterate.exceptions import LanguageDetectionError
 from src.API.Loading_templates import Step_template, Lesson_template, Section_template, \
     Course_template, Lesson_template_source, Section_template_source, Course_template_source
 
+
+class State(Enum):
+    STRICT_DELETE = 1
+    REMOVE = 2
 
 class Lesson:
 
@@ -32,7 +37,7 @@ class Lesson:
 
     def dict_info(self, **kwargs):
         """ Returns Lesson in the dictionary view.
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         copy = kwargs.get("copy", False)
         steps = [ i if isinstance(i, int) else i.dict_info(copy=copy) for i in self.steps ]
@@ -50,7 +55,7 @@ class Lesson:
     
     def get_structure(self, **kwargs):
         """ Returns Lesson in the dictionary view without most of fields
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         copy = kwargs.get("copy", False)
         id = self.id if not copy else None
@@ -61,8 +66,12 @@ class Lesson:
 
     def send(self, session: OAuthSession):
         """ Create or update Lesson on Stepic.org.
-        If self.id is None - Lesson will be created, otherwise it will be updated
+        + If self.id is None - Lesson will be created, otherwise it will be updated
         The same applies to objects inside. """
+
+        # if self.params.get("del_status", False) == State.STRICT_DELETE:
+        #     del self.params["del_status"]
+        #     return self.delete_network(session, False)
 
         api_url = 'https://stepik.org/api/lessons'
         if  self.id:
@@ -84,16 +93,20 @@ class Lesson:
 
         if is_success(r, 0):
             self.id = id
-            for i in self.steps:
-                i.lesson_id = self.id
+            for step in self.steps:
+                step.lesson_id = self.id if step.params.get("del_status", False) else None
+            steps = []
             for i in range(len(self.steps)):
-                self.steps[i].send(i, session)
+                if self.steps[i].params.get("del_status", False):
+                    continue
+                steps.append(self.steps[i].send(i, session))
+            self.steps = steps
 
         return request_status(r, 201)
 
     def delete_network(self, session: OAuthSession, danger = False):
         """ Delete your Lesson from Stepic.org. 
-        if danger: delete Lesson even if it's part of any courses """
+        + if danger: delete Lesson even if it's part of any courses """
 
         if danger:
             if self.sect_id:
@@ -113,7 +126,7 @@ class Lesson:
     
     def save(self, **kwargs):
         """ Write your Lesson to {Lesson's Title}.yaml in root directory.
-        **kwargs: filename - custom file's name, type and path;
+        + **kwargs: filename - custom file's name, type and path;
             if copy: delete all ids """
 
         title = kwargs.get("filename", f"{self.title}.yaml")
@@ -134,14 +147,15 @@ class Lesson:
         return sect_id in self.sect_ids
 
     def tie(self, sect_id: int, position: int, session: OAuthSession):
-        """ Tie Lesson to Section with Section's id """
+        """ Tie Lesson to Section with Section's id
+        + Do is_tied() before this - otherwise you may clone Lesson in Section"""
 
         unit = Unit(Section(id=sect_id), self, position)
-        return unit.tie(session)
+        return unit.send(session)
     
     def load_from_file(self, filename: str, **kwargs):
         """ Fill all Lesson's fields with content from file.
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         data = ""
         filename = filename.replace(os.getcwd(), "./")
@@ -201,7 +215,7 @@ class Lesson:
 
     def load_from_dict(self, data: dict, **kwargs):
         """ Fill all Lesson's fields with content from dictionary.
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         copy = kwargs.get("copy", False)
         self.title = data["title"]
@@ -240,7 +254,7 @@ class Lesson:
     
     def load_from_net(self, id: int, session: OAuthSession, **kwargs):
         """ Fill all Lesson's fields with content from Stepic.org.
-        **kwargs: if source: load steps's content.
+        + **kwargs: if source: load steps's content.
             Without source self.steps will contain only list[int] with steps' ids """
 
         url = f"https://stepik.org/api/lessons/{id}"
@@ -305,25 +319,29 @@ class Lesson:
 class Section:
     pass
 
-
 @dataclass
 class Unit:
     section: Section
     lesson: Lesson
-    position: int = -1
     id: int = None
 
-    def tie(self, session: OAuthSession):
+    def send(self, position: int, session: OAuthSession):
+        """ Create and tie lesson to section """
 
-            
+        if self.lesson.params.get("del_status", False):
+            self.lesson.send(session)
+            del self.lesson.params["del_status"]
+            return self.delete_network(session)
+
+        self.lesson.send(session)
         
         api_url = 'https://stepik.org/api/units'
         if id:
             api_url += f"/{self.id}"
 
-        data = {
+        data = {    
             "unit": {
-                **self.dict_info()
+                **self.dict_info(position)
             }
         }
 
@@ -335,13 +353,23 @@ class Unit:
         if is_success(r2, 0):
             self.lesson.sect_ids.append(self.section.id)
         return request_status(r2, 0)
+    
+    def delete_network(self, session: OAuthSession):
+        """ Likewise Lesson.untie from Section"""
+
+        api_url = f"https://stepik.org/api/units/{self.id}"
+        r = requests.delete(api_url, headers=session.headers())
+
+        if is_success(r, 204):
+            self.id = None
+        return request_status(r, 204)
 
 
-    def dict_info(self):
+    def dict_info(self, position):
         return {
             "section": self.section.id,
             "lesson": self.lesson.id,
-            "position": self.position
+            "position": position
         }
     
 
@@ -353,20 +381,20 @@ class Section:
         self.id = None
         self.params = params
         for lesson in lessons:
-            self.__add_unit__(lesson)
+            self.add_unit(lesson)
 
-    def __add_unit__(self, lesson: Lesson, position: int = -1, id: int = None):
+    def add_unit(self, lesson: Lesson, position: int = -1, id: int = None):
         """ append if position == -1
         else: insert """
 
         if position == -1:
-            self.units.append( Unit(self, lesson, len(self.units)) )
+            self.units.append( Unit(self, lesson) )
         else:
-            self.units.insert( Unit(self, lesson, position), position)
+            self.units.insert( Unit(self, lesson), position)
 
     def dict_info(self, **kwargs):
         """ Returns Section in the dictionary view.
-        **kwargs: if copy: delete all ids
+        + **kwargs: if copy: delete all ids
         path - path to saving lessons"""
 
         copy = kwargs.get("copy", False)
@@ -396,7 +424,7 @@ class Section:
     def save(self, **kwargs):
         """ Save your Section to {Section's name}.yaml in root directory.
         All Section's lessons will be saved to same directory as {Section's Title}.yaml
-        **kwargs: filename - custom file's name, type and path;
+        + **kwargs: filename - custom file's name, type and path;
             if copy: delete all ids """
 
         title = kwargs.get("filename", f"{self.title}.yaml")
@@ -418,22 +446,26 @@ class Section:
     def delete_network(self, session: OAuthSession):
         """ Delete your Section from Stepic.org """
         id = self.id
-        if not id == None:
+        if id:
             api_url = f"https://stepik.org/api/sections/{id}"
             r = requests.delete(api_url, headers=session.headers())
 
             if is_success(r, 204):
                 self.id = None
-                for i in self.units:
-                    index = i.lesson.sect_ids.index(id)
-                    i.lesson.sect_ids.pop(index)
             return request_status(r, 204)
         return success_status(False, "")
     
     def send(self, course_id: int, position: int, session: OAuthSession):
         """ Create or update Section on Stepic.org.
-        If self.id is None - Section will be created, otherwise it will be updated
+        + If self.id is None - Section will be created, otherwise it will be updated
+        ( It can be deleted if it was marked before )
         The same applies to objects inside."""
+
+        if self.params.get("del_status", False):
+            for unit in self.units:
+                unit.lesson.send(session)
+            del self.params["del_status"]
+            return self.delete_network(session)
 
         api_url = "https://stepik.org/api/sections"
         if self.id:
@@ -463,10 +495,13 @@ class Section:
         if is_success(r, 0):
             id = json.loads(r.text)["sections"][0]["id"]
             self.id = id
+            units = []
             for i in range(len(self.units)):
-                self.units[i].lesson.send(session)
-                if not self.units[i].lesson.is_tied(self.id):
-                    self.units[i].lesson.tie(self.id, i, session)
+                self.units[i].send(session)
+                if not self.units[i].params.get("del_status", False):
+                    units.append(self.units[i])
+            self.units = units
+
         return request_status(r, 201)
     
     # def send_lesson(self, les_pos: int, session: OAuthSession):
@@ -474,20 +509,14 @@ class Section:
     #     self.units[les_pos].lesson.send(session)
     #     self.units[les_pos].tie(session)
 
-    def delete_local_lesson(self, les_pos: int):
-        """ Delete Lesson from self.units.lesson """
-        if self.units[les_pos].lesson.id is None:
-            self.units.pop(les_pos)
+    def remove_lesson(self, les_pos):
+        """ Remove Lesson from Section, mark as removed in network (after self.send()) """
 
-    def delete_network_lesson(self, les_pos, session: OAuthSession, danger = False):
-        """ Likewise Lesson().delete_network()
-        if danger: delete Lesson even if it's part of any courses """
-
-        return self.units[les_pos].lesson.delete_network(session, danger)
+        self.units[les_pos].lesson.params["del_status"] = State.REMOVE
 
     def load_from_file(self, filename: str, **kwargs):
         """ Fill all Section's fields with content from file.
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         data = ""
         with open(filename, "r", encoding="utf-8") as file:
@@ -496,14 +525,14 @@ class Section:
 
     def load_from_dict(self, data: dict, **kwargs):
         """ Fill all Section's fields with content from dictionary.
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         copy = kwargs.get("copy", False)
         self.title = data["title"]
         self.id = data["id"] if not copy else None
         self.units = []
         for i in range(len(data["lessons"])):
-            self.__add_unit__( Lesson().load_from_file(data["lessons"][i]["file"], **kwargs) ) 
+            self.add_unit( Lesson().load_from_file(data["lessons"][i]["file"], **kwargs) ) 
 
         try:
             data2 = Section_template().dump(data)
@@ -520,7 +549,7 @@ class Section:
     
     def load_lessons(self, ids: list[int], session: OAuthSession, **kwargs):
         """ Fill self.units with content from Stepic.org.
-        **kwargs: if source: load steps's content, otherwise: only ids """
+        + **kwargs: if source: load steps's content, otherwise: only ids """
 
         ids_url = [ str(i) for i in ids]
         ids_url = "&ids[]=".join(ids_url)
@@ -537,7 +566,7 @@ class Section:
             les = Lesson()
             les.load_from_net(units[i]["lesson"], session, **kwargs)
 
-            self.__add_unit__(les, id = units[i]["id"])
+            self.add_unit(les, id = units[i]["id"])
 
     
 class Course:
@@ -550,7 +579,7 @@ class Course:
 
     def auth(self, session: OAuthSession):
         """ Attaches session to self.session
-        self.session is using in following methods:
+        + self.session is using in following methods:
             load_from_net, send_all, load_sections, send_heading, send_section, send_lesson,
             delete_network, delete_network_section, delete_network_lesson """
         self.session = session
@@ -558,7 +587,7 @@ class Course:
     def save(self, **kwargs):
         """ Write your Course to {Course's Title}.yaml in root directory
         All Sections' lessons will be saved to same directory as {Course's Title}.yaml
-        **kwargs: filename - custom file's name, type and path;
+        + **kwargs: filename - custom file's name, type and path;
             if copy: delete all ids """
 
         title = kwargs.get("filename", f"{self.title}.yaml")
@@ -578,57 +607,64 @@ class Course:
 
     def dict_info(self, **kwargs):
         """ Returns Course in the dictionary view.
-        **kwargs: if copy: delete all ids
+        + **kwargs: if copy: delete all ids
         path - path to save Sections' lessons"""
 
         copy = kwargs.get("copy", False)
         id = self.id if not copy else None
         ans = { **{"title": self.title, "id": id, "sections": [] }, **self.params }
-        for i in self.sections:
-            ans["sections"].append( i.dict_info(**kwargs) )
+        for sect in self.sections:
+            # if sect.id == State.TO_DELETE:
+            #     continue
+            ans["sections"].append( sect.dict_info(**kwargs) )
         return ans
     
     def get_structure(self, **kwargs):
         """ Returns Course in the dictionary view without most of fields
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         copy = kwargs.get("copy", False)
         id = self.id if not copy else None
         ans = {"id": id, "sections": []}
-        for i in self.sections:
-            ans["Sections"].append(i.get_structure(copy=copy))
+        for sect in self.sections:
+            # if sect.id == State.TO_DELETE:
+            #     continue
+            ans["Sections"].append(sect.get_structure(copy=copy))
         return ans
     
-    def create_section(self, position: int, section: Section):
-        """ Add your Section to Course's sections ( self.sections ):
-        insert if position != -1 
-        append if position == -1 """
+    # def create_lesson(self, les: Lesson, sect_pos: int, position: int = -1):
+    #     """ Add your Lesson to Course's sections' lessons ( self.sections[sect_pos].units ):
+    #     insert if position != -1 
+    #     append if position == -1 """
         
-        if position != -1:
-            self.sections.insert( position, section)
-        else:
-            self.sections.append( section )
-    
-    def create_lesson(self, les: Lesson, sect_pos: int, position: int = -1):
-        """ Add your Lesson to Course's sections' lessons ( self.sections[sect_pos].units ):
-        insert if position != -1 
-        append if position == -1 """
-        
-        if position != -1:
-            self.sections[sect_pos].__add_unit__(les, position)
-        else:
-            self.sections[sect_pos].__add_unit__(les) 
+    #     if position != -1:
+    #         self.sections[sect_pos].__add_unit__(les, position)
+    #     else:
+    #         self.sections[sect_pos].__add_unit__(les)
 
-    def delete_local(self):
-        """ Clear all fields """
-        self.title = 0
+    def clear_del(self):
+        """ Clear all fields
+        + mark content to delete it in network """
+        if not self.id:
+            self.clear()
+            return
+
+        self.title = ""
+        self.params = {}
+        self.params["del_status"] = State.STRICT_DELETE
+        self.sections = []
+
+    def clear(self):
+        """ Clear all fields.
+        + It won't mark content to delete it in network """
+        self.title = "" 
         self.id = None
         self.params = {}
         self.sections = []
 
     def delete_network(self, **kwargs):
         """ Delete your Course from Stepic.org
-        **kwargs: session: use given OAuthSession() instead of self.session"""
+        + **kwargs: session: use given OAuthSession() instead of self.session"""
 
         id = self.id
         url = f"https://stepik.org/api/courses/{id}"
@@ -643,53 +679,49 @@ class Course:
         if is_success(r, 204):
             self.id = None
             for i in self.sections:
-                for j in i.units:
-                    index = j.lesson.sect_ids.index( i.id )
-                    j.lesson.sect_ids.pop(index)
                 i.id = None
         return request_status(r, 204)
 
-
-    def delete_local_section(self, sect_pos: int):
+    def delete_section(self, sect_pos: int):
         """ Delete Section from self.sections"""
-        if self.sections[sect_pos].id is None:
-            self.sections.pop(sect_pos)
-
-    def delete_network_section(self, sect_pos: int):
-        """ Likewise Section().delete_network """
-        res = self.sections[sect_pos].delete_network(self.session)
-        if res["Success"]:
-            self.delete_local_section(sect_pos)
-        return res
-    
-    def delete_local_lesson(self, sect_pos: int, les_pos: int):
-        self.sections[sect_pos].delete_local_lesson(les_pos)
-    
-    def delete_network_lesson(self, sect_pos: int, les_pos: int, danger = False):
-        """ Likewise Lesson().delete_network
-        if danger: delete Lesson even if it's part of any courses """
-
-        return self.sections[sect_pos].delete_network_lesson(les_pos, self.session, danger)
+        if self.sections[sect_pos].id:
+            self.sections[sect_pos].params["del_status"] = State.STRICT_DELETE
+            return
+        self.sections.pop(sect_pos)
 
     def send_all(self, **kwargs):
         """ Create or update Course on Stepic.org.
         If self.id is None - Course will be created, otherwise it will be updated.
+        ( It can be deleted, if it was marked before )
         The same applies to objects inside.
-        **kwargs: session: use given OAuthSession() instead of self.session """
+        + **kwargs: session: use given OAuthSession() instead of self.session """
 
         try:
-            kwargs.get("session", self.session)
+            session = kwargs.get("session", self.session)
         except AttributeError:
             raise AttributeError("run self.auth() or set **kwargs: session")
         
+        if self.params.get("del_status", False):
+            for sect in self.sections:
+                for unit in sect.units:
+                    unit.lesson.send(session)
+
+            del self.params["del_status"]
+            return self.delete_network(**kwargs)
+        
         self.send_heading(**kwargs)
+        sections = []
         for i in range(len(self.sections)):
-            self.send_section(i, **kwargs)
+            self.sections[i].send(self.id, i, session)
+            if not self.sections[i].params.get("del_status", False):
+                sections.append(self.sections[i])
+        self.sections = sections
+
 
     def send_heading(self, **kwargs):
         """ Create or update Section's heading on Stepic.org.
         If self.id is None - Course will be created, otherwise it will be updated.
-        **kwargs: session: use given OAuthSession() instead of self.session """
+        + **kwargs: session: use given OAuthSession() instead of self.session """
 
         try:
             session = kwargs.get("session", None) or self.session
@@ -721,30 +753,10 @@ class Course:
             id = json.loads(r.text)['enrollments'][0]['id']
             self.id = id
         return request_status(r, 201)
-    
-    def send_section(self, sect_pos: int, **kwargs):
-        """ Likewise Section().send()
-        **kwargs: session: use given OAuthSession() instead of self.session """
-
-        try:
-            session = kwargs.get("session", None) or self.session
-        except AttributeError:
-            raise AttributeError("run self.auth() or set **kwargs: session")
-        self.sections[sect_pos].send(self.id, sect_pos, session)
-
-    def send_lesson(self, sect_pos: int, les_pos: int, **kwargs):
-        """ Likewise Lesson().send()
-        **kwargs: session: use given OAuthSession() instead of self.session """
-
-        try:
-            session = kwargs.get("session", None) or self.session
-        except AttributeError:
-            raise AttributeError("run self.auth() or set **kwargs: session")
-        self.sections[sect_pos].send_lesson(les_pos, session)
 
     def load_from_file(self, filename: str, **kwargs):
         """ Fill all Course's fields with content from file.
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         data = ""
         filename = filename.replace(os.getcwd(), ".")
@@ -754,7 +766,7 @@ class Course:
     
     def load_from_dict(self, data: dict, **kwargs):
         """ Fill all Course's fields with content from dictionary.
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         copy = kwargs.get("copy", False)
         self.title = data["title"]
@@ -772,7 +784,7 @@ class Course:
 
     def load_from_net(self, id: int, **kwargs):
         """ Fill all Course's fields with content from Stepic.org.
-        **kwargs: if source: load steps's content.
+        + **kwargs: if source: load steps's content.
             session: use given OAuthSession() instead of self.session
             Without source Lesson().steps will contain only list[int] with steps' ids"""
 
@@ -806,7 +818,7 @@ class Course:
 
     def load_sections(self, ids: list[int], **kwargs):
         """ Fill Course.sections with content from Stepic.org.
-        **kwargs: if source: load steps's content, otherwise: only ids
+        + **kwargs: if source: load steps's content, otherwise: only ids
             session: use given OAuthSession() instead of self.session
             Without source Lesson().steps will contain only list[int] with steps' ids"""
 

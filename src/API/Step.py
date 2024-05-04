@@ -3,6 +3,8 @@ from src.Help_methods import is_success, request_status
 from abc import ABC
 import json
 import yaml
+from src.API.Classes import State
+from src.API.OAuthSession import OAuthSession
 from dataclasses import field, dataclass
 from typing import Any, Optional
 from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique
@@ -10,7 +12,7 @@ from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique
 
 def create_any_step(type: str, *args, **kwargs):
     """ Creates needable Step with type
-    *args, **kwargs: abstract Step's arguments """
+    + *args, **kwargs: abstract Step's arguments """
 
     title, lesson_id, body, unique = ( args[i] if i < len(args) else None for i in range(4) )
 
@@ -35,7 +37,7 @@ def create_any_step(type: str, *args, **kwargs):
 class Step(ABC):
     """ body - block field of Step's API request
     Unique: StepAnyType.Unique() Can be filled with Loading_templates module
-    P.S: id can be set in params """
+    + P.S: id can be set in params """
 
     title: str = ""
     lesson_id: int = None
@@ -48,9 +50,13 @@ class Step(ABC):
         if self.params:
             self.id = self.params.get("id")
 
-    def send(self, position: int, session):
-        """ Create or update Step on Stepic.org.
-        If self.id is None - Step will be created, otherwise it will be updated """
+    def send(self, position: int, session: OAuthSession):
+        """ Create/update/delete Step on Stepic.org.
+        + If self.id is None - Step will be created, otherwise it will be updated """
+
+        if self.params.get("del_status", False):
+            del self.params["del_status"]
+            return self.delete_network(session)
 
         api_url = "https://stepik.org/api/step-sources"
         if self.params.get("id", False):
@@ -77,9 +83,19 @@ class Step(ABC):
             self.id = json.loads(r.text)["step-sources"][0]["id"]
         return request_status(r, 201)
     
+    def delete_network(self, session: OAuthSession):
+        """ Delete Step from network """
+
+        api_url = f"https://stepik.org/api/step-sources/{self.id}"
+
+        r = requests.delete(api_url, headers=session.headers())
+        if is_success(r, 204):
+            self.id = None
+        return request_status(r, 204)
+    
     def save(self, **kwargs):
         """ Save your Step to {Step's name}.yaml in root directory.
-        **kwargs: filename: custom file's name, type and path """
+        + **kwargs: filename: custom file's name, type and path """
 
         optional = self.params
         data = {
@@ -101,7 +117,7 @@ class Step(ABC):
 
     def load_from_file(self, filename, **kwargs):
         """ Fill all Step's fields with content from file.
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         data = ""
         with open(filename, "r") as file:
@@ -110,7 +126,7 @@ class Step(ABC):
     
     def load_from_dict(self, data: dict, **kwargs):
         """ Fill all Step's fields with content from dictionary.
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         params = Step_template().dump(data)
         if kwargs.get("copy", False):
@@ -131,7 +147,7 @@ class Step(ABC):
 
     def dict_info(self, **kwargs):
         """ Returns Step in the dictionary view.
-        **kwargs: if copy: delete all ids """
+        + **kwargs: if copy: delete all ids """
 
         ans = { 
             "title": self.title,
@@ -153,7 +169,7 @@ class Step(ABC):
 class StepText(Step):
     """ body - block field of Step's API request
     Unique: None
-        P.S: id can be set in params """
+    + P.S: id can be set in params """
         
     _type = "text"
     
@@ -167,8 +183,8 @@ class StepText(Step):
 class StepChoice(Step):
     """ body - block field of Step's API request body.
     Unique: StepChoice.Unique() Can be filled with Loading_templates.ChoiceUnique()
-        P.S: id can be set in params 
-    Body can be set as: body["source"]: { [ {is_correct, text, feedback: Optional }, ...], is_multiple_choice }"""
+    + P.S: id can be set in params 
+    + Body can be set as: body["source"]: { [ {is_correct, text, feedback: Optional }, ...], is_multiple_choice }"""
     
     _type = "choice"
     
@@ -219,8 +235,8 @@ class StepChoice(Step):
 class StepCode(Step):
     """ body - block field of Step's API request body.
     Unique: StepCode.Unique() Can be filled with Loading_templates.CodeUnique()
-        P.S: id can be set in params 
-    Body can be set as: body["source"]: {
+    + P.S: id can be set in params 
+    + Body can be set as: body["source"]: {
         "code": str,
         "execution_time_limit": int,
         "execution_memory_limit": int,
@@ -274,26 +290,3 @@ class StepCode(Step):
         self.id = self.params.get("id")
         source = self.unique.get_dict()
         self.body["source"] = source
-
-
-# @dataclass
-# class StepVideo(Step):
-
-#     _type = "video"
-
-#     @dataclass
-#     class Unique:
-
-#         @dataclass
-#         class Video:
-#             filename: str            
-#             id: int = None
-        
-#         video: Video
-#         subtitles: dict
-#         """format:  ru: 'text', en: 'text', etc."""
-
-#         def get_dict(self):
-#             return {
-#                 "subtitles":
-#             }
