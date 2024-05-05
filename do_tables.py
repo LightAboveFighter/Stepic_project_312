@@ -38,7 +38,7 @@ def get_course_structure(info_course: dict, info_klass: list)->list:
         steps_of_section = []
         for lesson in section['lessons']:
                 lesson_id = lesson['id']
-                for step in range(len(lesson['steps'])):
+                for step in range(len(lesson['steps'])):    #don’t need a global step number, but a serial number in the lesson
                     name_step = str(lesson_id)+"-"+str(step+1)  #it is how they writen in received course_grades files
                     flag = 0
                     for student in info_klass:
@@ -47,6 +47,7 @@ def get_course_structure(info_course: dict, info_klass: list)->list:
                             break
                     if flag == 1:
                         steps_of_section.append(name_step)
+
         course_structure.append(steps_of_section)
     return course_structure
 
