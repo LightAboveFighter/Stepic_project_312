@@ -4,11 +4,15 @@ import os
 import yaml
 import jinja2
 
-def do_a_site_with_tables(your_class_id: int, update: bool)->None:
+def do_a_site_with_tables(your_class_id: int, update: bool, client_id="", client_secret="")->None:
     """Creates an html file, which shows score tables of your class divided into sections
     If you need to update information about course or scores, use update=True"""
 
-    t = Class(your_class_id, auth.OAuthSession())   #enter args to OAuthSession, if you need
+    if client_id and client_secret:   #enters args to OAuthSession, if needed
+        t = Class(your_class_id, auth.OAuthSession(client_id, client_secret))
+    else:
+        t = Class(your_class_id, auth.OAuthSession())
+        
     if update:
         t.update_info_lessons()
     t.get_table()
