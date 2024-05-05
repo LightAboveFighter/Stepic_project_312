@@ -3,7 +3,7 @@ from src.Help_methods import is_success, request_status
 from abc import ABC
 import json
 import yaml
-from src.API.Classes import State
+# from src.API.Classes import State
 from src.API.OAuthSession import OAuthSession
 from dataclasses import field, dataclass
 from typing import Any, Optional
@@ -54,8 +54,8 @@ class Step(ABC):
         """ Create/update/delete Step on Stepic.org.
         + If self.id is None - Step will be created, otherwise it will be updated """
 
-        if self.params.get("del_status", False):
-            del self.params["del_status"]
+        if self.params.get("__del_status__", False):
+            del self.params["__del_status__"]
             return self.delete_network(session)
 
         api_url = "https://stepik.org/api/step-sources"
@@ -149,6 +149,10 @@ class Step(ABC):
         """ Returns Step in the dictionary view.
         + **kwargs: if copy: delete all ids """
 
+        params = self.params
+        if params.get("__del_status__", False):
+            params["__del_status__"] = "STRICT_DELETE"
+
         ans = { 
             "title": self.title,
             "id": self.id,
@@ -157,8 +161,9 @@ class Step(ABC):
                 "name": self._type,
                  **self.body
                 },
-            **self.params 
+            **params 
             }
+        
         if kwargs.get("copy", False):
             ans["id"] = None
             ans["lesson"] = None

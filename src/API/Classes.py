@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from transliterate import translit
 from transliterate.exceptions import LanguageDetectionError
 from src.API.Loading_templates import Step_template, Lesson_template, Section_template, \
-    Course_template, Lesson_template_source, Section_template_source, Course_template_source
+    Course_template, Lesson_template_source
 
 
 class State(Enum):
@@ -49,8 +49,11 @@ class Lesson:
         
         id = self.id if not copy else None
         sect_ids = self.sect_ids if not copy else []
+        params = self.params
+        if params.get("__del_status__", False):
+            params["__del_status__"] = "STRICT_DELETE" if params["__del_status__"] == State.STRICT_DELETE else "REMOVE"
 
-        ans = { **{"title": self.title, "id": id, "steps": steps, "sect_ids": sect_ids }, **self.params}
+        ans = { **{"title": self.title, "id": id, "steps": steps, "sect_ids": sect_ids }, **params}
         return ans
     
     def get_structure(self, **kwargs):
@@ -69,9 +72,11 @@ class Lesson:
         + If self.id is None - Lesson will be created, otherwise it will be updated
         The same applies to objects inside. """
 
-        # if self.params.get("del_status", False) == State.STRICT_DELETE:
-        #     del self.params["del_status"]
-        #     return self.delete_network(session, False)
+        if self.params.get("__del_status__", False):
+            if self.params.get("__del_status__", False) == State.STRICT_DELETE:
+                del self.params["__del_status__"]
+                return self.delete_network(session, False)
+            del self.params["__del_status__"]
 
         api_url = 'https://stepik.org/api/lessons'
         if  self.id:
@@ -94,12 +99,13 @@ class Lesson:
         if is_success(r, 0):
             self.id = id
             for step in self.steps:
-                step.lesson_id = self.id if step.params.get("del_status", False) else None
+                step.lesson_id = self.id if step.params.get("__del_status__", False) else None
             steps = []
             for i in range(len(self.steps)):
-                if self.steps[i].params.get("del_status", False):
+                self.steps[i].send(i, session)
+                if self.steps[i].params.get("__del_status__", False):
                     continue
-                steps.append(self.steps[i].send(i, session))
+                steps.append(self.steps[i])
             self.steps = steps
 
         return request_status(r, 201)
@@ -328,9 +334,8 @@ class Unit:
     def send(self, position: int, session: OAuthSession):
         """ Create and tie lesson to section """
 
-        if self.lesson.params.get("del_status", False):
+        if self.lesson.params.get("__del_status__", False):
             self.lesson.send(session)
-            del self.lesson.params["del_status"]
             return self.delete_network(session)
 
         self.lesson.send(session)
@@ -351,6 +356,7 @@ class Unit:
             r2 = requests.post(api_url, headers=session.headers(), json=data)
             
         if is_success(r2, 0):
+            self.id = json.loads(r2.text)["units"][0]["id"]
             self.lesson.sect_ids.append(self.section.id)
         return request_status(r2, 0)
     
@@ -380,6 +386,7 @@ class Section:
         lessons = lessons or []
         self.id = None
         self.params = params
+        self.units = []
         for lesson in lessons:
             self.add_unit(lesson)
 
@@ -388,9 +395,9 @@ class Section:
         else: insert """
 
         if position == -1:
-            self.units.append( Unit(self, lesson) )
+            self.units.append( Unit(self, lesson, id) )
         else:
-            self.units.insert( Unit(self, lesson), position)
+            self.units.insert( Unit(self, lesson, id), position)
 
     def dict_info(self, **kwargs):
         """ Returns Section in the dictionary view.
@@ -403,12 +410,16 @@ class Section:
         params = self.params
         if copy:
             params["course"] = None
+
+        if params.get("__del_status__", False):
+            params["__del_status__"] = "STRICT_DELETE"
+
         ans = { **{"title": title, "id": id, "lessons": []}, **params }
-        for i in self.units:
+        for unit in self.units:
             filename = kwargs.get("path", ".")
-            filename += f"/{i.lesson.title}.yaml"
-            i.lesson.save(filename=filename, copy=kwargs.get("copy", False))
-            ans["lessons"].append({"id": i.lesson.id, "title": i.lesson.title, "file": filename})
+            filename += f"/{unit.lesson.title}.yaml"
+            unit.lesson.save(filename=filename, copy=kwargs.get("copy", False))
+            ans["lessons"].append({"id": unit.lesson.id, "title": unit.lesson.title, "file": filename, "unit": unit.id})
         return ans
     
     def get_structure(self, **kwargs):
@@ -444,7 +455,8 @@ class Section:
 
 
     def delete_network(self, session: OAuthSession):
-        """ Delete your Section from Stepic.org """
+        """ Delete your Section from Stepic.org
+        + Call save() method after this, to save id!"""
         id = self.id
         if id:
             api_url = f"https://stepik.org/api/sections/{id}"
@@ -461,10 +473,10 @@ class Section:
         ( It can be deleted if it was marked before )
         The same applies to objects inside."""
 
-        if self.params.get("del_status", False):
+        if self.params.get("__del_status__", False):
             for unit in self.units:
                 unit.lesson.send(session)
-            del self.params["del_status"]
+            del self.params["__del_status__"]
             return self.delete_network(session)
 
         api_url = "https://stepik.org/api/sections"
@@ -497,10 +509,11 @@ class Section:
             self.id = id
             units = []
             for i in range(len(self.units)):
-                self.units[i].send(session)
-                if not self.units[i].params.get("del_status", False):
+                if not self.units[i].lesson.params.get("__del_status__", False):
                     units.append(self.units[i])
+                self.units[i].send(i, session)
             self.units = units
+            print(self.units)
 
         return request_status(r, 201)
     
@@ -510,9 +523,9 @@ class Section:
     #     self.units[les_pos].tie(session)
 
     def remove_lesson(self, les_pos):
-        """ Remove Lesson from Section, mark as removed in network (after self.send()) """
+        """ Mark to remove in network (Remove Lesson from Section after self.send()) """
 
-        self.units[les_pos].lesson.params["del_status"] = State.REMOVE
+        self.units[les_pos].lesson.params["__del_status__"] = State.REMOVE
 
     def load_from_file(self, filename: str, **kwargs):
         """ Fill all Section's fields with content from file.
@@ -531,13 +544,10 @@ class Section:
         self.title = data["title"]
         self.id = data["id"] if not copy else None
         self.units = []
+        print(data)
         for i in range(len(data["lessons"])):
-            self.add_unit( Lesson().load_from_file(data["lessons"][i]["file"], **kwargs) ) 
-
-        try:
-            data2 = Section_template().dump(data)
-        except TypeError:
-            data2 = Section_template_source().dump(data)
+            self.add_unit( Lesson().load_from_file(data["lessons"][i]["file"], **kwargs), id=data["lessons"][i]["unit"] ) 
+        data2 = Section_template().dump(data)
 
         del data2["title"]
         del data2["id"]
@@ -565,9 +575,8 @@ class Section:
         for i in range(len(units)):
             les = Lesson()
             les.load_from_net(units[i]["lesson"], session, **kwargs)
-
             self.add_unit(les, id = units[i]["id"])
-
+        print(self.units)
     
 class Course:
 
@@ -612,7 +621,12 @@ class Course:
 
         copy = kwargs.get("copy", False)
         id = self.id if not copy else None
-        ans = { **{"title": self.title, "id": id, "sections": [] }, **self.params }
+
+        params = self.params
+        if params.get("__del_status__", False):
+            params["__del_status__"] = "STRICT_DELETE"
+
+        ans = { **{"title": self.title, "id": id, "sections": [] }, **params }
         for sect in self.sections:
             # if sect.id == State.TO_DELETE:
             #     continue
@@ -651,7 +665,7 @@ class Course:
 
         self.title = ""
         self.params = {}
-        self.params["del_status"] = State.STRICT_DELETE
+        self.params["__del_status__"] = State.STRICT_DELETE
         self.sections = []
 
     def clear(self):
@@ -685,7 +699,7 @@ class Course:
     def delete_section(self, sect_pos: int):
         """ Delete Section from self.sections"""
         if self.sections[sect_pos].id:
-            self.sections[sect_pos].params["del_status"] = State.STRICT_DELETE
+            self.sections[sect_pos].params["__del_status__"] = State.STRICT_DELETE
             return
         self.sections.pop(sect_pos)
 
@@ -701,19 +715,19 @@ class Course:
         except AttributeError:
             raise AttributeError("run self.auth() or set **kwargs: session")
         
-        if self.params.get("del_status", False):
+        if self.params.get("__del_status__", False):
             for sect in self.sections:
                 for unit in sect.units:
                     unit.lesson.send(session)
 
-            del self.params["del_status"]
+            del self.params["__del_status__"]
             return self.delete_network(**kwargs)
         
         self.send_heading(**kwargs)
         sections = []
         for i in range(len(self.sections)):
             self.sections[i].send(self.id, i, session)
-            if not self.sections[i].params.get("del_status", False):
+            if not self.sections[i].params.get("__del_status__", False):
                 sections.append(self.sections[i])
         self.sections = sections
 
@@ -775,11 +789,12 @@ class Course:
         self.sections = []
         for i in data["sections"]:
             self.sections.append( Section().load_from_dict(i, copy=copy))
+        data2 = Course_template().dump(data)
 
-        del data["title"]
-        del data["sections"]
-        del data["id"]
-        self.params = data
+        del data2["title"]
+        del data2["sections"]
+        del data2["id"]
+        self.params = data2
         return self
 
     def load_from_net(self, id: int, **kwargs):
