@@ -113,7 +113,7 @@ class Step(ABC):
 
         title = f"{self.title}.yaml" if not kwargs.get("filename", False) else kwargs["filename"]
         with open(title, "w") as file:
-            yaml.safe_dump(data, file)
+            yaml.dump(data, file, sort_keys=False)
 
     def load_from_file(self, filename, **kwargs):
         """ Fill all Step's fields with content from file.

@@ -145,7 +145,7 @@ class Lesson:
         content = self.dict_info(copy=kwargs.get("copy", False))
         title = title.replace(os.getcwd(), "./")
         with open(title, "w", encoding="utf-8") as file:
-            yaml.dump({"Lesson": content }, file, allow_unicode=True)
+            yaml.dump({"Lesson": content }, file, allow_unicode=True, sort_keys=False)
 
 
     def is_tied(self, sect_id: int):
@@ -451,7 +451,7 @@ class Section:
             if path[-1] != ".":
                 del path[-1]
             path = os.getcwd() + "/".join(path)
-            yaml.dump({"Section": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True)
+            yaml.dump({"Section": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
 
 
     def delete_network(self, session: OAuthSession):
@@ -513,7 +513,6 @@ class Section:
                     units.append(self.units[i])
                 self.units[i].send(i, session)
             self.units = units
-            print(self.units)
 
         return request_status(r, 201)
     
@@ -544,7 +543,6 @@ class Section:
         self.title = data["title"]
         self.id = data["id"] if not copy else None
         self.units = []
-        print(data)
         for i in range(len(data["lessons"])):
             self.add_unit( Lesson().load_from_file(data["lessons"][i]["file"], **kwargs), id=data["lessons"][i]["unit"] ) 
         data2 = Section_template().dump(data)
@@ -576,7 +574,6 @@ class Section:
             les = Lesson()
             les.load_from_net(units[i]["lesson"], session, **kwargs)
             self.add_unit(les, id = units[i]["id"])
-        print(self.units)
     
 class Course:
 
@@ -612,7 +609,7 @@ class Course:
             if path[-1] != ".":
                 del path[-1]
             path = os.getcwd() + "/" + "/".join(path)
-            yaml.dump({"Course": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True)
+            yaml.dump({"Course": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
 
     def dict_info(self, **kwargs):
         """ Returns Course in the dictionary view.
