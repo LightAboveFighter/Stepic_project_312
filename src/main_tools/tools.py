@@ -37,7 +37,7 @@ def __print_lesson_insides__(lesson: Lesson,  pref: str = ""):
     prefix_step = pref + prefix_continue_T
     prefix_step_end = pref + prefix_end
     for i in range(len(steps)-1):
-        print(prefix_step,f"[{i}] " , steps[i]["title"] if type(steps[i]) != int else steps[i], sep="")
+        print(prefix_step,f"[{i}] " , steps[i].dict_info()["title"] if type(steps[i]) != int else steps[i], sep="")
     print(prefix_step_end,f"[{len(steps)-1}] " , steps[-1].title if type(steps[-1]) != int else steps[-1], sep="")
 
 
@@ -55,8 +55,8 @@ def __print_sections_insides__(section: Section, pref: str, show_steps: bool = F
 
 
 def print_tree(data, show_steps: bool = False) -> None:
-    match type(data):
-        case Course: #full tree
+    match data.__class__.__name__:
+        case "Course": #full tree
             sections = data.sections
             print(data.title)
             for i in range(len(data.sections)-1):
@@ -64,6 +64,12 @@ def print_tree(data, show_steps: bool = False) -> None:
                 __print_sections_insides__(sections[i], prefix_continue, show_steps)
             print(prefix_end, f"[{len(sections)-1}] " ,sections[-1].title, sep="")
             __print_sections_insides__(sections[-1], prefix_zero, show_steps)
+        case "Section":
+            print(data.title)
+            __print_sections_insides__(data,"",show_steps)
+        case "Lesson":
+            print(data.title)
+            __print_lesson_insides__(data)
             
 def add_section_to_course(course: Course, name: str, section_position: int=-1) -> None:
     course.create_section(section_position, Section( title = name))

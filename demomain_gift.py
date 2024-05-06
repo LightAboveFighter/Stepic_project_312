@@ -34,6 +34,7 @@ def main():
     subparsers = main_parser.add_subparsers()
     update.add_subcommand(subparsers, parent_parser)
     load.add_subcommand(subparsers, parent_parser)
+    add.add_subcommand(subparsers, parent_parser)
     structure.add_subcommand(subparsers, parent_parser)
 
 

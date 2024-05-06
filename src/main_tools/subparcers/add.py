@@ -20,14 +20,22 @@ def add(options):
             lesson = course.sections[options.section].lessons[options.lesson]
         
         if options.step is not None:
-            lesson.steps.insert(options.step, steps[options.steps])
+            lesson.steps.insert(options.step, steps[options.step])
         else:
-            course.sections[options.section].insert(steps[options.step], options.lessonu)
+            course.sections[options.section].lessons.insert(options.lesson, Lesson(options.title,steps=steps))
         if not options.no_ask:
-            # TODO main_tools.print_lesson
-            if main_tools.ask_Y_N("Continue?"):
-                course.send_all()
+            if options.step is None:
+                main_tools.print_tree(course.sections[options.section])
+                print(f"lesson {options.lesson} in section {options.section} will be changed")
+            else:
+                main_tools.print_tree(lesson)
+                print(f"step {options.step} in lesson {options.lesson} in section {options.section} will be changed")
+            if main_tools.ask_Y_N("Continuing?"):
                 course.save(filename = options.course)
+                course.send_all()
+        else:
+            course.save(filename = options.course)
+            course.send_all()
     except IndexError as err:
         if len(course.sections)<=options.section:
             msg = f"course \"{course.title}\" "\
@@ -45,7 +53,7 @@ def add(options):
         raise RuntimeError()
 
 def add_subcommand(subparsers, parents):
-    parser = subparsers.add_parser("update", parents=[parents], help="Update(by replace) an existing lesson or step")
+    parser = subparsers.add_parser("add", parents=[parents], help="add an existing lesson or step")
     # parser.add_argument(
     #     "-c",
     #     "--config",
@@ -81,6 +89,14 @@ def add_subcommand(subparsers, parents):
         default=None,
         dest="lesson",
         help="lesson id to work with" 
+    )
+    parser.add_argument(
+        "-t",
+        "--title",
+        action="store",
+        default="",
+        dest="title",
+        help="new title of lesson",
     )
     parser.add_argument(
         "-m",

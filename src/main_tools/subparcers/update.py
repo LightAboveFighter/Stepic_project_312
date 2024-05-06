@@ -16,20 +16,29 @@ def update(options):
             raise ValueError("md and gift can't be loaded at same time")
         if options.md is not None:
             print('Rofls') # скоро оговоримся
-        else:
+        elif options.gift is not None:
             steps = get_gift_dicts(options.gift)
             lesson = course.sections[options.section].lessons[options.lesson]
-        
+        else:
+            raise ValueError("You need to choose md or gift file!")
+
         if options.step is not None:
-            pass
-            # lesson.steps[options.step] = steps[options.step]
+            lesson.steps[options.step] = steps[options.step]
         else:
             course.sections[options.section].lessons[options.lesson].steps = steps
         if not options.no_ask:
-            # TODO main_tools.print_lesson
-            if main_tools.ask_Y_N("Continue?"):
+            if options.step is None:
+                main_tools.print_tree(course.sections[options.section])
+                print(f"lesson {options.lesson} in section {options.section} will be changed")
+            else:
+                main_tools.print_tree(lesson)
+                print(f"step {options.step} in lesson {options.lesson} in section {options.section} will be changed")
+            if main_tools.ask_Y_N("Continuing?"):
                 course.save(filename = options.course)
                 course.send_all()
+        else:
+            course.save(filename = options.course)
+            course.send_all()
     except IndexError as err:
         if len(course.sections)<=options.section:
             msg = f"course \"{course.title}\" "\
