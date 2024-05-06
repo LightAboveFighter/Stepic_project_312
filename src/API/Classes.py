@@ -108,12 +108,20 @@ class Lesson:
         self.steps[step_pos].params["__del_status__"] = State.STRICT_DELETE
 
 
-    def delete_network(self, session: OAuthSession, danger = False):
+    def delete_network(self, session: OAuthSession, sect_ids: list[int] = None, danger = False):
         """ Delete your Lesson from Stepic.org. 
+        + sect_ids: list of sections, from where Lesson can be deleted
         + if danger: delete Lesson even if it's part of any courses """
 
-        if danger:
-            if self.sect_id:
+        if not danger:
+            ids = self.sect_ids
+            ok = True
+            if sect_ids:
+                try:
+                    ok = all([ sect_ids.index(id) for id in ids ])
+                except ValueError:
+                    ok = len(sect_ids) >= len(ids)
+            if self.sect_ids and ok:
                 raise "Safety delete: can't delete lesson, inside another courses"
         return self.__danger_delete_network__(session)
 
@@ -126,6 +134,9 @@ class Lesson:
         if is_success(r, 204):
             self.sect_ids = []
             self.id = None
+            for step in self.steps:
+                step.id = None
+                step.lesson_id = None
         return request_status(r, 204)
     
     def save(self, **kwargs):
@@ -237,7 +248,7 @@ class Lesson:
                     i["lesson"] = None
 
                 type = i["block"]["name"]
-                unique = i["block"]["source"]
+                unique = i["block"].get("source", None)
                 st = create_any_step(type, **i, unique=unique)
             
                 self.steps.append(st)
@@ -395,7 +406,8 @@ class Section:
             self.add_unit(lesson)
 
     def add_unit(self, lesson: Lesson, position: int = -1, id: int = None):
-        """ append if position == -1
+        """ Tie your Lesson to Section.
+        append if position == -1
         else: insert """
 
         if position == -1:
@@ -532,6 +544,11 @@ class Section:
         """ Mark to remove in network (Remove Lesson from Section after self.send()) """
 
         self.units[les_pos].lesson.params["__del_status__"] = State.REMOVE
+
+    def delete_lesson(self, les_pos: int):
+        """ Mark to full DELETE(!) your Lesson from Stepic.org. It will be deleted after send() method."""
+
+        self.units[les_pos].lesson.params["__del_status__"] = State.STRICT_DELETE
 
     def load_from_file(self, filename: str, **kwargs):
         """ Fill all Section's fields with content from file.

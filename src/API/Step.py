@@ -80,14 +80,15 @@ class Step(ABC):
             api_url += f"/{self.id}"
         optional = self.params
         data = {
-                "stepSource": { ** {
+                "stepSource": {
                                 "block": {
                                     "name": self._type,
                                     **self.body
                                     },
                                 "lesson": self.lesson_id,
-                                "position": position+1
-                                }, **optional }
+                                "position": position+1,
+                                **optional
+                                }
                 }
         
         if self.id:
@@ -95,8 +96,6 @@ class Step(ABC):
         else:
             r = requests.post(api_url, headers=session.headers(), json=data)
         
-        print(r.text)
-
         if is_success(r, 0):
             self.id = json.loads(r.text)["step-sources"][0]["id"]
         return request_status(r, 201)
@@ -316,7 +315,7 @@ class StepCode(Step):
     }"""
 
     def __init__(self, *args, **kwargs):
-        self._type = "choice"
+        self._type = "code"
         super().__init__(*args, **kwargs)
         source = self.unique.get_dict()
         self.body["source"] = source
