@@ -25,43 +25,59 @@ def create_any_step(type: str, *args, **kwargs):
     kwargs.pop("unique", None)
 
     if type == "choice":
-        return StepChoice( *args_corr, StepChoice.Unique(**ChoiceUnique().dump(unique)), kwargs ) 
+        return StepChoice( *args_corr, StepChoice.Unique(**ChoiceUnique().dump(unique)), **kwargs ) 
     if type == "code":
-        return StepCode( *args_corr, StepCode.Unique( **CodeUnique().dump(unique)), kwargs )
+        return StepCode( *args_corr, StepCode.Unique( **CodeUnique().dump(unique)), **kwargs )
     
     args_corr = args_corr[ : 3]
-    return StepText(*args_corr, params=kwargs)
+    return StepText(*args_corr, None, **kwargs)
 
 
-@dataclass
+@dataclass(repr = True)
 class Step(ABC):
     """ body - block field of Step's API request
     Unique: StepAnyType.Unique() Can be filled with Loading_templates module
     + P.S: id can be set in params """
 
-    title: str = ""
-    lesson_id: int = None
-    body: dict = None
-    unique: Any = None
-    params: Optional[Any] = field(default_factory = dict)
-    id = None
+    # title: str = ""
+    # lesson_id: int = None
+    # body: dict = None
+    # unique: Any = None
+    # params: Optional[Any] = field(default_factory = dict)
+    # id: int = None
 
-    def __post_init__(self):
-        if self.params:
-            self.id = self.params.get("id")
+    def __init__(self, title: str = "", lesson_id: int = None, body: dict = None, unique: Any = None, **params):
+        self.title = title
+        self.lesson_id = lesson_id
+        self.body = body or {}
+        self.unique = unique
+        self.params = params
+        self.id = None
+        if self.params.get("id", False):
+            self.id = params["id"]
+            del self.params["id"]
 
-    def send(self, position: int, session: OAuthSession):
+    # def __post_init__(self, a, b, c, d, e):
+    #     self.id = None
+    #     if self.params:
+    #         self.id = self.params.get("id", None)
+    #         del self.params["id"]
+
+    def send(self, position: int, session: OAuthSession, lesson_id: int = None):
         """ Create/update/delete Step on Stepic.org.
-        + If self.id is None - Step will be created, otherwise it will be updated """
+        + If self.id is None - Step will be created, otherwise it will be updated
+        + Given lesson_id will be written to self.lesson_id """
+
+        if lesson_id:
+            self.lesson_id = lesson_id if not self.params.get("__del_status__", False) else None
 
         if self.params.get("__del_status__", False):
             del self.params["__del_status__"]
             return self.delete_network(session)
 
         api_url = "https://stepik.org/api/step-sources"
-        if self.params.get("id", False):
+        if self.id:
             api_url += f"/{self.id}"
-        
         optional = self.params
         data = {
                 "stepSource": { ** {
@@ -74,12 +90,12 @@ class Step(ABC):
                                 }, **optional }
                 }
         
-        if self.params.get("id", False):
+        if self.id:
             r = requests.put(api_url, headers=session.headers(), json=data)
         else:
             r = requests.post(api_url, headers=session.headers(), json=data)
 
-        if is_success(r, 201):
+        if is_success(r, 0):
             self.id = json.loads(r.text)["step-sources"][0]["id"]
         return request_status(r, 201)
     
@@ -99,13 +115,15 @@ class Step(ABC):
 
         optional = self.params
         data = {
-                "stepSource": { ** {
+                "stepSource": {
                                 "block": {
                                     "name": self._type,
                                     **self.body
                                     },
-                                "lesson": self.lesson_id
-                                }, **optional }
+                                "lesson": self.lesson_id,
+                                "id": self.id,
+                                **optional 
+                                }
                 }
         if kwargs.get("copy", False):
             data["lesson"] = None
@@ -136,8 +154,10 @@ class Step(ABC):
         assert self._type == params["block"]["name"]
         del params["block"]["name"]
         self.title = data["title"]
+        self.id = params["id"]
         self.body = params["block"]
         del params["block"]
+        del params["id"]
         self.params = params
         return self
 
@@ -152,6 +172,7 @@ class Step(ABC):
         params = self.params
         if params.get("__del_status__", False):
             params["__del_status__"] = "STRICT_DELETE"
+        
 
         ans = { 
             "title": self.title,
@@ -170,18 +191,21 @@ class Step(ABC):
         return ans
     
 
-@dataclass(init=True)
+@dataclass
 class StepText(Step):
     """ body - block field of Step's API request
     Unique: None
     + P.S: id can be set in params """
         
-    _type = "text"
+    def __init__(self, *args, **kwargs):
+        self._type = "text"
+        super().__init__(*args, **kwargs)
+        
     
-    def __post_init__(self):
-        if self.body:
-            if self.body.get("text") is None:
-                raise "StepText must contain text field"
+    # def __post_init__(self):
+    #     if self.body:
+    #         if self.body.get("text") is None:
+    #             raise "StepText must contain text field"
 
 
 @dataclass
@@ -191,7 +215,21 @@ class StepChoice(Step):
     + P.S: id can be set in params 
     + Body can be set as: body["source"]: { [ {is_correct, text, feedback: Optional }, ...], is_multiple_choice }"""
     
-    _type = "choice"
+    def __init__(self, *args, **kwargs):
+        self._type = "choice"
+        super().__init__(*args, **kwargs)
+        source = self.unique.get_dict()
+        choices = { **{
+            "is_always_correct": False,
+            "sample_size": len(self.unique.options),
+            "is_html_enabled": True,
+            "is_options_feedback": all([i.get_option()["feedback"] for i in self.unique.options]),
+            },
+             **source,
+            }
+
+        for i in choices.keys():
+            self.body["source"][i] = choices[i]
     
     @dataclass
     class Unique:
@@ -222,21 +260,22 @@ class StepChoice(Step):
                 "options": [ i.get_option() for i in self.options]
             }
 
-    def __post_init__(self):
-        self.id = self.params.get("id")
-        source = self.unique.get_dict()
-        choices = { **{
-            "is_always_correct": False,
-            "sample_size": len(self.unique.options),
-            "is_html_enabled": True,
-            "is_options_feedback": all([i.get_option()["feedback"] for i in self.unique.options]),
-            },
-             **source,
-            }
+    # def __post_init__(self):
+        # self.id = self.params.get("id")
+        # source = self.unique.get_dict()
+        # choices = { **{
+        #     "is_always_correct": False,
+        #     "sample_size": len(self.unique.options),
+        #     "is_html_enabled": True,
+        #     "is_options_feedback": all([i.get_option()["feedback"] for i in self.unique.options]),
+        #     },
+        #      **source,
+        #     }
 
-        for i in choices.keys():
-            self.body["source"][i] = choices[i]
+        # for i in choices.keys():
+        #     self.body["source"][i] = choices[i]
 
+@dataclass
 class StepCode(Step):
     """ body - block field of Step's API request body.
     Unique: StepCode.Unique() Can be filled with Loading_templates.CodeUnique()
@@ -255,7 +294,11 @@ class StepCode(Step):
         "manual_memory_limits": []
     }"""
 
-    _type = "code"
+    def __init__(self, *args, **kwargs):
+        self._type = "choice"
+        super().__init__(*args, **kwargs)
+        source = self.unique.get_dict()
+        self.body["source"] = source
 
     @dataclass
     class Unique:
@@ -291,7 +334,7 @@ class StepCode(Step):
                 "manual_memory_limits": self.manual_memory_limits
             }
 
-    def __post_init__(self):
-        self.id = self.params.get("id")
-        source = self.unique.get_dict()
-        self.body["source"] = source
+    # def __post_init__(self):
+        # self.id = self.params.get("id")
+        # source = self.unique.get_dict()
+        # self.body["source"] = source
