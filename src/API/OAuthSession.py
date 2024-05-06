@@ -13,7 +13,7 @@ class OAuthSession:
                 client_id = data["client_id"]
                 client_secret = data["client_secret"]
         else:
-            with open("src/API/Client_information.yaml", "x") as file:
+            with open("src/API/Client_information.yaml", "w") as file:
                 yaml.dump({"client_id": client_id, "client_secret": client_secret}, file)
 
         auth = requests.auth.HTTPBasicAuth(client_id, client_secret)
