@@ -102,6 +102,7 @@ Question text?
         "id": None,
         "text": "Question text?",
         "variants": [DataStepChoice.Variant("s == p", True), DataStepChoice.Variant("*s == *p", False), DataStepChoice.Variant("s[0] == p[0]", False)],
+        "step_addons": {"SHUFFLE": True, "HINT": None}
     }
     input_text = input_text.split('\n')
     dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
@@ -110,19 +111,6 @@ Question text?
     dst.add_info(input_text)
     assert isinstance(dst, DataStepText)
     assert dst.as_dict() == expected
-    assert isinstance(dst, DataStepChoice) == True
-    assert dst.step_name == "sdhgosdrhofslkdf"
-    assert dst.text == "Question text?"
-    assert dst.variants[0].text == "s == p"
-    assert dst.variants[0].is_correct == True
-    assert dst.variants[0].feedback == None
-    assert dst.variants[1].text == "*s == *p"
-    assert dst.variants[1].is_correct == False
-    assert dst.variants[1].feedback == None
-    assert dst.variants[2].text == "s[0] == p[0]"
-    assert dst.variants[2].is_correct == False
-    assert dst.variants[2].feedback == None
-    assert dst.step_addons["SHUFFLE"] == "true"
 
 
 @pytest.mark.markdown
@@ -133,24 +121,20 @@ def test_Choice2():
 +) `s == p`
 -) `*s == *p`
 -) `s[0] == p[0]`"""
+    expected = {
+        "step_name": sdhgosdrhofslkdf,
+        "id": None,
+        "text": "?",
+        "variants": [DataStepChoice.Variant("s == p", True), DataStepChoice.Variant("*s == *p", False), DataStepChoice.Variant("s[0] == p[0]", False)],
+        "step_addons": {"SHUFFLE": True, "HINT": None}
+    }
     input_text = input_text.split('\n')
     dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
     input_text = input_text[1:]
     dst = DataStepCreationSchema.create_step(dst_inf.type, dst_inf.name)
     dst.add_info(input_text)
-    assert isinstance(dst, DataStepChoice) == True
-    assert dst.step_name == "sdhgosdrhofslkdf"
-    assert dst.text == ["?"]
-    assert dst.variants[0].text == "`s == p`"
-    assert dst.variants[0].is_correct == True
-    assert dst.variants[0].feedback == None
-    assert dst.variants[1].text == "`*s == *p`"
-    assert dst.variants[1].is_correct == False
-    assert dst.variants[1].feedback == None
-    assert dst.variants[2].text == "`s[0] == p[0]`"
-    assert dst.variants[2].is_correct == False
-    assert dst.variants[2].feedback == None
-    assert dst.step_addons["SHUFFLE"] == "true"
+    assert isinstance(dst, DataStepText)
+    assert dst.as_dict() == expected
 
 @pytest.mark.markdown
 def test_Choice3():
@@ -162,24 +146,20 @@ Question text?
 -) `s[0] == p[0]`
 
 HINT: подсказка"""
+    expected = {
+        "step_name": sdhgosdrhofslkdf,
+        "id": None,
+        "text": "Question text?",
+        "variants": [DataStepChoice.Variant("s == p", True), DataStepChoice.Variant("*s == *p", False), DataStepChoice.Variant("s[0] == p[0]", False, "подсказка")],
+        "step_addons": {"SHUFFLE": True, "HINT": None}
+    }
     input_text = input_text.split('\n')
     dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
     input_text = input_text[1:]
     dst = DataStepCreationSchema.create_step(dst_inf.type, dst_inf.name)
     dst.add_info(input_text)
-    assert isinstance(dst, DataStepChoice)
-    assert dst.step_name == "sdhgosdrhofslkdf"
-    assert dst.text == ["Question text?"]
-    assert dst.variants[0].text == "`s == p`"
-    assert dst.variants[0].is_correct == True
-    assert dst.variants[0].feedback == None
-    assert dst.variants[1].text == "`*s == *p`"
-    assert dst.variants[1].is_correct == False
-    assert dst.variants[1].feedback == None
-    assert dst.variants[2].text == "`s[0] == p[0]`"
-    assert dst.variants[2].is_correct == False
-    assert dst.variants[2].feedback == "подсказка"
-    assert dst.step_addons["SHUFFLE"] == "true"
+    assert isinstance(dst, DataStepText)
+    assert dst.as_dict() == expected
 
 @pytest.mark.markdown
 def test_Choice4():
