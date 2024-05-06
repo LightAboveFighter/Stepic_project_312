@@ -3,12 +3,12 @@ from src.Help_methods import is_success, request_status
 from abc import ABC
 import json
 import yaml
+from src.markdown.data_steps import *
 # from src.API.Classes import State
 from src.API.OAuthSession import OAuthSession
 from dataclasses import field, dataclass
 from typing import Any, Optional
 from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique
-
 
 def create_any_step(type: str, *args, **kwargs):
     """ Creates needable Step with type
@@ -94,6 +94,8 @@ class Step(ABC):
             r = requests.put(api_url, headers=session.headers(), json=data)
         else:
             r = requests.post(api_url, headers=session.headers(), json=data)
+        
+        print(r.text)
 
         if is_success(r, 0):
             self.id = json.loads(r.text)["step-sources"][0]["id"]
@@ -141,6 +143,9 @@ class Step(ABC):
         with open(filename, "r") as file:
             data = yaml.safe_load(file)
         return self.load_from_dict(data, **kwargs)
+    
+    def load_from_parse():
+        pass
     
     def load_from_dict(self, data: dict, **kwargs):
         """ Fill all Step's fields with content from dictionary.
@@ -200,7 +205,9 @@ class StepText(Step):
     def __init__(self, *args, **kwargs):
         self._type = "text"
         super().__init__(*args, **kwargs)
-        
+
+    def load_from_parse(self, step: DataStepText):
+        self.body["text"] = step.text
     
     # def __post_init__(self):
     #     if self.body:
@@ -248,17 +255,31 @@ class StepChoice(Step):
                     "feedback": self.feedback
                     }
 
-        preserve_order: bool = False
-        options: list[tuple] = field(default_factory= list)
+        # preserve_order: bool = False
+        # options: list[tuple] = field(default_factory = list)
 
-        def __post_init__(self):
+        def __init__(self, preserve_order: bool = False, options: list[tuple] = None):
+            self.preserve_order = preserve_order
+            self.options = options or []
             self.options = [ self.Option(*i) if isinstance(i, tuple) else self.Option(**i) for i in self.options  ]
+
+        # def __post_init__(self):
+        #     self.options = [ self.Option(*i) if isinstance(i, tuple) else self.Option(**i) for i in self.options  ]
 
         def get_dict(self):
             return {
                 "preserve_order": self.preserve_order,
                 "options": [ i.get_option() for i in self.options]
             }
+        
+
+    def load_from_parse(self, step: DataStepChoice):
+        self.body["text"] = step.text
+        self.unique = self.Unique(step.step_addons["SHUFFLE"] != "true",
+                                  [ (option.text, option.is_correct, option.feedback) for option in step.variants]
+                                  )
+        self.title = step.step_name
+
 
     # def __post_init__(self):
         # self.id = self.params.get("id")
@@ -303,21 +324,45 @@ class StepCode(Step):
     @dataclass
     class Unique:
 
-        code: str
-        execution_time_limit: int
-        execution_memory_limit: int
-        templates_data: str
-        test_cases: list[list[str]]
-        samples_count: int = None          #amount if tests you will show to student
-        is_time_limit_scaled: bool = False
-        is_memory_limit_scaled: bool = False
-        manual_time_limits: list = field(default_factory=list)
-        manual_memory_limits: list = field(default_factory=list)
+        # code: str
+        # execution_time_limit: int
+        # execution_memory_limit: int
+        # templates_data: str
+        # test_cases: list[list[str]]
+        # samples_count: int = None          #amount if tests you will show to student
+        # is_time_limit_scaled: bool = False
+        # is_memory_limit_scaled: bool = False
+        # manual_time_limits: list = field(default_factory=list)
+        # manual_memory_limits: list = field(default_factory=list)
 
-        def __post_init__(self):
+        def __init__(self, code: str,
+                    execution_time_limit: int,
+                    execution_memory_limit: int,
+                    templates_data: str,
+                    test_cases: list[list[str]],
+                    samples_count: int = None,
+                    is_time_limit_scaled: bool = False,
+                    is_memory_limit_scaled: bool = False,
+                    manual_time_limits: list = None,
+                    manual_memory_limits: list = None):
+            self.code = code
+            self.execution_time_limit = execution_time_limit
+            self.execution_memory_limit = execution_memory_limit
+            self.templates_data = templates_data
+            self.test_cases = test_cases
+            self.samples_count = samples_count
+            self.is_time_limit_scaled = is_time_limit_scaled
+            self.is_memory_limit_scaled = is_memory_limit_scaled
+            self.manual_time_limits = manual_time_limits or []
+            self.manual_memory_limits = manual_memory_limits or []
             for i in self.test_cases:
                 assert len(i) == 2   # TestCase must have two fields: question and answer
             self.samples_count = self.samples_count or len(self.test_cases)
+
+        # def __post_init__(self):
+        #     for i in self.test_cases:
+        #         assert len(i) == 2   # TestCase must have two fields: question and answer
+        #     self.samples_count = self.samples_count or len(self.test_cases)
 
         def get_dict(self):
             return {
