@@ -23,6 +23,14 @@ class DataStepText(DataStep):
     '''text: list[str]'''
     def add_info(self, lines: list[str]):
         self.text = ''.join(lines)
+    
+    def as_dict(self):
+        data_dict = {
+            "step_name": self.step_name,
+            "id": self.id,
+            "text": self.text
+        }
+        return data_dict
 
 
 class DataStepChoice(DataStep):
@@ -99,6 +107,16 @@ class DataStepChoice(DataStep):
                         continue
                 case _:
                     raise Exception("Undefined DataStepChoice.add_info() state.")
+    
+    def as_dict(self):
+        data_dict = {
+            "step_name": self.step_name,
+            "id": self.id,
+            "text": self.text,
+            "variants": self.variants,
+            "step_addons": self.step_addons
+        }
+        return data_dict
 
 
 class DataStepQuiz(DataStep):
@@ -172,6 +190,16 @@ class DataStepQuiz(DataStep):
                 case _:
                     raise Exception("Undefined DataStepQuiz.add_info() state.")
 
+    def as_dict(self):
+        data_dict = {
+            "step_name": self.step_name,
+            "id": self.id,
+            "text": self.text,
+            "variants": self.variants,
+            "step_addons": self.step_addons
+        }
+        return data_dict
+
 
 class DataStepTaskinline(DataStep):
     def add_info(self, lines: list[str]):
@@ -222,6 +250,17 @@ class DataStepTaskinline(DataStep):
                     continue
                 case _:
                     raise Exception("Undefined DataStepTaskinline.add_info() state.")
+
+    def as_dict(self):
+        data_dict = {
+            "step_name": self.step_name,
+            "id": self.id,
+            "text": self.text,
+            "code": self.code,
+            "inputs": self.inputs,
+            "outputs": self.outputs
+        }
+        return data_dict
 
 
 class DataStepCreationSchema():
