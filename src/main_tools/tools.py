@@ -37,7 +37,7 @@ def __print_lesson_insides__(lesson: Lesson,  pref: str = ""):
     prefix_step = pref + prefix_continue_T
     prefix_step_end = pref + prefix_end
     for i in range(len(steps)-1):
-        print(prefix_step,f"[{i}] " , steps[i].title if type(steps[i]) != int else steps[i], sep="")
+        print(prefix_step,f"[{i}] " , steps[i]["title"] if type(steps[i]) != int else steps[i], sep="")
     print(prefix_step_end,f"[{len(steps)-1}] " , steps[-1].title if type(steps[-1]) != int else steps[-1], sep="")
 
 
@@ -73,10 +73,10 @@ def add_lesson_to_section(lesson: Lesson ,course: Course, section_position: int,
     course.create_lesson(lesson, section_position)
 
 
-def ask_Y_N() -> bool:
+def ask_Y_N(msg: str) -> bool:
     counter = 0
     while counter < 20:
-        user_input = input("Do you want to continue? [yes/no]: ")
+        user_input = input(f"{msg} [yes/no]: ")
         if user_input.lower() in ["yes", "y"]:
             print("Continuing...")
             return True

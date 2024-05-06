@@ -2,13 +2,85 @@
 import argparse
 import logging
 import os
+from pathlib import Path
 
 from logs.project_logger import activate_logger
 from src.gift.gift_processing import get_gift_dicts
 from src.API.Classes import Lesson, Course, Section
 from src.API.OAuthSession import OAuthSession
-import src.main_tools as tools
 
+import src.main_tools.tools
+from src.main_tools.subparcers import add, structure, update, load
+
+
+
+
+# Украдено у https://github.com/qtile/qtile
+def main():
+    parent_parser = argparse.ArgumentParser(add_help=False)
+    parent_parser.add_argument(
+        "-l",
+        "--log-level",
+        default="WARNING",
+        dest="log_level",
+        type=str.upper,
+        choices=("D", "I", "W", "E", "C"),
+        help="Set qtile log level",
+    )
+    main_parser = argparse.ArgumentParser(
+        prog="Stepik project",
+    )
+
+    subparsers = main_parser.add_subparsers()
+    update.add_subcommand(subparsers, parent_parser)
+    load.add_subcommand(subparsers, parent_parser)
+    structure.add_subcommand(subparsers, parent_parser)
+
+
+
+    # `qtile help` should print help
+    def print_help(options):
+        main_parser.print_help()
+
+    help_ = subparsers.add_parser("help", help="Print help message and exit.")
+    help_.set_defaults(func=print_help)
+
+    options = main_parser.parse_args()
+    if func := getattr(options, "func", None):
+        log_level = options.log_level
+        activate_logger(log_level if log_level else "E")
+        func(options)
+    else:
+        main_parser.print_usage()
+        exit(1)
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
 activate_logger("D")
 parser = argparse.ArgumentParser(
                     description='Demo',
@@ -135,6 +207,7 @@ match args.cmd:
     case _:
         print("Хо??")
 
+'''
 '''
 parser.add_argument('-G', '--GIFT',
                     help='export from GIFT file')
