@@ -378,6 +378,13 @@ class StepCode(Step):
                 "manual_time_limits": self.manual_time_limits,
                 "manual_memory_limits": self.manual_memory_limits
             }
+        
+    def load_from_parse(self, step: DataStepTaskinline):
+        self.body["text"] = step.text
+        self.unique = self.Unique(step.code, None, None, "", [ [input, output] for input, output in zip(step.inputs, step.outputs) ], None, None,
+                                  False, [], []
+                                  )
+        self.title = step.step_name
 
     # def __post_init__(self):
         # self.id = self.params.get("id")
