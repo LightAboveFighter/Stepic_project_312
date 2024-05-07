@@ -5,7 +5,7 @@ from src.Help_methods import is_success, request_status, success_status
 import json
 import os
 from enum import Enum
-from src.API.Step import StepText, Step, create_any_step
+from src.API.Step import StepText, Step, create_any_step, load_any_step
 import pyparsing as pp
 import io
 from dataclasses import dataclass
@@ -18,6 +18,7 @@ from src.API.Loading_templates import Step_template, Lesson_template, Section_te
 class State(Enum):
     STRICT_DELETE = 1
     REMOVE = 2
+
 
 class Lesson:
 
@@ -40,15 +41,14 @@ class Lesson:
         + **kwargs: if copy: delete all ids """
 
         copy = kwargs.get("copy", False)
-        steps = [ (i if not copy else None) if isinstance(i, int) else i.dict_info(copy=copy) for i in self.steps ]
-        
+        steps = [ (step if not copy else None) if isinstance(step, dict) else step.dict_info(copy=copy) for step in self.steps ]
         id = self.id if not copy else None
         sect_ids = self.sect_ids if not copy else []
         params = self.params
         if params.get("__del_status__", False):
             params["__del_status__"] = "STRICT_DELETE" if params["__del_status__"] == State.STRICT_DELETE else "REMOVE"
 
-        ans = { **{"title": self.title, "id": id, "steps": steps, "sect_ids": sect_ids }, **params}
+        ans = { "title": self.title, "id": id, "steps": steps, "sect_ids": sect_ids, **params}
         return ans
     
     def get_structure(self, **kwargs):
@@ -59,8 +59,8 @@ class Lesson:
         id = self.id if not copy else None
         ans = {"id": id, "steps": []}
         if not copy:
-            for i in self.steps:
-                ans["steps"].append(i if isinstance(i, int) else i.id)
+            for step in self.steps:
+                ans["steps"].append(step["id"] if len(step.keys()) <= 2 else step.id)
 
     def send(self, session: OAuthSession):
         """ Create or update Lesson on Stepic.org.
@@ -81,7 +81,7 @@ class Lesson:
             'lesson': { **{
                 'title': self.title,
                 'id': self.id,
-                "steps": [ i if isinstance(i, int) else i.id for i in self.steps ]
+                "steps": [ step["id"] if isinstance(step, dict) else step.id for step in self.steps ]
             }, **self.params }
         }
 
@@ -95,9 +95,18 @@ class Lesson:
             self.id = id
             steps = []
             for i in range(len(self.steps)):
-                if not self.steps[i].params.get("__del_status__", False):
-                    steps.append(self.steps[i])
-                self.steps[i].send(i, session, self.id)
+
+                if isinstance(self.steps[0], dict):
+                    if self.steps[i].get("__del_status__", False) != State.STRICT_DELETE:
+                        steps.append(self.steps[i])
+                        load_any_step(self.steps[i]["id"], session).send(i, session, self.id)
+                        continue
+                    StepText(id=self.steps[i]["id"]).delete_network(session)
+
+                else:
+                    if not self.steps[i].params.get("__del_status__", False):
+                        steps.append(self.steps[i])
+                    self.steps[i].send(i, session, self.id)
             self.steps = steps
 
         return request_status(r, 201)
@@ -105,7 +114,10 @@ class Lesson:
     def delete_step(self, step_pos: int):
         """ Mark to remove in network (Remove Step from Lesson after self.send()) """
 
-        self.steps[step_pos].params["__del_status__"] = State.STRICT_DELETE
+        if len(self.steps.keys()) > 2:
+            self.steps[step_pos].params["__del_status__"] = State.STRICT_DELETE
+            return
+        self.steps[step_pos]["__del_status__"] = State.STRICT_DELETE
 
 
     def delete_network(self, session: OAuthSession, sect_ids: list[int] = None, danger = False):
@@ -134,9 +146,10 @@ class Lesson:
         if is_success(r, 204):
             self.sect_ids = []
             self.id = None
-            for step in self.steps:
-                step.id = None
-                step.lesson_id = None
+            if not isinstance(self.steps[0], dict):
+                for step in self.steps:
+                    step.id = None
+                    step.lesson_id = None
         return request_status(r, 204)
     
     def save(self, **kwargs):
@@ -150,7 +163,6 @@ class Lesson:
                 title = translit(title, reversed=True)
             except LanguageDetectionError:
                 pass
-        
         content = self.dict_info(copy=kwargs.get("copy", False))
         title = title.replace(os.getcwd(), "./")
         with open(title, "w", encoding="utf-8") as file:
@@ -234,24 +246,21 @@ class Lesson:
         self.id = data["id"] if not copy else None
         self.sect_ids = data["sect_ids"] if not copy else []
 
-        if isinstance(data["steps"][0], int):
-            self.steps = data["steps"] if not copy else []
-        else:
+        if len(data["steps"][0].keys()) > 2:
             self.steps = []
-            for i in data["steps"]:
-                if isinstance(i, int):
-                    if not copy:
-                        self.steps.append(i)
-                    continue
+            for step in data["steps"]:
                 if copy:
-                    i["id"] = None
-                    i["lesson"] = None
+                    step["id"] = None
+                    step["lesson"] = None
 
-                type = i["block"]["name"]
-                unique = i["block"].get("source", None)
-                st = create_any_step(type, **i, unique=unique)
+                type = step["block"]["name"]
+                unique = step["block"].get("source", None)
+                st = create_any_step(type, **step, unique=unique)
             
                 self.steps.append(st)
+        else:
+            self.steps = data["steps"] if not copy else []
+            self.steps = [ {"id": step["id"], "__del_status__": step.get("__del_status__", None) } for step in self.steps ]
 
         data2 = data.copy()
         del data2["title"]
@@ -275,13 +284,16 @@ class Lesson:
         if not is_success(r, 0):
             return success_status(False, "Can't get course's head")
         
-        content = Lesson_template().dump(json.loads(r.text)["lessons"][0])
+        if not kwargs.get("sourse", False):
+            content = Lesson_template().dump(json.loads(r.text)["lessons"][0])
+        else:
+            content = Lesson_template_source().dump(json.loads(r.text)["lessons"][0])
 
         self.id = id
         self.title = content["title"]
         
         self.sect_ids = content["courses"]
-        steps_ids = content["steps"]
+        steps_ids = [ {"id": id} for id in content["steps"] ]
 
         del content["id"]
         del content["title"]
@@ -290,7 +302,7 @@ class Lesson:
 
         self.params = content
         if kwargs.get("source", False):
-            self.load_steps(steps_ids, session)
+            self.load_steps([step_id["id"] for step_id in steps_ids], session)
         else:
             self.steps = steps_ids
         return self

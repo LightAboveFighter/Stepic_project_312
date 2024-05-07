@@ -32,6 +32,20 @@ def create_any_step(type: str, *args, **kwargs):
     args_corr = args_corr[ : 3]
     return StepText(*args_corr, None, **kwargs)
 
+def load_any_step(id: int, session: OAuthSession):
+
+    api_url = f"https://stepik.org/api/step-sources?ids[]={id}"
+
+    r = requests.get(api_url, headers=session.headers())
+
+    if is_success(r, 0):
+        content = json.loads(r.text)["step-sources"][0]
+        type = content["block"]["name"]
+        unique = content["block"].get("source", {})
+        return create_any_step(type, **content, unique=unique)
+    return StepText(body={"text": "Empty step"})
+
+
 
 @dataclass(repr = True)
 class Step(ABC):
@@ -95,7 +109,6 @@ class Step(ABC):
             r = requests.put(api_url, headers=session.headers(), json=data)
         else:
             r = requests.post(api_url, headers=session.headers(), json=data)
-        
         if is_success(r, 0):
             self.id = json.loads(r.text)["step-sources"][0]["id"]
         return request_status(r, 201)
@@ -225,15 +238,14 @@ class StepChoice(Step):
         self._type = "choice"
         super().__init__(*args, **kwargs)
         source = self.unique.get_dict()
-        choices = { **{
+        choices = {
             "is_always_correct": False,
             "sample_size": len(self.unique.options),
             "is_html_enabled": True,
             "is_options_feedback": all([i.get_option()["feedback"] for i in self.unique.options]),
-            },
-             **source,
+            **source,
             }
-
+        self.body["source"] = self.body.get("source", {})
         for i in choices.keys():
             self.body["source"][i] = choices[i]
     

@@ -33,7 +33,6 @@ class Step_block_template(Schema):
     options = fields.Dict()
     source = fields.Dict()
 
-
 class Step_template(Schema):
 
     id = fields.Integer(required=True)
