@@ -23,6 +23,7 @@ def create_any_step(type: str, *args, **kwargs):
     kwargs.pop("lesson", None)
     kwargs.pop("block", None)
     kwargs.pop("unique", None)
+    kwargs.pop("position", None)
 
     if type == "choice":
         return StepChoice( *args_corr, StepChoice.Unique(**ChoiceUnique().dump(unique)), **kwargs ) 

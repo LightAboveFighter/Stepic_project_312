@@ -41,7 +41,14 @@ class Lesson:
         + **kwargs: if copy: delete all ids """
 
         copy = kwargs.get("copy", False)
-        steps = [ (step if not copy else None) if isinstance(step, dict) else step.dict_info(copy=copy) for step in self.steps ]
+        steps = [ (
+            {
+            "id": step["id"],
+            "__del_status__": "STRICT_DELETE" if step.get("__del_status__", False) == State.STRICT_DELETE else None
+            } 
+            if not copy else None) if isinstance(step, dict) else step.dict_info(copy=copy) for step in self.steps
+            ]
+        
         id = self.id if not copy else None
         sect_ids = self.sect_ids if not copy else []
         params = self.params
@@ -114,7 +121,7 @@ class Lesson:
     def delete_step(self, step_pos: int):
         """ Mark to remove in network (Remove Step from Lesson after self.send()) """
 
-        if len(self.steps.keys()) > 2:
+        if len(self.steps[step_pos].keys()) > 2:
             self.steps[step_pos].params["__del_status__"] = State.STRICT_DELETE
             return
         self.steps[step_pos]["__del_status__"] = State.STRICT_DELETE
@@ -260,7 +267,10 @@ class Lesson:
                 self.steps.append(st)
         else:
             self.steps = data["steps"] if not copy else []
-            self.steps = [ {"id": step["id"], "__del_status__": step.get("__del_status__", None) } for step in self.steps ]
+            self.steps = [ {
+                "id": step["id"],
+                "__del_status__": State.STRICT_DELETE if (step.get("__del_status__", None) == "STRICT_DELETE") else None
+                } for step in self.steps ]
 
         data2 = data.copy()
         del data2["title"]
