@@ -118,6 +118,19 @@ class Lesson:
 
         return request_status(r, 201)
     
+    def add_step(self, step: Step, position: int = -1):
+        """ Add Step to your Lesson.
+        + position:
+            if -1:
+                append to Lesson's steps
+            else:
+                insert into Lesson's steps"""
+
+        if position == -1:
+            self.steps.append(step)
+        else:
+            self.steps.insert(position, step)
+    
     def delete_step(self, step_pos: int):
         """ Mark to remove in network (Remove Step from Lesson after self.send()) """
 
@@ -179,13 +192,6 @@ class Lesson:
     def is_tied(self, sect_id: int):
         """ Check if Lesson is part of some Section -> Course """
         return sect_id in self.sect_ids
-
-    def tie(self, sect_id: int, position: int, session: OAuthSession):
-        """ Tie Lesson to Section with Section's id
-        + Do is_tied() before this - otherwise you may clone Lesson in Section"""
-
-        unit = Unit(Section(id=sect_id), self, position)
-        return unit.send(session)
     
     def load_from_file(self, filename: str, **kwargs):
         """ Fill all Lesson's fields with content from file.
@@ -425,17 +431,30 @@ class Section:
         self.params = params
         self.units = []
         for lesson in lessons:
-            self.add_unit(lesson)
+            self.add_lesson(lesson)
 
-    def add_unit(self, lesson: Lesson, position: int = -1, id: int = None):
-        """ Tie your Lesson to Section.
-        append if position == -1
-        else: insert """
+    def add_lesson(self, lesson: Lesson, position: int = -1):
+        """ Add Lesson to your Section.
+        + position:
+            if -1:
+                append to Lesson's steps
+            else:
+                insert into Lesson's steps"""
 
         if position == -1:
-            self.units.append( Unit(self, lesson, id) )
+            self.units.append( Unit(self, lesson, None) )
         else:
-            self.units.insert( position, Unit(self, lesson, id) )
+            self.units.insert( position, Unit(self, lesson, None) )
+
+    def add_step(self, les_pos: int, step: Step, position: int = -1):
+        """ Add Step to your Lesson. les_pos - indexes as at list[].
+        + position:
+            if -1:
+                append to Lesson's steps
+            else:
+                insert into Lesson's steps"""
+
+        self.units[les_pos].lesson.add_step(step, position)
 
     def dict_info(self, **kwargs):
         """ Returns Section in the dictionary view.
@@ -563,14 +582,26 @@ class Section:
         return request_status(r, 201)
 
     def remove_lesson(self, les_pos: int):
-        """ Mark to remove in network (Remove Lesson from Section after self.send()) """
+        """ Mark your Lesson to untie from your Section. It will be removed after send_all() method.
+        + Indexes as at list[] 
+        + Indexes of next lessons won't change until send() method!"""
 
         self.units[les_pos].lesson.params["__del_status__"] = State.REMOVE
 
     def delete_lesson(self, les_pos: int):
-        """ Mark to full DELETE(!) your Lesson from Stepic.org. It will be deleted after send() method."""
+        """ Mark your Lesson to DELETE from Stepic.org. It will be deleted after send_all() method.
+        + Attention! After send_all() method lesson will be deleted even if it's part of some Courses'
+        + Indexes as at list[] 
+        + Indexes of next lessons won't change until send() method!""" 
 
         self.units[les_pos].lesson.params["__del_status__"] = State.STRICT_DELETE
+
+    def delete_step(self, les_pos: int, step_pos: int):
+        """ Mark your Step to delete from your Lesson. It will be deleted after send_all() method.
+        + Indexes as at list[]
+        + Indexes of next steps won't change until send() method!"""
+
+        self.units[les_pos].lesson.delete_step(step_pos)
 
     def load_from_file(self, filename: str, **kwargs):
         """ Fill all Section's fields with content from file.
@@ -591,7 +622,8 @@ class Section:
         self.course = data["course"] if not copy else None
         self.units = []
         for i in range(len(data["lessons"])):
-            self.add_unit( Lesson().load_from_file(data["lessons"][i]["file"], **kwargs), id=data["lessons"][i]["unit"] ) 
+            self.add_lesson( Lesson().load_from_file(data["lessons"][i]["file"], **kwargs) ) 
+            self.units[-1].id = data["lessons"][i]["unit"]
         data2 = Section_template().dump(data)
 
         del data2["title"]
@@ -619,7 +651,8 @@ class Section:
         for i in range(len(units)):
             les = Lesson()
             les.load_from_net(units[i]["lesson"], session, **kwargs)
-            self.add_unit(les, id = units[i]["id"])
+            self.add_lesson(les)
+            self.units[-1].id = units[i]["id"]
     
 class Course:
 
@@ -686,16 +719,6 @@ class Course:
             #     continue
             ans["Sections"].append(sect.get_structure(copy=copy))
         return ans
-    
-    # def create_lesson(self, les: Lesson, sect_pos: int, position: int = -1):
-    #     """ Add your Lesson to Course's sections' lessons ( self.sections[sect_pos].units ):
-    #     insert if position != -1 
-    #     append if position == -1 """
-        
-    #     if position != -1:
-    #         self.sections[sect_pos].__add_unit__(les, position)
-    #     else:
-    #         self.sections[sect_pos].__add_unit__(les)
 
     def clear_del(self):
         """ Clear all fields
@@ -743,6 +766,48 @@ class Course:
             self.sections[sect_pos].params["__del_status__"] = State.STRICT_DELETE
             return
         self.sections.pop(sect_pos)
+
+    def delete_lesson(self, sect_pos: int, les_pos: int):
+        """ Mark your Lesson to DELETE from Stepic.org. It will be deleted after send_all() method.
+        + Attention! After send_all() method lesson will be deleted even if it's part of some Courses'
+        + Indexes as at list[] 
+        + Indexes of next lessons won't change until send_all() method!"""   
+
+        self.sections[sect_pos].delete_lesson(les_pos)
+
+    def remove_lesson(self, sect_pos: int, les_pos: int):
+        """ Mark your Lesson to untie from your Section. It will be removed after send_all() method.
+        + Indexes as at list[] 
+        + Indexes of next lessons won't change until send_all() method!"""
+
+        self.sections[sect_pos].remove_lesson(les_pos)
+
+    def delete_step(self, sect_pos: int, les_pos: int, step_pos: int):
+        """ Mark your Step to delete from your Lesson. It will be deleted after send_all() method.
+        + Indexes as at list[] 
+        + Indexes of next steps won't change until send_all() method!"""
+
+        self.sections[sect_pos].delete_step(les_pos, step_pos)
+
+    def add_lesson(self, sect_pos: int, lesson: Lesson, position: int = -1):
+        """ Add Lesson to your Section. sect_pos - indexes as at list[].
+        + position:
+            if -1:
+                append to Lesson's steps
+            else:
+                insert into Lesson's steps"""
+
+        self.sections[sect_pos].add_lesson(lesson, position)
+
+    def add_step(self, sect_pos: int, les_pos: int, step: Step, position: int = -1):
+        """ Add Step to your Lesson. sect_pos, les_pos - indexes as at list[].
+        + position:
+            if -1:
+                append to Lesson's steps
+            else:
+                insert into Lesson's steps"""
+
+        self.sections[sect_pos].add_step(les_pos, step, position)
 
     def send_all(self, **kwargs):
         """ Create or update Course on Stepic.org.
