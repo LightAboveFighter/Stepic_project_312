@@ -185,19 +185,19 @@ class DataStepQuiz(DataStep):
                     try:
                         addon = ParsingModuleSchema.body_addon().parseString(line)
                         self.step_addons[str(addon.type)] = addon.value
-                        if self.step_addons["ANSWER"]:
-                            self.step_addons["ANSWER"].replace(" ", "")
-                            answer_letters = self.step_addons["ANSWER"].split(",")
-                            for var in self.variants:
-                                if var.label in answer_letters:
-                                    var.is_correct = True
-                        else:
-                            raise Exception("Expected ANSWER obligatory addon.")
                         continue
                     except pp.ParseException:
                         continue
                 case _:
                     raise Exception("Undefined DataStepQuiz.add_info() state.")
+        if self.step_addons["ANSWER"]:
+            self.step_addons["ANSWER"].replace(" ", "")
+            answer_letters = self.step_addons["ANSWER"].split(",")
+            for var in self.variants:
+                if var.label in answer_letters:
+                    var.is_correct = True
+        else:
+            raise Exception("Expected ANSWER obligatory addon.")
 
     def as_dict(self):
         data_dict = {

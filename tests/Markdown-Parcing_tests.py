@@ -35,7 +35,7 @@ def test_Text1():
 jdhrgiohdrkfrjsdf
 fdgrgerdgfgdg"""
     expected = {
-        "step_name": sdhgosdrhofslkdf,
+        "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "jdhrgiohdrkfrjsdf\nfdgrgerdgfgdg"
     }
@@ -55,7 +55,7 @@ def test_Text2():
 jdhrg iohdrkfrjsdf
 fdgrgerdg fgdg"""
     expected = {
-        "step_name": sdhgosdrhofslkdf,
+        "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "jdhrg iohdrkfrjsdf\nfdgrgerdg fgdg"
     }
@@ -75,7 +75,7 @@ def test_Text3():
 jdhrgiohdrkfrjsdf
 fdgrgerdgfgdg"""
     expected = {
-        "step_name": sdhgosdrhofslkdf,
+        "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "jdhrgiohdrkfrjsdf\nfdgrgerdgfgdg"
     }
@@ -98,7 +98,7 @@ Question text?
 -) `*s == *p`
 -) `s[0] == p[0]`"""
     expected = {
-        "step_name": sdhgosdrhofslkdf,
+        "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Question text?",
         "variants": [DataStepChoice.Variant("s == p", True), DataStepChoice.Variant("*s == *p", False), DataStepChoice.Variant("s[0] == p[0]", False)],
@@ -122,7 +122,7 @@ def test_Choice2():
 -) `*s == *p`
 -) `s[0] == p[0]`"""
     expected = {
-        "step_name": sdhgosdrhofslkdf,
+        "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "?",
         "variants": [DataStepChoice.Variant("s == p", True), DataStepChoice.Variant("*s == *p", False), DataStepChoice.Variant("s[0] == p[0]", False)],
@@ -147,7 +147,7 @@ Question text?
 
 HINT: подсказка"""
     expected = {
-        "step_name": sdhgosdrhofslkdf,
+        "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Question text?",
         "variants": [DataStepChoice.Variant("s == p", True), DataStepChoice.Variant("*s == *p", False), DataStepChoice.Variant("s[0] == p[0]", False, "подсказка")],
@@ -171,7 +171,7 @@ HINT: частная подсказка
 -) `*s == *p`
 -) `s[0] == p[0]`"""
     expected = {
-        "step_name": sdhgosdrhofslkdf,
+        "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Question text?",
         "variants": [DataStepChoice.Variant("s == p", True, "частная подсказка"), DataStepChoice.Variant("*s == *p", False), DataStepChoice.Variant("s[0] == p[0]", False)],
@@ -198,7 +198,7 @@ Question text?
 SHUFFLE: false
 HINT: общая подсказка"""
     expected = {
-        "step_name": sdhgosdrhofslkdf,
+        "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Question text?",
         "variants": [DataStepChoice.Variant("s == p", True), DataStepChoice.Variant("*s == *p", False), DataStepChoice.Variant("s[0] == p[0]", False)],
@@ -226,6 +226,13 @@ B. `А ху asking`
 C. `Thank you for your question`
 
 ANSWER: A"""
+    expected = {
+        "step_name": sdhgosdrhofslkdf,
+        "id": None,
+        "text": "Question text?",
+        "variants": [DataStepChoice.Variant("s == p", True), DataStepChoice.Variant("*s == *p", False), DataStepChoice.Variant("s[0] == p[0]", False)],
+        "step_addons": {"SHUFFLE": "false", "HINT": "общая подсказка"}
+    }
     input_text = input_text.split('\n')
     dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
     input_text = input_text[1:]
