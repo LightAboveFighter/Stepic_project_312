@@ -134,7 +134,7 @@ class Lesson:
     def delete_step(self, step_pos: int):
         """ Mark to remove in network (Remove Step from Lesson after self.send()) """
 
-        if len(self.steps[step_pos].keys()) > 2:
+        if isinstance(self.steps[step_pos], Step):
             self.steps[step_pos].params["__del_status__"] = State.STRICT_DELETE
             return
         self.steps[step_pos]["__del_status__"] = State.STRICT_DELETE
@@ -368,11 +368,10 @@ class Unit:
     def send(self, position: int, session: OAuthSession):
         """ Create and tie lesson to section """
 
-        if self.lesson.params.get("__del_status__", False):
-            self.lesson.send(session)
-            return self.delete_network(session)
-
         self.lesson.send(session)
+
+        if self.lesson.params.get("__del_status__", False):
+            return self.delete_network(session)
         
         api_url = 'https://stepik.org/api/units'
         if id:
@@ -918,6 +917,8 @@ class Course:
         r = requests.get(url, headers=session.headers())
         if not is_success(r, 0):
             return success_status(False, "Can't get course's head")
+        
+        self.clear()
         
         content = json.loads(r.text)["courses"][0] 
 
