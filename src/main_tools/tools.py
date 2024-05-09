@@ -42,7 +42,7 @@ def __print_lesson_insides__(lesson: Lesson,  pref: str = ""):
 
 
 def __print_sections_insides__(section: Section, pref: str, show_steps: bool = False):
-    lessons = section.lessons
+    lessons = [unit.lesson for unit in section.units]
     prefix_lesson = pref + prefix_continue_T
     prefix_lesson_end = pref + prefix_end
     for i in range(len(lessons)-1):

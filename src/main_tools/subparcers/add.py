@@ -17,18 +17,17 @@ def add(options):
             print('Rofls') # скоро оговоримся
         else:
             steps = get_gift_dicts(options.gift)
-            lesson = course.sections[options.section].lessons[options.lesson]
         
         if options.step is not None:
-            lesson.steps.insert(options.step, steps[options.step])
+            course.add_step(options.section, options.lesson, steps[options.step], options.step)
         else:
-            course.sections[options.section].lessons.insert(options.lesson, Lesson(options.title,steps=steps))
+            course.add_lesson(options.section, Lesson(options.title,steps=steps),options.lesson)
         if not options.no_ask:
             if options.step is None:
                 main_tools.print_tree(course.sections[options.section])
                 print(f"lesson {options.lesson} in section {options.section} will be changed")
             else:
-                main_tools.print_tree(lesson)
+                main_tools.print_tree(course)
                 print(f"step {options.step} in lesson {options.lesson} in section {options.section} will be changed")
             if main_tools.ask_Y_N("Continuing?"):
                 course.save(filename = options.course)
@@ -37,19 +36,20 @@ def add(options):
             course.save(filename = options.course)
             course.send_all()
     except IndexError as err:
-        if len(course.sections)<=options.section:
-            msg = f"course \"{course.title}\" "\
-                  f"have only {len(course.sections)} sections"
-        elif len(course.sections[options.section].lessons)<=options.lesson:
-            msg = f"section \"{course.sections[options.section].title}\" "\
-                  f"have only {len(course.sections[options.section].lessons)} lessons"
-        elif len(lesson.steps)<=options.step:
-            msg = f"lesson \"{lesson.title}\" "\
-                  f"have only {len(lesson.steps)} steps"
-        else:
-            msg = str(err)
-        log.error(msg)
-        print("ERROR:", msg, file=sys.stderr)
+        # if len(course.sections)<=options.section:
+        #     msg = f"course \"{course.title}\" "\
+        #           f"have only {len(course.sections)} sections"
+        # elif len(course.sections[options.section].lessons)<=options.lesson:
+        #     msg = f"section \"{course.sections[options.section].title}\" "\
+        #           f"have only {len(course.sections[options.section].lessons)} lessons"
+        # elif len(lesson.steps)<=options.step:
+        #     msg = f"lesson \"{lesson.title}\" "\
+        #           f"have only {len(lesson.steps)} steps"
+        # else:
+        #     msg = str(err)
+        # log.error(msg)
+        # print("ERROR:", msg, file=sys.stderr)
+        print(err)
         raise RuntimeError()
 
 def add_subcommand(subparsers, parents):

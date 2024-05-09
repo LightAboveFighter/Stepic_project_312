@@ -23,7 +23,11 @@ def update(options):
             raise ValueError("You need to choose md or gift file!")
 
         if options.step is not None:
-            lesson.steps[options.step] = steps[options.step]
+            steps_num = len(course.sections[options.section].units[options.lesson].lesson.steps)
+            for i in range(steps_num):
+                course.delete_step(options.section, options.lesson, i)
+            for step in steps:
+                course.add_step(options.section, options.lesson, step)
         else:
             course.sections[options.section].lessons[options.lesson].steps = steps
         if not options.no_ask:
@@ -31,7 +35,7 @@ def update(options):
                 main_tools.print_tree(course.sections[options.section])
                 print(f"lesson {options.lesson} in section {options.section} will be changed")
             else:
-                main_tools.print_tree(lesson)
+                main_tools.print_tree(course.sections[options.section].units[options.lesson].lesson)
                 print(f"step {options.step} in lesson {options.lesson} in section {options.section} will be changed")
             if main_tools.ask_Y_N("Continuing?"):
                 course.save(filename = options.course)
