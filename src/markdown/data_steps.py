@@ -126,8 +126,9 @@ class DataStepQuiz(DataStep):
     step_addons: dict'''
 
     class Variant:
-        def __init__(self, text: str, label: str, feedback: str = None):
+        def __init__(self, text: str, label: str, is_correct: bool=False, feedback: str=None):
             self.text = text
+            self.is_correct = is_correct
             self.label = label
             self.feedback = feedback
 
@@ -159,7 +160,7 @@ class DataStepQuiz(DataStep):
                         continue
 
                     try:
-                        variant_data = ParsingModuleSchema.quiz_variant().parseString(line)  # проблемы с этим парсером
+                        variant_data = ParsingModuleSchema.quiz_variant().parseString(line)
                         self.add_variant(variant_data.value, variant_data.label)
                         state = 'VARIANTS'
                         self.text = ''.join(self.text)
@@ -179,11 +180,19 @@ class DataStepQuiz(DataStep):
                         if line != pp.Empty():
                             variant_data = ParsingModuleSchema.quiz_variant().parseString(line)
                             self.add_variant(variant_data.value, variant_data.label)
-                        continue    
+                        continue
                 case 'END':
                     try:
                         addon = ParsingModuleSchema.body_addon().parseString(line)
                         self.step_addons[str(addon.type)] = addon.value
+                        if self.step_addons["ANSWER"]:
+                            self.step_addons["ANSWER"].replace(" ", "")
+                            answer_letters = self.step_addons["ANSWER"].split(",")
+                            for var in self.variants:
+                                if var.label in answer_letters:
+                                    var.is_correct = True
+                        else:
+                            raise Exception("Expected ANSWER obligatory addon.")
                         continue
                     except pp.ParseException:
                         continue
