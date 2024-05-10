@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from schemas import *
+from src.markdown.schemas import *
 
 
 class DataStep(ABC):
@@ -15,29 +15,31 @@ class DataStep(ABC):
         self.id = None      # пока не знаю как это заполнять
     
     @abstractmethod
-    def add_info(lines: list[str]):
+    def add_info(self, lines: list[str]):
         pass
 
 
 class DataStepText(DataStep):
     '''text: list[str]'''
     def add_info(self, lines: list[str]):
-        self.text = lines
+        self.text = ''.join(lines)
+    
+    def as_dict(self):
+        data_dict = {
+            "step_name": self.step_name,
+            "id": self.id,
+            "text": self.text
+        }
+        return data_dict
 
 
 class DataStepChoice(DataStep):
     # Text before answer variants
     '''text: list[str]
-    variants: list[variant_data]
+    variants: list[Variant]
     step_addons: dict'''
-    # option 
-    # {
-    #   text 
-    #   is_correct
-    # feedback
-    # }
 
-    class variant:
+    class Variant:
         def __init__(self, text: str, is_correct: str, feedback: str = None):
             self.text = text
             if is_correct == '+':
@@ -47,83 +49,218 @@ class DataStepChoice(DataStep):
             else:
                 raise Exception('Undefined type of variant_data.')
             self.feedback = feedback
-
-    def add_variant(self, variant_data):
-        match (variant_data.type):
-            case '+':
-                self.correct[variant_data.value] = None
-            case '-':
-                self.incorrect[variant_data.value] = None
-            case _:
-                raise Exception('Undefined type of choice variant_data.')
-
-    def add_feedback(self, variant_data, feedback):
-        if feedback.type != 'HINT':
-            raise Exception('Wrong feedback type.')
-
-        match (variant_data.type):
-            case '+':
-                self.correct[variant_data.value] = feedback.value
-            case '-':
-                self.incorrect[variant_data.value] = feedback.value
-            case _:
-                raise Exception('Undefined type of choice variant_data.')
+    
+    def add_variant(self, value, type):
+        value_begin = value.find('`')
+        value_end = value[value_begin+1:].find('`')
+        self.variants.append(self.Variant(value[value_begin+1:value_end+1], type))
 
     def add_info(self, lines: list[str]):
         self.text = []
         self.variants = []
         self.step_addons = {'SHUFFLE' : 'true'}
 
-        getting_text = True
-        getting_variants = False
-        getting_end = False
+        BEGIN = 'TEXTBEGIN'
+        END = 'TEXTEND'
+        state = 'TEXT'
+        only_text = False
+        for line in lines:
+            match (state):
+                case 'TEXT':
+                    if line.strip() == BEGIN:
+                        only_text = True
+                    elif line.strip() == END:
+                        only_text = False
 
-        for l in lines:
-            if getting_text:
-                try:
-                    variant_data = ParsingModuleSchema.choice_variant().parseString(l)
-                    # add_variant
-                    self.variants.append(DataStepChoice.variant(variant_data.value, variant_data.type))
-                    getting_text = False
-                    getting_variants = True
-                    continue
-                except pp.ParseException:
-                    self.text.append(l)
-                    continue
-                    
-            if getting_variants:
-                try:
-                    feedback = ParsingModuleSchema.body_addon().parseString(l)
-                    if feedback.type != 'HINT':
-                        self.step_addons[str(feedback.type)] = feedback.value
-                        getting_variants = False
-                        getting_end = True
+                    if only_text:
+                        self.text.append(line)
                         continue
-                    # self.add_feedback(variant_data, feedback)
-                    self.variants[-1].feedback = feedback.value
-                except pp.ParseException:
-                    if l != pp.Empty():
-                        variant_data = ParsingModuleSchema.choice_variant().parseString(l)
-                        # self.add_variant(variant_data)
-                        self.variants.append(DataStepChoice.variant(variant_data.value, variant_data.type))
-                    continue
-                    
-            if getting_end:
-                try:
-                    addon = ParsingModuleSchema.body_addon().parseString(l)
-                    self.step_addons[str(addon.type)] = addon.value
-                    continue
-                except pp.ParseException:
-                    continue
+
+                    try:
+                        variant_data = ParsingModuleSchema.choice_variant().parseString(line)
+                        self.add_variant(variant_data.value, variant_data.type)
+                        state = 'VARIANTS'
+                        self.text = ''.join(self.text)
+                        continue
+                    except pp.ParseException:
+                        self.text.append(line)
+                        continue
+                case 'VARIANTS':
+                    try:
+                        feedback = ParsingModuleSchema.body_addon().parseString(line)
+                        if feedback.type != 'HINT':
+                            self.step_addons[str(feedback.type)] = feedback.value
+                            state = 'END'
+                            continue
+                        self.variants[-1].feedback = feedback.value
+                    except pp.ParseException:
+                        if line != pp.Empty():
+                            variant_data = ParsingModuleSchema.choice_variant().parseString(line)
+                            self.add_variant(variant_data.value, variant_data.type)
+                        continue
+                case 'END':
+                    try:
+                        addon = ParsingModuleSchema.body_addon().parseString(line)
+                        self.step_addons[str(addon.type)] = addon.value
+                        continue
+                    except pp.ParseException:
+                        continue
+                case _:
+                    raise Exception("Undefined DataStepChoice.add_info() state.")
+    
+    def as_dict(self):
+        data_dict = {
+            "step_name": self.step_name,
+            "id": self.id,
+            "text": self.text,
+            "variants": self.variants,
+            "step_addons": self.step_addons
+        }
+        return data_dict
 
 
 class DataStepQuiz(DataStep):
+    # text before answer variants
     '''text: list[str]
-    variants: dict
+    variants: list[Variant]
     step_addons: dict'''
+
+    class Variant:
+        def __init__(self, text: str, label: str, feedback: str = None):
+            self.text = text
+            self.label = label
+            self.feedback = feedback
+
+    def add_variant(self, value, label):
+        value_begin = value.find('`')
+        value_end = value[value_begin+1:].find('`')
+        self.variants.append(DataStepQuiz.Variant(value[value_begin+1:value_end+1], label))
+
     def add_info(self, lines: list[str]):
-        # Нужно будет отпарсить все строчки находящиеся в lines
-        pass
+        self.text = []
+        self.variants = []
+        self.step_addons = {'SHUFFLE' : 'true'}
+
+        BEGIN = 'TEXTBEGIN'
+        END = 'TEXTEND'
+        state = 'TEXT'
+        only_text = False
+
+        for line in lines:
+            match (state):
+                case 'TEXT':
+                    if line.strip() == BEGIN:
+                        only_text = True
+                    elif line.strip() == END:
+                        only_text = False
+
+                    if only_text:
+                        self.text.append(line)
+                        continue
+
+                    try:
+                        variant_data = ParsingModuleSchema.quiz_variant().parseString(line)  # проблемы с этим парсером
+                        self.add_variant(variant_data.value, variant_data.label)
+                        state = 'VARIANTS'
+                        self.text = ''.join(self.text)
+                        continue
+                    except pp.ParseException:
+                        self.text.append(line)
+                        continue
+                case 'VARIANTS':
+                    try:
+                        feedback = ParsingModuleSchema.body_addon().parseString(line)
+                        if feedback.type != 'HINT':
+                            self.step_addons[str(feedback.type)] = feedback.value
+                            state = 'END'
+                            continue
+                        self.variants[-1].feedback = feedback.value
+                    except pp.ParseException:
+                        if line != pp.Empty():
+                            variant_data = ParsingModuleSchema.quiz_variant().parseString(line)
+                            self.add_variant(variant_data.value, variant_data.label)
+                        continue    
+                case 'END':
+                    try:
+                        addon = ParsingModuleSchema.body_addon().parseString(line)
+                        self.step_addons[str(addon.type)] = addon.value
+                        continue
+                    except pp.ParseException:
+                        continue
+                case _:
+                    raise Exception("Undefined DataStepQuiz.add_info() state.")
+
+    def as_dict(self):
+        data_dict = {
+            "step_name": self.step_name,
+            "id": self.id,
+            "text": self.text,
+            "variants": self.variants,
+            "step_addons": self.step_addons
+        }
+        return data_dict
+
+
+class DataStepTaskinline(DataStep):
+    def add_info(self, lines: list[str]):
+        self.text = []
+        self.code = []
+        self.inputs = []
+        self.outputs = []
+        data = []
+
+        BEGIN = 'TEXTBEGIN'
+        END = 'TEXTEND'
+        state = 'TEXT'
+        only_text = False
+        for line in lines:
+            match (state):
+                case 'TEXT':
+                    if line.strip() == BEGIN:
+                        only_text = True
+                    elif line.strip() == END:
+                        only_text = False
+                    if only_text:
+                        self.text.append(line)
+                        continue
+
+                    elif line.strip() == 'CODE':
+                        state = 'CODE'
+                        self.text = ''.join(self.text)
+                        continue
+                    self.text.append(line)
+                    continue
+                case 'CODE':
+                    if line.strip() == 'TEST':
+                        state = 'TEST'
+                        self.code = ''.join(self.code)
+                        continue
+                    self.code.append(line)
+                    continue
+                case 'TEST':
+                    if line.strip() == '----':
+                        self.inputs.append(''.join(data))
+                        data = []
+                        continue
+                    elif line.strip() == '====':
+                        self.outputs.append(''.join(data))
+                        data = []
+                        continue
+                    data.append(line)
+                    continue
+                case _:
+                    raise Exception("Undefined DataStepTaskinline.add_info() state.")
+
+    def as_dict(self):
+        data_dict = {
+            "step_name": self.step_name,
+            "id": self.id,
+            "text": self.text,
+            "code": self.code,
+            "inputs": self.inputs,
+            "outputs": self.outputs
+        }
+        return data_dict
 
 
 class DataStepCreationSchema():
@@ -141,5 +278,7 @@ class DataStepCreationSchema():
                 return DataStepQuiz(name, id)
             case 'CHOICE':
                 return DataStepChoice(name, id)
+            case 'TASKINLINE':
+                return DataStepTaskinline(name, id)
             case _:
                 raise Exception('Unexpected step type.')
