@@ -1,0 +1,20 @@
+<body>
+    <div class="container mt-3">
+      <div class="row">
+{% for cap_title in cap_title_list %}
+        <div class="col-4">
+          <div class="card">
+            <img src="https://dvmn.org/filer/canonical/1569333143/329/" class="card-img-top" alt="...">
+            <div class="card-body">
+              <h5 class="card-title">{{cap_title}}</h5>
+              <p class="card-text">{{cap_text_list[loop.index-1]}}</p>
+              <p class="card-text"><small class="text-muted">Last updated {{loop.index}} mins ago</small></p>
+            </div>
+          </div>
+        </div>
+{% endfor %}
+        </div>
+    </div>
+
+</body>
+</html>
