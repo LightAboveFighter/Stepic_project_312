@@ -35,6 +35,9 @@ class StringUnique(Schema):
     is_text_disabled = fields.Bool()
     is_file_disabled = fields.Bool()
 
+class FreeAnswerUnique(Schema):
+
+    is_html_enabled = fields.Bool()
 
 class Step_block_template(Schema):
 

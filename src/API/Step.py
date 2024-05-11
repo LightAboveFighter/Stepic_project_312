@@ -4,11 +4,10 @@ from abc import ABC
 import json
 import yaml
 from src.markdown.data_steps import *
-# from src.API.Classes import State
 from src.API.OAuthSession import OAuthSession
 from dataclasses import field, dataclass
 from typing import Any, Optional
-from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique, StringUnique
+from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique, StringUnique, FreeAnswerUnique
 
 def create_any_step(type: str, *args, **kwargs):
     """ Creates needable Step with type
@@ -31,6 +30,8 @@ def create_any_step(type: str, *args, **kwargs):
         return StepCode( *args_corr, StepCode.Unique( **CodeUnique().dump(unique)), **kwargs )
     if type == "string":
         return StepString( *args_corr, StepString.Unique( **StringUnique().dump(unique)), **kwargs )
+    if type == "free-answer":
+        return StepFreeAnswer( *args_corr, StepFreeAnswer.Unique( **FreeAnswerUnique().dump(unique)), **kwargs )
     
     args_corr = args_corr[ : 3]
     return StepText(*args_corr, None, **kwargs)
@@ -275,13 +276,12 @@ class StepChoice(Step):
             }
         
 
-    def load_from_parse(self, step: DataStepChoice):
+    def load_from_parse(self, step: DataStepChoice | DataStepQuiz):
         self.body["text"] = step.text
         self.unique = self.Unique(step.step_addons["SHUFFLE"] != "true",
                                   [ (option.text, option.is_correct, option.feedback) for option in step.variants]
                                   )
         self.title = step.step_name
-
 
     # def __post_init__(self):
         # self.id = self.params.get("id")
@@ -420,4 +420,22 @@ class StepString(Step):
                 "code": self.code,
                 "is_text_disabled": self.is_text_disabled,
                 "is_file_disabled": self.is_file_disabled
+            }
+        
+class StepFreeAnswer(Step):
+
+    def __init__(self, *args, **kwargs):
+        self._type = "free-answer"
+        super().__init__(*args, **kwargs)
+        source = self.unique.get_dict()
+        self.body["source"] = source
+
+    @dataclass
+    class Unique:
+        """ is_html_enabled - turn on/off extended text redactor"""
+        is_html_enabled: bool = False
+
+        def get_dict(self):
+            return {
+                "is_html_enabled": self.is_html_enabled
             }
