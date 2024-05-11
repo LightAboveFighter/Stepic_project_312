@@ -30,8 +30,8 @@ def add(options):
                 main_tools.print_tree(course)
                 print(f"step {options.step} in lesson {options.lesson} in section {options.section} will be changed")
             if main_tools.ask_Y_N("Continuing?"):
-                course.save(filename = options.course)
                 course.send_all()
+                course.save(filename = options.course)
         else:
             course.save(filename = options.course)
             course.send_all()

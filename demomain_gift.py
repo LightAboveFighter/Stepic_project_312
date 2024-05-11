@@ -15,18 +15,7 @@ from src.main_tools.subparcers import add, structure, update, load
 
 
 
-course: Course = tools.get_course_from_file("a.yaml")
-steps = get_gift_dicts("tests/gift_examples/simple_example.gift")
 
-course.auth(OAuthSession())
-
-course.add_step(0, 0, steps[0], 1)
-course.save(filename = "a.yaml")
-course.send_all()
-
-
-
-exit(1)
 # Украдено у https://github.com/qtile/qtile
 def main():
     parent_parser = argparse.ArgumentParser(add_help=False)
