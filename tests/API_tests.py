@@ -1,80 +1,130 @@
 import pytest
-import yaml
+import os
 from src.API.OAuthSession import OAuthSession
-from src.API.Classes import Course, Section, Lesson
+from src.API.Classes import Lesson
 from src.API.Step import *
 
-session = ""
-course = ""
-
-"""------------StepText's test------------"""
-
-def create_steptext():
-    title = "StepText's title"
-    lesson_id = 1234
-    body = {"text": "StepText's text"}
-    params = {"id": 987, "cost": 100}
-    right = {"title": title, "lesson": lesson_id, "block": {**body, "name": "text"}, **params}
-    return StepText(title, lesson_id, body, None, params), right
+lesson = None
 
 @pytest.mark.local
-def test_steptext_create():
-    a, right = create_steptext()
-
-    assert right == a.dict_info()
-    right["lesson"] = None
-    right["id"] = None
-    assert right == a.dict_info(copy=True)
+def test_lesson_dict():
+    global lesson
+    title = "Lesson's Title"
+    id = 12
+    cost = 15
+    step_title = "Step's title"
+    step_text = "StepText's content"
+    steps = [StepText(step_title, body = {"text": step_text}, cost = cost)]
+    sect_ids = [123123, 233443]
+    lesson = Lesson(title, id, steps, sect_ids)
+    right_dict = {
+        "title": title,
+        "id": id,
+        "steps": [
+            {
+                "title": step_title,
+                "id": None,
+                "lesson": None,
+                "block": {
+                    "name": "text",
+                    "text": step_text
+                },
+                "cost": cost
+            }
+        ],
+        "sect_ids": sect_ids
+    }
+    assert lesson.dict_info() == right_dict
+    right_dict["id"] = None
+    right_dict["steps"][0]["lesson"] = None
+    right_dict["steps"][0]["id"] = None
+    right_dict["sect_ids"] = []
+    assert lesson.dict_info(copy=True) == right_dict
 
 @pytest.mark.local
-def test_steptext_load_from_dict():
-    a, right = create_steptext()
-    assert a == StepText().load_from_dict(right)
+def test_save_lesson():
+    global lesson
 
+    file1 = "Custom_name_type.txt"
+    file2 = "Load_without_ids.png"
+    file3 = "Without_ids.cpp"
 
-@pytest.mark.network
-def test_auth():
-    global session
-    session = OAuthSession()
-    assert not( session.token == "" )
+    lesson.save()
+    lesson.save(filename=file1)
+    lesson.save(filename=file2)
+    lesson.save(filename=file3, copy=True)
 
+    lesson1 = Lesson().load_from_file(f"{lesson.title}.yaml")
+    lesson2 = Lesson().load_from_file(file1)
+    lesson3 = Lesson().load_from_file(file2, copy=True)
+    lesson4 = Lesson().load_from_file(file3)
 
-@pytest.mark.network
-def test_full_send_delete_course():
-    global session
+    assert lesson.dict_info() == lesson1.dict_info()
+    assert lesson.dict_info() == lesson2.dict_info()
+    assert lesson.dict_info(copy=True) == lesson3.dict_info()
+    assert lesson.dict_info(copy=True) == lesson4.dict_info()
 
-    title = "Test course's title"
-    descr = "Test course's description"
-    c = Course(title, description=descr)
-    c.auth(session)
-    c.send_all() # Sending course
-    assert not( c.id == None)
-    assert c.delete_network() == {"Success": True, "json": ""} # Deleting course
-
-
-@pytest.mark.network
-def test_send_section():
-    global session
-    global course
-
-    title = "Test course's title"
-    descr = "Test course's description"
-    course = Course(title, description=descr)
-    course.create_section(Section("Test section's title"))
-    course.auth(session)
-    course.send_all()
-    assert not( course.sections[0].id == None)
-    assert course.delete_network_section(0) == {"Success": True, "json": ""}
-
+    os.remove(f"./{lesson.title}.yaml")
+    os.remove(file1)
+    os.remove(file2)
+    os.remove(file3)
 
 @pytest.mark.network
-def test_send_lesson():
-    global session
-    global course
+def test_send_load_lesson():
+    global lesson
+    title = "Lesson's title"
+    id = None
+    cost = 15
+    step_title = "Step_0"
+    step_text = "StepText's content"
+    steps = [StepText(step_title, body = {"text": step_text}, cost = cost)]
+    sect_ids = [123123, 233443]
+    lesson = Lesson(title, id, steps, sect_ids)
 
-    course.create_section(Section("Test section"))
-    course.create_lesson(Lesson("Test lesson"), 0)
-    course.auth(session)
-    course.send_all()
-    assert not( course.sections[0].lessons[0].id == None)
-    assert course.delete_network_lesson(0, 0) == {"Success": True, "json": ""}
+    assert lesson.send(OAuthSession())["success"]
+
+@pytest.mark.network
+def test_load_lesson():
+    global lesson
+
+    lesson2 = Lesson().load_from_net(lesson.id, OAuthSession(), source = True)
+
+    dict2 = lesson.dict_info()
+    dict2["steps"][0]["block"]["source"] = {}
+    dict2["steps"][0]["block"]["options"] = {}
+    dict2["sect_ids"] = []
+
+    dict2_copy = lesson.dict_info(copy=True)
+    dict2_copy["steps"][0]["block"]["source"] = {}
+    dict2_copy["steps"][0]["block"]["options"] = {}
+    dict2_copy["sect_ids"] = []
+
+    assert lesson2.dict_info(copy = True) == dict2_copy
+    assert lesson2.dict_info() == dict2
+
+@pytest.mark.network
+def test_load_lesson_no_source():
+    global lesson
+
+    lesson2 = Lesson().load_from_net(lesson.id, OAuthSession())
+
+    no_source_dict = lesson.dict_info()
+    no_source_dict["steps"] = [ {
+        "id": step["id"],
+        "__del_status__": None
+        }
+        for step in no_source_dict["steps"] ]
+    
+    no_source_dict["sect_ids"] = []
+    assert no_source_dict == lesson2.dict_info()
+
+    no_source_dict["steps"] = []
+    no_source_dict["id"] = None
+
+    assert no_source_dict == lesson2.dict_info(copy = True)
+
+@pytest.mark.network
+def test_delete_lesson():
+    global lesson
+
+    assert lesson.__danger_delete_network__(OAuthSession())["success"]

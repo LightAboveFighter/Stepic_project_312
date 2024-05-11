@@ -41,12 +41,16 @@ class Lesson:
         + **kwargs: if copy: delete all ids """
 
         copy = kwargs.get("copy", False)
-        steps = [ (
-            {
-            "id": step["id"],
-            "__del_status__": "STRICT_DELETE" if step.get("__del_status__", False) == State.STRICT_DELETE else None
-            } 
-            if not copy else None) if isinstance(step, dict) else step.dict_info(copy=copy) for step in self.steps
+        if copy and isinstance(self.steps[0], dict):
+            steps = []
+        else:
+            steps = [ 
+                (
+                    {
+                    "id": step["id"],
+                    "__del_status__": "STRICT_DELETE" if step.get("__del_status__", False) == State.STRICT_DELETE else None
+                    }
+                ) if isinstance(step, dict) else step.dict_info(copy=copy) for step in self.steps
             ]
         
         id = self.id if not copy else None

@@ -14,12 +14,12 @@ def is_success(*r):
 def request_status(*r):
     """ r - (requests.post object, strict requirment, ...)
     If strict requirment = 0 - every success code will be enough 
-    Return {"Success": , "json": }"""
+    Return {"success": , "json": }"""
     text = r[0].text
     for i in range(2, len(r), 2):
         text += r[i].text
 
-    return {"Success": is_success(*r), "json": text} 
+    return {"success": is_success(*r), "json": text} 
 
 def success_status(success: bool, text: str):
-    return {"Success": success, "json": text}
+    return {"success": success, "json": text}
