@@ -86,7 +86,7 @@ Every object, except for `Step`, has field with child objects:
 
 ## Child containig fields
 
-From `Course`, the main parent object, stores the `Step`, the smallest child object along the following path:
+From `Course`, the main parent object, you can get the `Step`, the smallest child object along the following path:
 ```
 step = course.sections[i].units[j].lesson.steps[k]
 ```
