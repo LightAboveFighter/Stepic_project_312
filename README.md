@@ -2,7 +2,7 @@
 Engineering workshop. 312 group 1st course MIPT. API Stepic project.
 
 > [!IMPORTANT]
-> Create API application at [Stepic API application](https://stepik.org/oauth2/applications/), otherwise you won't be able to work in net. Later, you need to use `client id` and `client secret` from it.
+> Create API application at [Stepic API application](https://stepik.org/oauth2/applications/): `client type - confidentional`, `autorization grant type - client credentials` , otherwise you won't be able to work in net. Later, you need to use `client id` and `client secret` from it.
 
 # Usage(демки на момент 06.05)
 На данный момент существует 4 сценария использования
