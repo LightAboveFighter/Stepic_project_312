@@ -8,7 +8,7 @@ from src.markdown.data_steps import *
 from src.API.OAuthSession import OAuthSession
 from dataclasses import field, dataclass
 from typing import Any, Optional
-from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique
+from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique, StringUnique
 
 def create_any_step(type: str, *args, **kwargs):
     """ Creates needable Step with type
@@ -29,6 +29,8 @@ def create_any_step(type: str, *args, **kwargs):
         return StepChoice( *args_corr, StepChoice.Unique(**ChoiceUnique().dump(unique)), **kwargs ) 
     if type == "code":
         return StepCode( *args_corr, StepCode.Unique( **CodeUnique().dump(unique)), **kwargs )
+    if type == "string":
+        return StepString( *args_corr, StepString.Unique( **StringUnique().dump(unique)), **kwargs )
     
     args_corr = args_corr[ : 3]
     return StepText(*args_corr, None, **kwargs)
@@ -68,7 +70,7 @@ class Step(ABC):
         self.unique = unique
         self.params = params
         self.id = None
-        if self.params.get("id", False):
+        if "id" in self.params.keys():
             self.id = params["id"]
             del self.params["id"]
 
@@ -110,8 +112,10 @@ class Step(ABC):
             r = requests.put(api_url, headers=session.headers(), json=data)
         else:
             r = requests.post(api_url, headers=session.headers(), json=data)
+
         if is_success(r, 0):
             self.id = json.loads(r.text)["step-sources"][0]["id"]
+
         return request_status(r, 201)
     
     def delete_network(self, session: OAuthSession):
@@ -126,23 +130,10 @@ class Step(ABC):
     
     def save(self, **kwargs):
         """ Save your Step to {Step's name}.yaml in root directory.
-        + **kwargs: filename: custom file's name, type and path """
+        + **kwargs: filename: custom file's name, type and path
+            if copy: delete all ids"""
 
-        optional = self.params
-        data = {
-                "stepSource": {
-                                "block": {
-                                    "name": self._type,
-                                    **self.body
-                                    },
-                                "lesson": self.lesson_id,
-                                "id": self.id,
-                                **optional 
-                                }
-                }
-        if kwargs.get("copy", False):
-            data["lesson"] = None
-            data["id"] = None
+        data = {"Step": self.dict_info(copy=kwargs.get("copy", False)) }
 
         title = f"{self.title}.yaml" if not kwargs.get("filename", False) else kwargs["filename"]
         with open(title, "w") as file:
@@ -191,7 +182,6 @@ class Step(ABC):
         if params.get("__del_status__", False):
             params["__del_status__"] = "STRICT_DELETE"
         
-
         ans = { 
             "title": self.title,
             "id": self.id,
@@ -200,7 +190,7 @@ class Step(ABC):
                 "name": self._type,
                  **self.body
                 },
-            **params 
+            **params
             }
         
         if kwargs.get("copy", False):
@@ -402,3 +392,32 @@ class StepCode(Step):
         # self.id = self.params.get("id")
         # source = self.unique.get_dict()
         # self.body["source"] = source
+
+class StepString(Step):
+
+    def __init__(self, *args, **kwargs):
+        self._type = "string"
+        super().__init__(*args, **kwargs)
+        source = self.unique.get_dict()
+        self.body["source"] = source
+
+    @dataclass
+    class Unique:
+        pattern: str = ""
+        use_re: bool = False
+        match_substring: bool = False
+        case_sensitive: bool = False
+        code: str = ""
+        is_text_disabled: bool = False
+        is_file_disabled: bool = True
+
+        def get_dict(self):
+            return {
+                "pattern": self.pattern,
+                "use_re": self.use_re,
+                "match_substring": self.match_substring,
+                "case_sensitive": self.case_sensitive,
+                "code": self.code,
+                "is_text_disabled": self.is_text_disabled,
+                "is_file_disabled": self.is_file_disabled
+            }

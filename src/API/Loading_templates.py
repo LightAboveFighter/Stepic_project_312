@@ -25,6 +25,16 @@ class CodeUnique(Schema):
     samples_count = fields.Int()
     test_cases = fields.List(fields.List(fields.Str()), required=True)
 
+class StringUnique(Schema):
+
+    pattern = fields.Str(required=True)
+    use_re = fields.Bool()
+    match_substring = fields.Bool()
+    case_sensitive = fields.Bool()
+    code = fields.Str()
+    is_text_disabled = fields.Bool()
+    is_file_disabled = fields.Bool()
+
 
 class Step_block_template(Schema):
 
