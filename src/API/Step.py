@@ -6,8 +6,8 @@ import yaml
 from src.markdown.data_steps import *
 from src.API.OAuthSession import OAuthSession
 from dataclasses import field, dataclass
-from typing import Any, Optional
-from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique, StringUnique, FreeAnswerUnique
+from typing import Any
+from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique, StringUnique, FreeAnswerUnique, NumberUnique
 
 def create_any_step(type: str, *args, **kwargs):
     """ Creates needable Step with type
@@ -32,6 +32,8 @@ def create_any_step(type: str, *args, **kwargs):
         return StepString( *args_corr, StepString.Unique( **StringUnique().dump(unique)), **kwargs )
     if type == "free-answer":
         return StepFreeAnswer( *args_corr, StepFreeAnswer.Unique( **FreeAnswerUnique().dump(unique)), **kwargs )
+    if type == "number":
+        return StepNumber( *args_corr, StepNumber.Unique( **NumberUnique().dump(unique)), **kwargs )
     
     args_corr = args_corr[ : 3]
     return StepText(*args_corr, None, **kwargs)
@@ -189,7 +191,7 @@ class Step(ABC):
             "lesson": self.lesson_id,
             "block": {
                 "name": self._type,
-                 **self.body
+                **self.body
                 },
             **params
             }
@@ -229,13 +231,13 @@ class StepChoice(Step):
     def __init__(self, *args, **kwargs):
         self._type = "choice"
         super().__init__(*args, **kwargs)
-        source = self.unique.get_dict()
+        source = self.unique.dict_info()
         choices = {
             "is_always_correct": False,
             "sample_size": len(self.unique.options),
             "is_html_enabled": True,
-            "is_options_feedback": all([i.get_option()["feedback"] for i in self.unique.options]),
-            **source,
+            "is_options_feedback": all([option.dict_info()["feedback"] for option in self.unique.options]),
+            **source
             }
         self.body["source"] = self.body.get("source", {})
         for i in choices.keys():
@@ -243,7 +245,8 @@ class StepChoice(Step):
     
     @dataclass
     class Unique:
-        """ options: [ { is_correct, text, feedback } ]"""
+        """ options: [ { is_correct, text, feedback } ]
+        + After __init__() it will be modifyed to [ StepChoice.Unique.Option ]"""
 
         @dataclass
         class Option:
@@ -251,7 +254,7 @@ class StepChoice(Step):
             is_correct: bool = False
             feedback: str = ""
         
-            def get_option(self):
+            def dict_info(self):
                 return {
                     "is_correct": self.is_correct,
                     "text": self.text,
@@ -269,12 +272,11 @@ class StepChoice(Step):
         # def __post_init__(self):
         #     self.options = [ self.Option(*i) if isinstance(i, tuple) else self.Option(**i) for i in self.options  ]
 
-        def get_dict(self):
+        def dict_info(self):
             return {
                 "preserve_order": self.preserve_order,
-                "options": [ i.get_option() for i in self.options]
+                "options": [ option.dict_info() for option in self.options]
             }
-        
 
     def load_from_parse(self, step: DataStepChoice | DataStepQuiz):
         self.body["text"] = step.text
@@ -285,7 +287,7 @@ class StepChoice(Step):
 
     # def __post_init__(self):
         # self.id = self.params.get("id")
-        # source = self.unique.get_dict()
+        # source = self.unique.dict_info()
         # choices = { **{
         #     "is_always_correct": False,
         #     "sample_size": len(self.unique.options),
@@ -320,8 +322,7 @@ class StepCode(Step):
     def __init__(self, *args, **kwargs):
         self._type = "code"
         super().__init__(*args, **kwargs)
-        source = self.unique.get_dict()
-        self.body["source"] = source
+        self.body["source"] = self.unique.dict_info()
 
     @dataclass
     class Unique:
@@ -366,7 +367,7 @@ class StepCode(Step):
         #         assert len(i) == 2   # TestCase must have two fields: question and answer
         #     self.samples_count = self.samples_count or len(self.test_cases)
 
-        def get_dict(self):
+        def dict_info(self):
             return {
                 "code": self.code,
                 "execution_time_limit": self.execution_time_limit,
@@ -390,7 +391,7 @@ class StepCode(Step):
 
     # def __post_init__(self):
         # self.id = self.params.get("id")
-        # source = self.unique.get_dict()
+        # source = self.unique.dict_info()
         # self.body["source"] = source
 
 class StepString(Step):
@@ -398,8 +399,7 @@ class StepString(Step):
     def __init__(self, *args, **kwargs):
         self._type = "string"
         super().__init__(*args, **kwargs)
-        source = self.unique.get_dict()
-        self.body["source"] = source
+        self.body["source"] = self.unique.dict_info()
 
     @dataclass
     class Unique:
@@ -411,7 +411,7 @@ class StepString(Step):
         is_text_disabled: bool = False
         is_file_disabled: bool = True
 
-        def get_dict(self):
+        def dict_info(self):
             return {
                 "pattern": self.pattern,
                 "use_re": self.use_re,
@@ -427,15 +427,48 @@ class StepFreeAnswer(Step):
     def __init__(self, *args, **kwargs):
         self._type = "free-answer"
         super().__init__(*args, **kwargs)
-        source = self.unique.get_dict()
-        self.body["source"] = source
+        self.body["source"] = self.unique.dict_info()
 
     @dataclass
     class Unique:
         """ is_html_enabled - turn on/off extended text redactor"""
         is_html_enabled: bool = False
 
-        def get_dict(self):
+        def dict_info(self):
             return {
                 "is_html_enabled": self.is_html_enabled
+            }
+        
+class StepNumber(Step):
+
+    def __init__(self, *args, **kwargs):
+        self._type = "number"
+        super().__init__(*args, **kwargs)
+        self.body["source"] = self.unique.dict_info()
+
+    class Unique:
+        """ options - [ ( 'answer', 'max_error' ) ]
+        + max_error must be positive number
+        + after __init__() it will be modified to [ StepNumber.Unique.Option ] """
+
+        @dataclass
+        class Option:
+            answer: str = ""
+            max_error: str = ""
+
+            def dict_info(self):
+                return {
+                    "answer": self.answer,
+                    "max_error": self.max_error
+                }
+
+        def __init__(self, options: list[dict] = None):
+            options = options or []
+            self.options = []
+            for option in options:
+                self.options.append( self.Option(**option) )
+
+        def dict_info(self):
+            return {
+                "options": [ option.dict_info() for option in self.options ]
             }

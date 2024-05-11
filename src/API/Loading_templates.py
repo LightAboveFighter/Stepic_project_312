@@ -39,6 +39,15 @@ class FreeAnswerUnique(Schema):
 
     is_html_enabled = fields.Bool()
 
+class NumberUniqueOption(Schema):
+
+    answer = fields.Str(required=True)
+    max_error = fields.Str(required=True)
+
+class NumberUnique(Schema):
+
+    options = fields.Nested("NumberUniqueOption", many=True)
+
 class Step_block_template(Schema):
 
     text = fields.Str()
