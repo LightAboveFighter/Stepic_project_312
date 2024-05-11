@@ -81,7 +81,7 @@ def test_send_load_lesson():
     sect_ids = [123123, 233443]
     lesson = Lesson(title, id, steps, sect_ids)
 
-    assert lesson.send(OAuthSession())["success"]
+    assert lesson.send(OAuthSession()).success
 
 @pytest.mark.network
 def test_load_lesson():
@@ -127,4 +127,4 @@ def test_load_lesson_no_source():
 def test_delete_lesson():
     global lesson
 
-    assert lesson.__danger_delete_network__(OAuthSession())["success"]
+    assert lesson.__danger_delete_network__(OAuthSession()).success

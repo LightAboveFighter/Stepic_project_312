@@ -1,3 +1,10 @@
+from dataclasses import dataclass
+
+
+@dataclass
+class RequestStatus:
+    success: bool
+    json: str
 
 def is_success(*r):
     """ r - (requests.post object, strict requirment, ...)
@@ -19,7 +26,7 @@ def request_status(*r):
     for i in range(2, len(r), 2):
         text += r[i].text
 
-    return {"success": is_success(*r), "json": text} 
+    return RequestStatus(is_success(*r), text)
 
 def success_status(success: bool, text: str):
-    return {"success": success, "json": text}
+    return RequestStatus(success, text)

@@ -1,7 +1,6 @@
 import requests
-from src.Help_methods import is_success, request_status
+from src.Help_methods import *
 from abc import ABC
-import json
 import yaml
 from src.markdown.data_steps import *
 from src.API.OAuthSession import OAuthSession
@@ -45,7 +44,7 @@ def load_any_step(id: int, session: OAuthSession):
     r = requests.get(api_url, headers=session.headers())
 
     if is_success(r, 0):
-        content = json.loads(r.text)["step-sources"][0]
+        content = r.json()["step-sources"][0]
         type = content["block"]["name"]
         unique = content["block"].get("source", {})
         return create_any_step(type, **content, unique=unique)
@@ -83,7 +82,7 @@ class Step(ABC):
     #         self.id = self.params.get("id", None)
     #         del self.params["id"]
 
-    def send(self, position: int, session: OAuthSession, lesson_id: int = None):
+    def send(self, position: int, session: OAuthSession, lesson_id: int = None) -> RequestStatus:
         """ Create/update/delete Step on Stepic.org.
         + If self.id is None - Step will be created, otherwise it will be updated
         + Given lesson_id will be written to self.lesson_id """
@@ -116,12 +115,19 @@ class Step(ABC):
         else:
             r = requests.post(api_url, headers=session.headers(), json=data)
 
-        if is_success(r, 0):
-            self.id = json.loads(r.text)["step-sources"][0]["id"]
+        change_step_message = "Вы можете изменить условие задания в этом поле и указать настройки ниже"
+        content = r.json()["step-sources"][0]
+        id = content["id"]
 
-        return request_status(r, 201)
+        if is_success(r, 0):
+            self.id = id
+        if change_step_message in content["block"]["text"]:
+            self.id = id
+            return success_status(True, r.text)
+
+        return request_status(r, 0)
     
-    def delete_network(self, session: OAuthSession):
+    def delete_network(self, session: OAuthSession) -> RequestStatus:
         """ Delete Step from network """
 
         api_url = f"https://stepik.org/api/step-sources/{self.id}"
@@ -173,11 +179,11 @@ class Step(ABC):
         self.params = params
         return self
 
-    def get_type(self):
+    def get_type(self) -> str:
         """ Return Step's type """
         return self._type
 
-    def dict_info(self, **kwargs):
+    def dict_info(self, **kwargs) -> dict:
         """ Returns Step in the dictionary view.
         + **kwargs: if copy: delete all ids """
 
