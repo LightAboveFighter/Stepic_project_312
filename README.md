@@ -2,12 +2,12 @@
 Engineering workshop. 312 group 1st course MIPT. API Stepic project.
 
 > [!IMPORTANT]
-> Create API application at [Stepic API application](https://stepik.org/oauth2/applications/): `client type - confidentional`, `autorization grant type - client credentials` , otherwise you won't be able to work in net. Later, you need to use `client id` and `client secret` from it.
+> Create API application at [Stepic API application](https://stepik.org/oauth2/applications/): `client type - confidential`, `authorization grant type - client credentials` , otherwise you won't be able to work in net. Later, you need to use `client id` and `client secret` from it.
 
 # Usage(демки на момент 06.05)
 На данный момент существует 4 сценария использования
 * **load** --- загружает файлы курса в файлы расширения yaml, для дальнейшей работы с самим курсом
-* **add** --- позволяет добавить элемент в урок или секцию в курса с помощью урока описанного, в .md или .gift
+* **add** --- позволяет добавить элемент в урок или секцию в курс с помощью урока описанного, в .md или .gift
 * **update** --- позволяет обновить урок в курсе с помощью урока описанного, в .md или .gift
 * **struct** --- позволяет увидеть структуру курса
 в примерах будет использоваться написание флагов `-C=a.yaml`,  но вы можете использовать любые удобные вам (например: `-C a.yaml`, `-C="a.yaml"`) 
@@ -49,7 +49,7 @@ prog add -C=a.yaml -S=1 -L=0 -s=1 --gift=example.gift
 prog load -C=a.yaml -S=1 -L=0 -s=1 --gift=example.gift 
 ```
 ## struct
-* `--course, -С`  --- данный флаг указывает название файла, из который будет считан курс
+* `--course, -С`  --- данный флаг указывает название файла, из которого будет считан курс
 Пример
 ```
 prog struc -C=a.yaml  
@@ -66,7 +66,7 @@ Every class has these methods:
 	(**send_all()** for `Course`)
 * **save()** --- save your object to root/your directory. Original file's type - **yaml**
 * **dict_info()** --- return your object in dictionary view
-* **load_from_net()** --- fill object with information from *Stepic.org* by it's id
+* **load_from_net()** --- fill object with information from *Stepic.org* by its id
 * **delete_network()** --- dangerous deleting object from Stepik.org without checks
 * **load_from_dict()** --- fill object with information from dictionary
 * **load_from_file()** --- fill object with information from file
@@ -84,7 +84,7 @@ Every object, except for `Step`, has field with child objects:
 * **units** --- for `Section` (every unit stores lesson)
 * **steps** --- for `Lesson`
 
-## Child containig fields
+## Child containing fields
 
 From `Course`, the main parent object, you can get the `Step`, the smallest child object along the following path:
 ```
@@ -95,10 +95,10 @@ So, using this path, you can change objects' order.
 ## OAuthSession
 
 Every method, connecting with server accepts **OAuthSession**.
-This class exists for autorization at Stepic.org.
+This class exists for authorization at Stepic.org.
 ### Stepic API application
-Create your application with [Stepic API application](https://stepik.org/oauth2/applications/) --- `client type - confidentional`, `autorization grant type - client credentials`
-First initialization OAuthSession accepts your **client_id** and **client_secret**. Next time, it will be saved, so can be called simplier, for example:
+Create your application with [Stepic API application](https://stepik.org/oauth2/applications/) --- `client type - confidential`, `authorization grant type - client credentials`
+First initialization OAuthSession accepts your **client_id** and **client_secret**. Next time, it will be saved, so can be called simpler, for example:
 ```
 a.send(session = OAuthSession())
 ```
@@ -135,7 +135,7 @@ and all next objects won't be sent.
 
 ## Delete_network()
 
-Dangerous deleting object from *Stepic.org* without any checks. It's better to use this method withoud parenting objects: for them nothing will happened, that can cause to wrong objects managing.
+Dangerous deleting object from *Stepic.org* without any checks. It's better to use this method without parenting objects: for them nothing will happen, that can cause to wrong objects managing.
 
 It's better to use:
 ## Delete_*object*()
