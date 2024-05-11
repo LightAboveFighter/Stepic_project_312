@@ -49,6 +49,12 @@ class DataStepChoice(DataStep):
             else:
                 raise Exception('Undefined type of variant_data.')
             self.feedback = feedback
+        
+        def __eq__(self, other):
+            if self.text == other.text and self.is_correct == other.is_correct and \
+                self.feedback == other.feedback:
+                return True
+            return False
     
     def add_variant(self, value, type):
         value_begin = value.find('`')
@@ -131,6 +137,12 @@ class DataStepQuiz(DataStep):
             self.is_correct = is_correct
             self.label = label
             self.feedback = feedback
+        
+        def __eq__(self, other):
+            if self.text == other.text and self.is_correct == other.is_correct and \
+                self.label == other.label and self.feedback == other.feedback:
+                return True
+            return False
 
     def add_variant(self, value, label):
         value_begin = value.find('`')
