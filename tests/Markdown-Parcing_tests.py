@@ -290,4 +290,4 @@ HINT: подсказка"""
     assert dst.variants[2].feedback == None
     assert dst.step_addons["SHUFFLE"] == "false"
     assert dst.step_addons["ANSWER"] == "A, C"
-    assert dst.step_addons["HINT"] == "подсказка"ё
+    assert dst.step_addons["HINT"] == "подсказка"

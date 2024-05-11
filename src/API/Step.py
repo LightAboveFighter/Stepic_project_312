@@ -1,14 +1,12 @@
 import requests
-from src.Help_methods import is_success, request_status
+from src.Help_methods import *
 from abc import ABC
-import json
 import yaml
 from src.markdown.data_steps import *
-# from src.API.Classes import State
 from src.API.OAuthSession import OAuthSession
 from dataclasses import field, dataclass
-from typing import Any, Optional
-from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique, StringUnique
+from typing import Any
+from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique, StringUnique, FreeAnswerUnique, NumberUnique
 
 def create_any_step(type: str, *args, **kwargs):
     """ Creates needable Step with type
@@ -31,6 +29,10 @@ def create_any_step(type: str, *args, **kwargs):
         return StepCode( *args_corr, StepCode.Unique( **CodeUnique().dump(unique)), **kwargs )
     if type == "string":
         return StepString( *args_corr, StepString.Unique( **StringUnique().dump(unique)), **kwargs )
+    if type == "free-answer":
+        return StepFreeAnswer( *args_corr, StepFreeAnswer.Unique( **FreeAnswerUnique().dump(unique)), **kwargs )
+    if type == "number":
+        return StepNumber( *args_corr, StepNumber.Unique( **NumberUnique().dump(unique)), **kwargs )
     
     args_corr = args_corr[ : 3]
     return StepText(*args_corr, None, **kwargs)
@@ -42,7 +44,7 @@ def load_any_step(id: int, session: OAuthSession):
     r = requests.get(api_url, headers=session.headers())
 
     if is_success(r, 0):
-        content = json.loads(r.text)["step-sources"][0]
+        content = r.json()["step-sources"][0]
         type = content["block"]["name"]
         unique = content["block"].get("source", {})
         return create_any_step(type, **content, unique=unique)
@@ -80,7 +82,7 @@ class Step(ABC):
     #         self.id = self.params.get("id", None)
     #         del self.params["id"]
 
-    def send(self, position: int, session: OAuthSession, lesson_id: int = None):
+    def send(self, position: int, session: OAuthSession, lesson_id: int = None) -> RequestStatus:
         """ Create/update/delete Step on Stepic.org.
         + If self.id is None - Step will be created, otherwise it will be updated
         + Given lesson_id will be written to self.lesson_id """
@@ -113,12 +115,19 @@ class Step(ABC):
         else:
             r = requests.post(api_url, headers=session.headers(), json=data)
 
-        if is_success(r, 0):
-            self.id = json.loads(r.text)["step-sources"][0]["id"]
+        change_step_message = "Вы можете изменить условие задания в этом поле и указать настройки ниже"
+        content = r.json()["step-sources"][0]
+        id = content["id"]
 
-        return request_status(r, 201)
+        if is_success(r, 0):
+            self.id = id
+        if change_step_message in content["block"]["text"]:
+            self.id = id
+            return success_status(True, r.text)
+
+        return request_status(r, 0)
     
-    def delete_network(self, session: OAuthSession):
+    def delete_network(self, session: OAuthSession) -> RequestStatus:
         """ Delete Step from network """
 
         api_url = f"https://stepik.org/api/step-sources/{self.id}"
@@ -170,11 +179,11 @@ class Step(ABC):
         self.params = params
         return self
 
-    def get_type(self):
+    def get_type(self) -> str:
         """ Return Step's type """
         return self._type
 
-    def dict_info(self, **kwargs):
+    def dict_info(self, **kwargs) -> dict:
         """ Returns Step in the dictionary view.
         + **kwargs: if copy: delete all ids """
 
@@ -188,7 +197,7 @@ class Step(ABC):
             "lesson": self.lesson_id,
             "block": {
                 "name": self._type,
-                 **self.body
+                **self.body
                 },
             **params
             }
@@ -228,13 +237,13 @@ class StepChoice(Step):
     def __init__(self, *args, **kwargs):
         self._type = "choice"
         super().__init__(*args, **kwargs)
-        source = self.unique.get_dict()
+        source = self.unique.dict_info()
         choices = {
             "is_always_correct": False,
             "sample_size": len(self.unique.options),
             "is_html_enabled": True,
-            "is_options_feedback": all([i.get_option()["feedback"] for i in self.unique.options]),
-            **source,
+            "is_options_feedback": all([option.dict_info()["feedback"] for option in self.unique.options]),
+            **source
             }
         self.body["source"] = self.body.get("source", {})
         for i in choices.keys():
@@ -242,7 +251,8 @@ class StepChoice(Step):
     
     @dataclass
     class Unique:
-        """ options: [ { is_correct, text, feedback } ]"""
+        """ options: [ { is_correct, text, feedback } ]
+        + After __init__() it will be modifyed to [ StepChoice.Unique.Option ]"""
 
         @dataclass
         class Option:
@@ -250,7 +260,7 @@ class StepChoice(Step):
             is_correct: bool = False
             feedback: str = ""
         
-            def get_option(self):
+            def dict_info(self):
                 return {
                     "is_correct": self.is_correct,
                     "text": self.text,
@@ -268,24 +278,22 @@ class StepChoice(Step):
         # def __post_init__(self):
         #     self.options = [ self.Option(*i) if isinstance(i, tuple) else self.Option(**i) for i in self.options  ]
 
-        def get_dict(self):
+        def dict_info(self):
             return {
                 "preserve_order": self.preserve_order,
-                "options": [ i.get_option() for i in self.options]
+                "options": [ option.dict_info() for option in self.options]
             }
-        
 
-    def load_from_parse(self, step: DataStepChoice):
+    def load_from_parse(self, step: DataStepChoice | DataStepQuiz):
         self.body["text"] = step.text
         self.unique = self.Unique(step.step_addons["SHUFFLE"] != "true",
                                   [ (option.text, option.is_correct, option.feedback) for option in step.variants]
                                   )
         self.title = step.step_name
 
-
     # def __post_init__(self):
         # self.id = self.params.get("id")
-        # source = self.unique.get_dict()
+        # source = self.unique.dict_info()
         # choices = { **{
         #     "is_always_correct": False,
         #     "sample_size": len(self.unique.options),
@@ -320,8 +328,7 @@ class StepCode(Step):
     def __init__(self, *args, **kwargs):
         self._type = "code"
         super().__init__(*args, **kwargs)
-        source = self.unique.get_dict()
-        self.body["source"] = source
+        self.body["source"] = self.unique.dict_info()
 
     @dataclass
     class Unique:
@@ -366,7 +373,7 @@ class StepCode(Step):
         #         assert len(i) == 2   # TestCase must have two fields: question and answer
         #     self.samples_count = self.samples_count or len(self.test_cases)
 
-        def get_dict(self):
+        def dict_info(self):
             return {
                 "code": self.code,
                 "execution_time_limit": self.execution_time_limit,
@@ -390,7 +397,7 @@ class StepCode(Step):
 
     # def __post_init__(self):
         # self.id = self.params.get("id")
-        # source = self.unique.get_dict()
+        # source = self.unique.dict_info()
         # self.body["source"] = source
 
 class StepString(Step):
@@ -398,8 +405,7 @@ class StepString(Step):
     def __init__(self, *args, **kwargs):
         self._type = "string"
         super().__init__(*args, **kwargs)
-        source = self.unique.get_dict()
-        self.body["source"] = source
+        self.body["source"] = self.unique.dict_info()
 
     @dataclass
     class Unique:
@@ -411,7 +417,7 @@ class StepString(Step):
         is_text_disabled: bool = False
         is_file_disabled: bool = True
 
-        def get_dict(self):
+        def dict_info(self):
             return {
                 "pattern": self.pattern,
                 "use_re": self.use_re,
@@ -420,4 +426,55 @@ class StepString(Step):
                 "code": self.code,
                 "is_text_disabled": self.is_text_disabled,
                 "is_file_disabled": self.is_file_disabled
+            }
+        
+class StepFreeAnswer(Step):
+
+    def __init__(self, *args, **kwargs):
+        self._type = "free-answer"
+        super().__init__(*args, **kwargs)
+        self.body["source"] = self.unique.dict_info()
+
+    @dataclass
+    class Unique:
+        """ is_html_enabled - turn on/off extended text redactor"""
+        is_html_enabled: bool = False
+
+        def dict_info(self):
+            return {
+                "is_html_enabled": self.is_html_enabled
+            }
+        
+class StepNumber(Step):
+
+    def __init__(self, *args, **kwargs):
+        self._type = "number"
+        super().__init__(*args, **kwargs)
+        self.body["source"] = self.unique.dict_info()
+
+    class Unique:
+        """ options - [ ( 'answer', 'max_error' ) ]
+        + max_error must be positive number
+        + after __init__() it will be modified to [ StepNumber.Unique.Option ] """
+
+        @dataclass
+        class Option:
+            answer: str = ""
+            max_error: str = ""
+
+            def dict_info(self):
+                return {
+                    "answer": self.answer,
+                    "max_error": self.max_error
+                }
+
+        def __init__(self, options: list[dict] = None):
+            options = options or []
+            self.options = []
+            for option in options:
+                self.options.append( self.Option(**option) )
+
+        def dict_info(self):
+            return {
+                "options": [ option.dict_info() for option in self.options ]
             }
