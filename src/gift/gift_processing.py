@@ -3,8 +3,9 @@ import pprint
 import json
 import sys
 import logging as log
+
 sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
-#from src.API.Classes import Step_text #FIXME 
+from src.API.Classes import Lesson 
 from src.API.Step import create_any_step
 
 from logs.project_logger import activate_logger
@@ -31,6 +32,7 @@ STEPIK_name_types = {"MultipleChoiceCheckbox()": "choice",
                      "Numerical()":"number",
                      "MultipleNumerical()":"number",
                      "Essay()":"free-answer",
+                     "Description()":"text",
                     }
 STEPIK_sampe_size = 10
 
@@ -152,25 +154,30 @@ def __data_essay__(x:giftparser.gift.Question):
       },
     })
 
+def __data_description__(x:giftparser.gift.Question):
+    return dict({"options": None})
+
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
     if (
         str(x.answer.__repr__()) == "MultipleChoiceRadio()"
         or str(x.answer.__repr__()) == "MultipleChoiceCheckbox()"
     ):
-        return create_any_step("choice","", 0, {"source":__data_multiple_choice__(x)})
+        return {"source":__data_multiple_choice__(x)}
     if str(x.answer.__repr__()) == "TrueFalse()":
-        return create_any_step("choice","", 0, {"source":__data_true_false__(x)})
+        return {"source":__data_true_false__(x)}
     if str(x.answer.__repr__()) == "Short()":
-        return create_any_step("string","", 0, __data_short__(x))
+        return __data_short__(x)
     if str(x.answer.__repr__()) == "Matching()":
-        return create_any_step("matching","", 0, __data_matching__(x))
+        return __data_matching__(x)
     if str(x.answer.__repr__()) == "Numerical()": 
-        return create_any_step("number","", 0, __data_numerical__(x))
+        return __data_numerical__(x)
     if str(x.answer.__repr__()) == "MultipleNumerical()":
-        return create_any_step("number","", 0, __data_multiple_numerical__(x))
+        return __data_multiple_numerical__(x)
     if str(x.answer.__repr__()) == "Essay()":
-        return create_any_step("free-answer","", 0, __data_essay__(x))
+        return __data_essay__(x)
+    if str(x.answer.__repr__()) == "Description()":
+        return __data_description__(x)
     return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
 
@@ -184,15 +191,19 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
         question_data["name"] = STEPIK_name_types[question.answer.__repr__()]
     question_data["text"] = question.text + (' _______ ' + question.text_continue if question.text_continue else '')
     options: dict = __get_question_options__(question)
-    #question_data = question_data | options # FIXME from config
-    return options
+    question_data = question_data | options
+    question_type = question_data["name"]
+    title = question.name
+    if title in question_data["text"]:  #FIXME add to .md 
+        log.info(f'title \"{title}\" title is contained in question, maby title is incorrect!')
+    return create_any_step(question_type, title if title else "", 0, **{"block":question_data},unique ={"options": (question_data["source"]["options"] if "source" in question_data.keys() else dict())})
 
 
 def get_gift_dicts(filename: str) -> list:
     """returns list if block dicts of question from GIFT file"""
     try:
-        giftfile = open(filename, "r").read()
-        parse_result = giftparser.parse(giftfile)
+        giftfile = open(filename, "r")
+        parse_result = giftparser.parse(giftfile.read())
     except FileNotFoundError:
         log.error( 'File "' + str(filename) + '" not found')
         raise FileNotFoundError
@@ -202,7 +213,12 @@ def get_gift_dicts(filename: str) -> list:
     except Exception as error:
         log.error("Can't parse \"" + str(filename) + '"\n'+ str(error))
         raise RuntimeError
-    questions: list = [__get_question_data__(i) for i in parse_result.questions]
+    questions = []
+    for i in parse_result.questions:
+        question = __get_question_data__(i)
+        if question is not None:
+            questions.append(question)
+    giftfile.close()
     return questions
 
 
@@ -218,12 +234,17 @@ def get_gift_dicts_from_text(text: str) -> list:
             + CEND
         )
         raise RuntimeError
-    questions: list = [ __get_question_data__(i) for i in parse_result.questions]
+    questions = []
+    for i in parse_result.questions:
+        question = __get_question_data__(i)
+        if question is not None:
+            questions.append(question)
+    print(questions)
     return questions
 
 
-def get_Step_list(lesson_id: int) -> list:
-    pass
+def get_Lesson() -> Lesson:
+    return
 
 if __name__ == "__main__":
     import argparse
@@ -241,5 +262,7 @@ if __name__ == "__main__":
     args = parse_input_arguments()
     for i in get_gift_dicts(args.file):  
         #print("\n\n",type(i))
+        if not i:
+            continue
         print(json.dumps(i.dict_info(), indent=4))
 

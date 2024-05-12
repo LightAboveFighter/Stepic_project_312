@@ -41,7 +41,7 @@ fdgrgerdgfgdg"""
     dst.add_info(input_text)
     assert isinstance(dst, DataStepText) == True
     assert dst.step_name == "sdhgosdrhofslkdf"
-    assert dst.text == input_text
+    assert dst.text == ("\n").join(input_text)
 
 
 @pytest.mark.markdown
@@ -57,7 +57,7 @@ fdgrgerdg fgdg"""
     dst.add_info(input_text)
     assert isinstance(dst, DataStepText) == True
     assert dst.step_name == "sdhgosdrhofslkdf"
-    assert dst.text == input_text
+    assert dst.text == ("\n").join(input_text)
 
 
 @pytest.mark.markdown
@@ -73,7 +73,7 @@ fdgrgerdgfgdg"""
     dst.add_info(input_text)
     assert isinstance(dst, DataStepText) == True
     assert dst.step_name == "sdhgosdrhofslkdf"
-    assert dst.text == input_text
+    assert dst.text == ("\n").join(input_text)
 
 
 # Нужно будет менять
@@ -92,14 +92,14 @@ Question text?
     dst.add_info(input_text)
     assert isinstance(dst, DataStepChoice) == True
     assert dst.step_name == "sdhgosdrhofslkdf"
-    assert dst.text == ["Question text?"]
-    assert dst.variants[0].text == "`s == p`"
+    assert dst.text == "Question text?"
+    assert dst.variants[0].text == "s == p"
     assert dst.variants[0].is_correct == True
     assert dst.variants[0].feedback == None
-    assert dst.variants[1].text == "`*s == *p`"
+    assert dst.variants[1].text == "*s == *p"
     assert dst.variants[1].is_correct == False
     assert dst.variants[1].feedback == None
-    assert dst.variants[2].text == "`s[0] == p[0]`"
+    assert dst.variants[2].text == "s[0] == p[0]"
     assert dst.variants[2].is_correct == False
     assert dst.variants[2].feedback == None
     assert dst.step_addons["SHUFFLE"] == "true"
@@ -147,7 +147,7 @@ HINT: подсказка"""
     input_text = input_text[1:]
     dst = DataStepCreationSchema.create_step(dst_inf.type, dst_inf.name)
     dst.add_info(input_text)
-    assert isinstance(dst, DataStepChoice) == True
+    assert isinstance(dst, DataStepChoice)
     assert dst.step_name == "sdhgosdrhofslkdf"
     assert dst.text == ["Question text?"]
     assert dst.variants[0].text == "`s == p`"
@@ -242,8 +242,8 @@ ANSWER: A"""
     dst.add_info(input_text)
     assert isinstance(dst, DataStepQuiz) == True
     assert dst.step_name == "Сравнение указателей"
-    assert dst.text == ["Do you have giraffe?"]
-    assert dst.variants[0].text == "`НУ Yes`"
+    assert dst.text == "Do you have giraffe?"
+    assert dst.variants[0].text == "НУ Yes"
     assert dst.variants[0].label == "A"
     assert dst.variants[0].feedback == "подсказка"
     assert dst.variants[1].text == "`А ху asking`"
