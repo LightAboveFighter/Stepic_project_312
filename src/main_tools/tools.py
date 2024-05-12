@@ -111,3 +111,15 @@ def ask(msg: str, reply_type=str):
     return False
 
 
+def get_auth(rewrite=False):
+    filename = os.path.dirname(sys.argv[0]) + "/src/API/Client_information.yaml"  # path can be broke FIXME
+    print(filename)
+    if rewrite or not os.access(filename, os.F_OK) or not os.access(filename, os.R_OK):
+        print("Secrets not found or need to be rewrited, you can get them form https://stepik.org/oauth2/applications")
+        print("DO NOT SHOW THIS STRINGS TO OTHER PEAPLE!")
+        auth = OAuthSession(ask("Client id: "),ask("Client secret: "))
+        print(f"file written into {filename}\nyou can change it by \"-A\" flag")
+        return auth
+
+    return OAuthSession()
+

@@ -10,7 +10,7 @@ from src.gift.gift_processing import get_gift_dicts
 def update(options):
     course: Course = main_tools.get_course_from_file(options.course)
     course.save(filename = options.course)
-    course.auth(OAuthSession())
+    course.auth(main_tools.get_auth())
     try:
         if options.section<0 or options.lesson<0 or options.step<0:
             raise IndexError()
@@ -29,7 +29,7 @@ def update(options):
             course.add_step(options.section, options.lesson, steps[options.step], options.step)
         else:
             steps_num = len(course.sections[options.section].units[options.lesson].lesson.steps)
-            for i in range(steps_num):
+            for i in range(steps_num): #ASK SASHA
                 course.delete_step(options.section, options.lesson, i)
             for step in steps:
                 course.add_step(options.section, options.lesson, step)
@@ -41,11 +41,13 @@ def update(options):
                 main_tools.print_tree(course.sections[options.section].units[options.lesson].lesson)
                 print(f"step {options.step} in lesson {options.lesson} in section {options.section} will be changed")
             if main_tools.ask_Y_N("Continuing?"):
-                course.send_all()
-                course.save(filename = options.course)
+                if course.send_all().success:
+                    print("DONE")
+                    course.save(filename = options.course)
         else:
-            course.send_all()
-            course.save(filename = options.course)
+            if course.send_all().success:
+                print("DONE")
+                course.save(filename = options.course)
     except IndexError as err:
         if not 0<=options.section<=len(course.sections):
             msg = f"course \"{course.title}\" "\

@@ -6,7 +6,7 @@ from src.API.Classes import Course, Lesson
 
 def load(options):
     course: Course = Course()
-    course.auth(OAuthSession())
+    course.auth(main_tools.get_auth())
     course.load_from_net(options.id, source=True)
     course.save(filename=options.course)
     

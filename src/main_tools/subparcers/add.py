@@ -8,14 +8,17 @@ from src.API.OAuthSession import OAuthSession
 from src.gift.gift_processing import get_gift_dicts
 
 def add(options):
+    main_tools.check_file(options.course)
     course: Course = main_tools.get_course_from_file(options.course)
-    course.auth(OAuthSession())
+    course.auth(main_tools.get_auth())
     try:
         if options.md is not None and options.gift is not None:
             raise ValueError("md and gift can't be loaded at same time")
         if options.md is not None:
+            main_tools.check_file(options.md)
             print('Rofls') # скоро оговоримся
         else:
+            main_tools.check_file(options.gift)
             steps = get_gift_dicts(options.gift)
         
         if options.step is not None:
@@ -30,27 +33,29 @@ def add(options):
                 main_tools.print_tree(course)
                 print(f"step {options.step} in lesson {options.lesson} in section {options.section} will be changed")
             if main_tools.ask_Y_N("Continuing?"):
-                course.send_all()
-                course.save(filename = options.course)
+                if course.send_all().success:
+                    print("DONE")
+                    course.save(filename = options.course)
         else:
-            course.save(filename = options.course)
-            course.send_all()
+            if course.send_all().success:
+                print("DONE")
+                course.save(filename = options.course)
     except IndexError as err:
-        # if len(course.sections)<=options.section:
-        #     msg = f"course \"{course.title}\" "\
-        #           f"have only {len(course.sections)} sections"
-        # elif len(course.sections[options.section].lessons)<=options.lesson:
-        #     msg = f"section \"{course.sections[options.section].title}\" "\
-        #           f"have only {len(course.sections[options.section].lessons)} lessons"
-        # elif len(lesson.steps)<=options.step:
-        #     msg = f"lesson \"{lesson.title}\" "\
-        #           f"have only {len(lesson.steps)} steps"
-        # else:
-        #     msg = str(err)
-        # log.error(msg)
-        # print("ERROR:", msg, file=sys.stderr)
-        print(err)
-        raise RuntimeError()
+        if not 0<=options.section<=len(course.sections):
+            msg = f"course \"{course.title}\" "\
+                  f"have only {len(course.sections)} sections"
+        elif not -1<=options.lesson<=len(course.sections[options.section].units):
+            msg = f"section \"{course.sections[options.section].title}\" "\
+                  f"have only {len(course.sections[options.section].units)} lessons"
+        else:
+            lesson = course.sections[options.section].units[options.lesson].lesson
+            if not -1<=options.step<len(lesson.steps):
+                msg = f"lesson \"{lesson.title}\" "\
+                      f"have only {len(lesson.steps)} steps"
+            else:
+                msg = str(err)
+        log.error(msg)
+        raise RuntimeError(msg)
 
 def add_subcommand(subparsers, parents):
     parser = subparsers.add_parser("add", parents=[parents], help="add an existing lesson or step")
@@ -107,7 +112,7 @@ def add_subcommand(subparsers, parents):
         help="markdown file to read",
     )
     parser.add_argument(
-        "-g",
+    "-g",
         "--gift",
         action="store",
         default=None,
