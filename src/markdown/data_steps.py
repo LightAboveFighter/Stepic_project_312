@@ -286,10 +286,10 @@ class DataStepTaskinline(DataStep):
 
 class DataStepCreationSchema():
     @staticmethod
-    def create_step(type,
-                    name,
-                    id = None
-    ):   # пока что не знаю что мне делать с id
+    def create_step(type: str,
+                    name: str,
+                    id: str = None
+    ) -> DataStep:   # пока что не знаю что мне делать с id
         if type == pp.Empty():
             type = 'TEXT'
         match type:
@@ -305,7 +305,7 @@ class DataStepCreationSchema():
                 raise Exception('Unexpected step type.')
 
     @staticmethod
-    def convert_step(step: DataStep):
+    def convert_step(step: DataStep) -> Step:
         match step:
             case DataStepText():
                 return StepText(title = step.step_name,

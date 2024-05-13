@@ -7,6 +7,7 @@ from src.API.OAuthSession import OAuthSession
 from dataclasses import field, dataclass
 from typing import Any
 from src.API.Loading_templates import Step_template, ChoiceUnique, CodeUnique, StringUnique, FreeAnswerUnique, NumberUnique
+# from src.markdown.data_steps import DataStepTaskinline, DataStepText, DataStepChoice, DataStepQuiz
 
 def create_any_step(type: str, *args, **kwargs):
     """ Creates needable Step with type
@@ -93,6 +94,7 @@ class Step(ABC):
         if self.params.get("__del_status__", False):
             del self.params["__del_status__"]
             return self.delete_network(session)
+        
 
         api_url = "https://stepik.org/api/step-sources"
         if self.id:
@@ -218,8 +220,8 @@ class StepText(Step):
         self._type = "text"
         super().__init__(*args, **kwargs)
 
-    def load_from_parse(self, step: DataStepText):
-        self.body["text"] = step.text
+    # def load_from_parse(self, step: DataStepText):
+    #     self.body["text"] = step.text
     
     # def __post_init__(self):
     #     if self.body:
@@ -281,7 +283,7 @@ class StepChoice(Step):
         def dict_info(self):
             return {
                 "preserve_order": self.preserve_order,
-                "options": [ i.get_option() for i in self.options]
+                "options": [ i.dict_info() for i in self.options]
             }
 
     def __post_init__(self):
@@ -291,7 +293,7 @@ class StepChoice(Step):
             "is_always_correct": False,
             "sample_size": len(self.unique.options),
             "is_html_enabled": True,
-            "is_options_feedback": all([i.get_option()["feedback"] for i in self.unique.options]),
+            "is_options_feedback": all([i.dict_info()["feedback"] for i in self.unique.options]),
             },
              **source,
             }
@@ -328,22 +330,22 @@ class StepCode(Step):
     @dataclass
     class Unique:
 
-        code: str = ""
-        execution_time_limit: int = 10
-        execution_memory_limit: int = 256
-        templates_data: str = ""
-        test_cases: list[list[str]] = None
-        samples_count: int = None          #amount if tests you will show to student
-        is_time_limit_scaled: bool = False
-        is_memory_limit_scaled: bool = False
-        manual_time_limits: list = field(default_factory=list)
-        manual_memory_limits: list = field(default_factory=list)
+        # code: str = ""
+        # execution_time_limit: int = 10
+        # execution_memory_limit: int = 256
+        # templates_data: str = ""
+        # test_cases: list[list[str]] = None
+        # samples_count: int = None          #amount if tests you will show to student
+        # is_time_limit_scaled: bool = False
+        # is_memory_limit_scaled: bool = False
+        # manual_time_limits: list = field(default_factory=list)
+        # manual_memory_limits: list = field(default_factory=list)
 
-        def __init__(self, code: str,
-                    execution_time_limit: int,
-                    execution_memory_limit: int,
-                    templates_data: str,
-                    test_cases: list[list[str]],
+        def __init__(self, code: str = "",
+                    execution_time_limit: int = 10,
+                    execution_memory_limit: int = 256,
+                    templates_data: str = "",
+                    test_cases: list[list[str]] = None,
                     samples_count: int = None,
                     is_time_limit_scaled: bool = False,
                     is_memory_limit_scaled: bool = False,
@@ -383,12 +385,12 @@ class StepCode(Step):
                 "manual_memory_limits": self.manual_memory_limits
             }
         
-    def load_from_parse(self, step: DataStepTaskinline):
-        self.body["text"] = step.text
-        self.unique = self.Unique(step.code, None, None, "", [ [input, output] for input, output in zip(step.inputs, step.outputs) ], None, None,
-                                  False, [], []
-                                  )
-        self.title = step.step_name
+    # def load_from_parse(self, step: DataStepTaskinline):
+    #     self.body["text"] = step.text
+    #     self.unique = self.Unique(step.code, None, None, "", [ [input, output] for input, output in zip(step.inputs, step.outputs) ], None, None,
+    #                               False, [], []
+    #                               )
+    #     self.title = step.step_name
 
     # def __post_init__(self):
         # self.id = self.params.get("id")
