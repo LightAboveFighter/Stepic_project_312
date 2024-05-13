@@ -306,15 +306,13 @@ class DataStepCreationSchema():
 
     @staticmethod
     def convert_step(step: DataStep):
-        t = type(step)
-
-        match t:
-            case type(DataStepText()):
+        match step:
+            case DataStepText():
                 return StepText(title = step.step_name,
                                 lesson_id = None,
                                 body = {"text": step.text})
 
-            case type(DataStepChoice()):
+            case DataStepChoice():
                 unique = {
                     'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'true',
                     'options' : [{'text': var.text,
@@ -326,7 +324,7 @@ class DataStepCreationSchema():
                                   body = {"text": step.text},
                                   unique = StepChoice.Unique(**unique))
 
-            case type(DataStepQuiz()):
+            case DataStepQuiz():
                 unique = {
                     'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'true',
                     'options' : [{'text': var.text,
@@ -338,8 +336,8 @@ class DataStepCreationSchema():
                                   body = {"text": step.text},
                                   unique = StepChoice.Unique(**unique))
 
-            case type(DataStepTaskinline()):
-                unqiue = {
+            case DataStepTaskinline():
+                unique = {
                     'templates_data': step.code,
                     'test_cases': [[input, output] for input,output in zip(step.inputs, step.outputs)]
                 }

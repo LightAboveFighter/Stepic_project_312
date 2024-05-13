@@ -6,3 +6,5 @@ Seminars
 *.yaml
 .*
 **/*.log
+is_it_working.py
+bla.md

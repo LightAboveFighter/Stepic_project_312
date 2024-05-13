@@ -281,30 +281,25 @@ class StepChoice(Step):
         def dict_info(self):
             return {
                 "preserve_order": self.preserve_order,
-                "options": [ option.dict_info() for option in self.options]
+                "options": [ i.get_option() for i in self.options]
             }
 
-    def load_from_parse(self, step: DataStepChoice | DataStepQuiz):
-        self.body["text"] = step.text
-        self.unique = self.Unique(step.step_addons["SHUFFLE"] != "true",
-                                  [ (option.text, option.is_correct, option.feedback) for option in step.variants]
-                                  )
-        self.title = step.step_name
+    def __post_init__(self):
+        self.id = self.params.get("id")
+        source = self.unique.get_dict()
+        choices = { **{
+            "is_always_correct": False,
+            "sample_size": len(self.unique.options),
+            "is_html_enabled": True,
+            "is_options_feedback": all([i.get_option()["feedback"] for i in self.unique.options]),
+            },
+             **source,
+            }
+        
+        self.body["source"] = self.body.get("source", {})
 
-    # def __post_init__(self):
-        # self.id = self.params.get("id")
-        # source = self.unique.dict_info()
-        # choices = { **{
-        #     "is_always_correct": False,
-        #     "sample_size": len(self.unique.options),
-        #     "is_html_enabled": True,
-        #     "is_options_feedback": all([i.get_option()["feedback"] for i in self.unique.options]),
-        #     },
-        #      **source,
-        #     }
-
-        # for i in choices.keys():
-        #     self.body["source"][i] = choices[i]
+        for i in choices.keys():
+            self.body["source"][i] = choices[i]
 
 @dataclass
 class StepCode(Step):
@@ -333,16 +328,16 @@ class StepCode(Step):
     @dataclass
     class Unique:
 
-        # code: str
-        # execution_time_limit: int
-        # execution_memory_limit: int
-        # templates_data: str
-        # test_cases: list[list[str]]
-        # samples_count: int = None          #amount if tests you will show to student
-        # is_time_limit_scaled: bool = False
-        # is_memory_limit_scaled: bool = False
-        # manual_time_limits: list = field(default_factory=list)
-        # manual_memory_limits: list = field(default_factory=list)
+        code: str = ""
+        execution_time_limit: int = 10
+        execution_memory_limit: int = 256
+        templates_data: str = ""
+        test_cases: list[list[str]] = None
+        samples_count: int = None          #amount if tests you will show to student
+        is_time_limit_scaled: bool = False
+        is_memory_limit_scaled: bool = False
+        manual_time_limits: list = field(default_factory=list)
+        manual_memory_limits: list = field(default_factory=list)
 
         def __init__(self, code: str,
                     execution_time_limit: int,
