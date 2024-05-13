@@ -8,7 +8,7 @@ class DataStep(ABC):
     step_name: str'''
     def __init__(
             self,
-            nam: str,
+            nam: str = None,
             id : int = None
     ) -> None:
         self.step_name = nam
@@ -30,7 +30,7 @@ class DataStepText(DataStep):
             "id": self.id,
             "text": self.text
         }
-        return data_dict
+        return data_dict        
 
 
 class DataStepChoice(DataStep):
@@ -228,8 +228,8 @@ class DataStepTaskinline(DataStep):
         self.code = []
         self.inputs = []
         self.outputs = []
-        data = []
 
+        data = []
         BEGIN = 'TEXTBEGIN'
         END = 'TEXTEND'
         state = 'TEXT'

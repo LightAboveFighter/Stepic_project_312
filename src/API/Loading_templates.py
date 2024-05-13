@@ -3,7 +3,7 @@ from marshmallow import fields, Schema
 class Base(Schema):
     id = fields.Integer(required=True)
     title = fields.String(required=True)
-
+    __del_status__ = fields.Str()
 
 class ChoiceUnique(Schema):
 
@@ -25,6 +25,28 @@ class CodeUnique(Schema):
     samples_count = fields.Int()
     test_cases = fields.List(fields.List(fields.Str()), required=True)
 
+class StringUnique(Schema):
+
+    pattern = fields.Str(required=True)
+    use_re = fields.Bool()
+    match_substring = fields.Bool()
+    case_sensitive = fields.Bool()
+    code = fields.Str()
+    is_text_disabled = fields.Bool()
+    is_file_disabled = fields.Bool()
+
+class FreeAnswerUnique(Schema):
+
+    is_html_enabled = fields.Bool()
+
+class NumberUniqueOption(Schema):
+
+    answer = fields.Str(required=True)
+    max_error = fields.Str(required=True)
+
+class NumberUnique(Schema):
+
+    options = fields.Nested("NumberUniqueOption", many=True)
 
 class Step_block_template(Schema):
 
@@ -32,7 +54,6 @@ class Step_block_template(Schema):
     name = fields.Str(required=True)
     options = fields.Dict()
     source = fields.Dict()
-
 
 class Step_template(Schema):
 
@@ -53,17 +74,16 @@ class Lesson_template_source(Base):
     steps = fields.Nested("Step_template", many=True)
 
 
+class Lesson_preview_section_template(Base):
+
+    file = fields.Str(required=True)
+    unit = fields.Int()
+
+
 class Section_template(Base):
 
     course = fields.Int(required=True)
-    lessons = fields.Nested("Lesson_template", many=True)
-    description = fields.Str()
-
-
-class Section_template_source(Base):
-
-    course = fields.Int(required=True)
-    lessons = fields.Nested("Lesson_template_source", many=True)
+    lessons = fields.Nested("Lesson_preview_section_template", many=True)
     description = fields.Str()
 
 
@@ -71,9 +91,3 @@ class Course_template(Base):
 
     description = fields.Str()
     sections = fields.Nested("Section_template", many=True)
-
-
-class Course_template_source(Base):
-
-    description = fields.Str()
-    sections = fields.Nested("Section_template_source", many=True)
