@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from src.markdown.schemas import *
-
+from src.API.Step import *
 
 class DataStep(ABC):
     '''id: int
     step_name: str'''
     def __init__(
             self,
-            nam: str,
+            nam: str = None,
             id : int = None
     ) -> None:
         self.step_name = nam
@@ -30,7 +30,7 @@ class DataStepText(DataStep):
             "id": self.id,
             "text": self.text
         }
-        return data_dict
+        return data_dict        
 
 
 class DataStepChoice(DataStep):
@@ -207,8 +207,8 @@ class DataStepTaskinline(DataStep):
         self.code = []
         self.inputs = []
         self.outputs = []
-        data = []
 
+        data = []
         BEGIN = 'TEXTBEGIN'
         END = 'TEXTEND'
         state = 'TEXT'
@@ -280,5 +280,52 @@ class DataStepCreationSchema():
                 return DataStepChoice(name, id)
             case 'TASKINLINE':
                 return DataStepTaskinline(name, id)
+            case _:
+                raise Exception('Unexpected step type.')
+
+    @staticmethod
+    def convert_step(step: DataStep):
+        t = type(step)
+
+        match t:
+            case type(DataStepText()):
+                return StepText(title = step.step_name,
+                                lesson_id = None,
+                                body = {"text": step.text})
+
+            case type(DataStepChoice()):
+                unique = {
+                    'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'true',
+                    'options' : [{'text': var.text,
+                                  'is_correct': var.is_correct,
+                                  'feedback': var.feedback} for var in step.variants]
+                }
+                return StepChoice(title = step.step_name,
+                                  lesson_id = None,
+                                  body = {"text": step.text},
+                                  unique = StepChoice.Unique(**unique))
+
+            case type(DataStepQuiz()):
+                unique = {
+                    'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'true',
+                    'options' : [{'text': var.text,
+                                  'is_correct': var.is_correct,
+                                  'feedback': var.feedback} for var in step.variants]
+                }
+                return StepChoice(title = step.step_name,
+                                  lesson_id = None,
+                                  body = {"text": step.text},
+                                  unique = StepChoice.Unique(**unique))
+
+            case type(DataStepTaskinline()):
+                unqiue = {
+                    'templates_data': step.code,
+                    'test_cases': [[input, output] for input,output in zip(step.inputs, step.outputs)]
+                }
+                return StepCode(title = step.step_name,
+                                lesson_id = None,
+                                body = {"text": step.text},
+                                unique = StepCode.Unique(**unique))
+
             case _:
                 raise Exception('Unexpected step type.')
