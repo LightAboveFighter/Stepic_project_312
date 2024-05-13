@@ -40,7 +40,7 @@ class DataStepChoice(DataStep):
     step_addons: dict'''
 
     class Variant:
-        def __init__(self, text: str, is_correct: str, feedback: str = None):
+        def __init__(self, text: str, is_correct: str, feedback: str = ''):
             self.text = text
             if is_correct == '+':
                 self.is_correct = True
@@ -132,7 +132,7 @@ class DataStepQuiz(DataStep):
     step_addons: dict'''
 
     class Variant:
-        def __init__(self, text: str, label: str, is_correct: bool=False, feedback: str=None):
+        def __init__(self, text: str, label: str, is_correct: bool=False, feedback: str=''):
             self.text = text
             self.is_correct = is_correct
             self.label = label
@@ -258,7 +258,7 @@ class DataStepTaskinline(DataStep):
                         continue
                     self.code.append(line)
                     continue
-                case 'TEST':
+                case 'TEST':    ## some problems with outputs, need to fix ASAP
                     if line.strip() == '----':
                         self.inputs.append(''.join(data))
                         data = []
@@ -314,26 +314,26 @@ class DataStepCreationSchema():
 
             case DataStepChoice():
                 unique = {
-                    'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'true',
+                    'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'false',
                     'options' : [{'text': var.text,
                                   'is_correct': var.is_correct,
                                   'feedback': var.feedback} for var in step.variants]
                 }
                 return StepChoice(title = step.step_name,
                                   lesson_id = None,
-                                  body = {"text": step.text},
+                                  body = {"text": step.text, "source": {"is_multiple_choice": False} },
                                   unique = StepChoice.Unique(**unique))
 
             case DataStepQuiz():
                 unique = {
-                    'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'true',
+                    'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'false',
                     'options' : [{'text': var.text,
                                   'is_correct': var.is_correct,
                                   'feedback': var.feedback} for var in step.variants]
                 }
                 return StepChoice(title = step.step_name,
                                   lesson_id = None,
-                                  body = {"text": step.text},
+                                  body = {"text": step.text, "source": {"is_multiple_choice": False}},
                                   unique = StepChoice.Unique(**unique))
 
             case DataStepTaskinline():
