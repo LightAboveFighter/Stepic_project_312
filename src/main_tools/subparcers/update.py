@@ -41,9 +41,13 @@ def update(options):
                 main_tools.print_tree(course.sections[options.section].units[options.lesson].lesson)
                 print(f"step {options.step} in lesson {options.lesson} in section {options.section} will be changed")
             if main_tools.ask_Y_N("Continuing?"):
-                if course.send_all().success:
-                    print("DONE")
+                if not options.no_load: 
+                    if course.send_all().success:
+                        course.save(filename = options.course)
+                        print("DONE")
+                else:
                     course.save(filename = options.course)
+                    print("DONE")
         else:
             if course.send_all().success:
                 print("DONE")
@@ -128,6 +132,14 @@ def add_subcommand(subparsers, parents):
         default=None,
         dest="step",
         help="step id to work with",
+    )
+    parser.add_argument(
+        "-N",
+        "--no-load",
+        action="store_true",
+        default=False,
+        dest="no_load",
+        help="Do not load course to stepik",
     )
     parser.add_argument(
         "-n",
