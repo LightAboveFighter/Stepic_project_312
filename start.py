@@ -7,10 +7,12 @@ parser.add_argument("update", type=str, help="Indicates the need to update (or w
 parser.add_argument("-s", "--session_info",  action="store_true", help="If you don't have file 'Session_information.txt'")
 args = parser.parse_args()
 
-if args.update == "true" or args.update == "True":
+if str.lower(args.update) == "true":
     update = True
-elif args.update == "false" or args.update == "False":
+elif str.lower(args.update) == "false":
     update = False
+else:
+    print("Incorrect update information")
 
 if args.session_info:
     client_id = str(input("Enter your client_id: "))
