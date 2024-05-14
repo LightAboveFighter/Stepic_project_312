@@ -76,14 +76,14 @@ def update(options):
 
 def add_subcommand(subparsers, parents):
     parser = subparsers.add_parser("update", parents=[parents], help="Update(by replace) an existing lesson or step")
-    parser.add_argument(
-        "-c",
-        "--config",
-        action="store",
-        # default=get_config_file(),
-        dest="configfile",
-        help="Use the specified configuration file.",
-    )
+    # parser.add_argument(
+    #     "-c",
+    #     "--config",
+    #     action="store",
+    #     # default=get_config_file(),
+    #     dest="configfile",
+    #     help="Use the specified configuration file.",
+    # )
     parser.add_argument(
         "-C",
         "--course",
