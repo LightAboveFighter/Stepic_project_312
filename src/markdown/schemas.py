@@ -63,7 +63,8 @@ class ParsingModuleSchema():
                           as_keyword=True) ('type')
         addon_value = pp.rest_of_line() ('value')
         addon_module = addon + pp.Suppress('=' + pp.White()[...]) + addon_value
-        return addon_module
+        return addon_module\
+
 
     @staticmethod
     def body_addon():
