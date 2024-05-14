@@ -1,0 +1,20 @@
+<details>
+  <summary><big><big>{{section_name}}</big></big></summary>
+  <table>
+    <tr>
+      <th rowspan='2'>Id</th>
+      <th rowspan='2'>Имя</th>
+      <th rowspan='2'>Всего</th>
+{% for lesson in lesson_names %}      <th colspan={{amount_steps[loop.index-1]}} text-align='center'>{{lesson}}</th>
+{% endfor %}    </tr>
+    <tr>
+{% for step in section_steps %}      <th>Step {{step}}</th>
+{% endfor %}    </tr>
+{% for student in student_ids %}    <tr>
+      <td>{{student}}</td>
+      <td>{{student_names[loop.index-1]}}</td>
+      <td>{{section_scores[loop.index-1]}}</td>
+{% for step_score in section_steps_scores[loop.index-1] %}      <td>{{step_score}}</td>
+{% endfor %}    </tr>
+{% endfor %}  </table>
+</details>

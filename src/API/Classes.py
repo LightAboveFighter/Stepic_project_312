@@ -12,6 +12,7 @@ from transliterate import translit
 from transliterate.exceptions import LanguageDetectionError
 from src.API.Loading_templates import Step_template, Lesson_template, Section_template, \
     Course_template, Lesson_template_source
+from pathlib import Path, PurePath
 
 
 class State(Enum):
@@ -189,21 +190,49 @@ class Lesson:
                     step.lesson_id = None
         return request_status(r, 204)
     
-    def save(self, **kwargs):
+    def save(self, path: str = None, **kwargs):
         """ Write your Lesson to {Lesson's Title}.yaml in root directory.
         + **kwargs: filename - custom file's name, type and path;
             if copy: delete all ids """
-
-        title = kwargs.get("filename", f"{self.title}.yaml")
-        if title != kwargs.get("filename", None):
-            try:
-                title = translit(title, reversed=True)
-            except LanguageDetectionError:
-                pass
+        
         content = self.dict_info(copy=kwargs.get("copy", False))
-        title = title.replace(os.getcwd(), "./")
-        with open(title, "w", encoding="utf-8") as file:
-            yaml.dump({"Lesson": content }, file, allow_unicode=True, sort_keys=False)
+
+        if not path:
+            i = 0
+            path = Path(f"Lesson_{i}.yaml")
+            while path.exists():
+                i += 1
+                path = Path(f"Lesson_{i}.yaml")
+            with open(path, "w", encoding="utf-8") as file:
+                current_path = Path.cwd()
+                path = current_path.joinpath(path)
+                path = str(path)
+                yaml.dump({"Lesson": content }, file, allow_unicode=True, sort_keys=False)
+        else:
+            path = Path(path)
+            if path.suffixes:
+                pathdir = path.parent
+                pathdir.mkdir(exist_ok=True)
+                with open(path, "w", encoding="utf-8") as file:
+                    path = str(path)
+                    yaml.dump({"Lesson": content }, file, allow_unicode=True, sort_keys=False)
+            else:
+                try:
+                    path.mkdir()
+                    path = path.joinpath("Lesson_0.yaml")
+                    with open(path, "w", encoding="utf-8") as file:
+                        path = str(path)
+                        yaml.dump({"Lesson": content }, file, allow_unicode=True, sort_keys=False)
+                except FileExistsError:
+                    i = 0
+                    path = path.joinpath(f"Lesson_{i}.yaml")
+                    while path.exists():
+                        i += 1
+                        path = path.joinpath(f"Lesson_{i}.yaml")
+                    with open(path, "w", encoding="utf-8") as file:
+                        path = str(path)
+                        yaml.dump({"Lesson": content }, file, allow_unicode=True, sort_keys=False)
+            
 
 
     def is_tied(self, sect_id: int) -> bool:
@@ -353,7 +382,7 @@ class Lesson:
         
         steps = r.json()["step-sources"]
         if not steps:
-            self.steps = ids
+            self.steps = [ {"id": id} for id in ids ]
             return
 
         for i in range(len(steps)):
@@ -489,10 +518,19 @@ class Section:
             params["__del_status__"] = "STRICT_DELETE"
 
         ans = { "title": title, "id": id, "lessons": [], "course": course, **params }
+
         for unit in self.units:
+
+            i = 0
+            path = Path(f"Lesson_{i}.yaml")
             filename = kwargs.get("path", ".")
-            filename += f"/{unit.lesson.title}.yaml"
-            unit.lesson.save(filename=filename, copy=kwargs.get("copy", False))
+            filename = Path(filename).joinpath(str(path))
+            while filename.exists():
+                i += 1
+                filename = filename.with_name(f"Lesson_{i}.yaml")
+            
+            filename = str(filename)
+            unit.lesson.save(path = filename, copy=kwargs.get("copy", False))
             ans["lessons"].append(
                 {
                     "id": unit.lesson.id if not copy else None,
@@ -513,26 +551,52 @@ class Section:
             ans["lessons"].append(i.lesson.get_structure(**kwargs))
         return ans
     
-    def save(self, **kwargs):
+    def save(self, path: str = None, **kwargs):
         """ Save your Section to {Section's name}.yaml in root directory.
         All Section's lessons will be saved to same directory as {Section's Title}.yaml
         + **kwargs: filename - custom file's name, type and path;
             if copy: delete all ids """
-
-        title = kwargs.get("filename", f"{self.title}.yaml")
-        if title != kwargs.get("filename", None):
-            try:
-                title = translit(title, reversed=True)
-            except LanguageDetectionError:
-                pass
-        title = title.replace(os.getcwd(), "./")
-        with open(title, "w", encoding="utf-8") as file:
-            path = kwargs.get("filename", "")
-            path = path.split(r"/")
-            if path[-1] != ".":
-                del path[-1]
-            path = os.getcwd() + "/".join(path)
-            yaml.dump({"Section": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
+        
+        if not path:
+            i = 0
+            path = Path(f"Section_{i}.yaml")
+            while path.exists():
+                i += 1
+                path = Path(f"Section_{i}.yaml")
+            with open(path, "w", encoding="utf-8") as file:
+                current_path = Path.cwd()
+                path = current_path.joinpath(path)
+                path = path.parent
+                path = str(path)
+                yaml.dump({"Section": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
+        else:
+            path = Path(path)
+            if path.suffixes:
+                pathdir = path.parent
+                pathdir.mkdir(exist_ok=True)
+                with open(path, "w", encoding="utf-8") as file:
+                    path = path.parent
+                    path = str(path)
+                    yaml.dump({"Section": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
+            else:
+                try:
+                    path.mkdir()
+                    path = path.joinpath("Section_0.yaml")
+                    with open(path, "w", encoding="utf-8") as file:
+                        path = path.parent
+                        path = str(path)
+                        yaml.dump({"Section": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
+                except FileExistsError:
+                    i = 0
+                    path = path.joinpath(f"Section_{i}.yaml")
+                    while path.exists():
+                        i += 1
+                        path = path.parent
+                        path = path.joinpath(f"Section_{i}.yaml")
+                    with open(path, "w", encoding="utf-8") as file:
+                        path = path.parent
+                        path = str(path)
+                        yaml.dump({"Section": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
 
 
     def delete_network(self, session: OAuthSession) -> RequestStatus:
@@ -690,7 +754,7 @@ class Course:
         self.id = None
         self.sections = sections or []
         self.params = params
-
+        
     def auth(self, session: OAuthSession):
         """ Attaches session to self.session
         + self.session is using in following methods:
@@ -698,26 +762,68 @@ class Course:
             delete_network, delete_network_section, delete_network_lesson """
         self.session = session
 
-    def save(self, **kwargs):
+    def save(self, path: str = None, **kwargs):
         """ Write your Course to {Course's Title}.yaml in root directory
         All Sections' lessons will be saved to same directory as {Course's Title}.yaml
         + **kwargs: filename - custom file's name, type and path;
             if copy: delete all ids """
 
-        title = kwargs.get("filename", f"{self.title}.yaml")
-        if title != kwargs.get("filename", None):
-            try:
-                title = translit(title, reversed=True)
-            except LanguageDetectionError:
-                pass
+        if not path:
+            i = 0
+            path = Path(f"Course_{i}.yaml")
+            while path.exists():
+                i += 1
+                path = Path(f"Course_{i}.yaml")
+            with open(path, "w", encoding="utf-8") as file:
+                current_path = Path.cwd()
+                path = current_path.joinpath(path)
+                path = path.parent
+                path = str(path)
+                yaml.dump({"Course": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
+        else:
+            path = Path(path)
+            if path.suffixes:
+                pathdir = path.parent
+                pathdir.mkdir(exist_ok=True)
+                with open(path, "w", encoding="utf-8") as file:
+                    path = path.parent
+                    path = str(path)
+                    yaml.dump({"Course": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
+            else:
+                try:
+                    path.mkdir()
+                    path = path.joinpath("Course_0.yaml")
+                    with open(path, "w", encoding="utf-8") as file:
+                        path = path.parent
+                        path = str(path)
+                        yaml.dump({"Course": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
+                except FileExistsError:
+                    i = 0
+                    path = path.joinpath(f"Course_{i}.yaml")
+                    while path.exists():
+                        i += 1
+                        path = path.parent
+                        path = path.joinpath(f"Course_{i}.yaml")
+                    with open(path, "w", encoding="utf-8") as file:
+                        path = path.parent
+                        path = str(path)
+                        yaml.dump({"Course": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
+
+
+        # title = kwargs.get("filename", f"{self.title}.yaml")
+        # if title != kwargs.get("filename", None):
+        #     try:
+        #         title = translit(title, reversed=True)
+        #     except LanguageDetectionError:
+        #         pass
             
-        with open(title, "w", encoding="utf-8") as file:
-            path = kwargs.get("filename", "")
-            path = path.split(r"/")
-            if path[-1] != ".":
-                del path[-1]
-            path = os.getcwd() + "/" + "/".join(path)
-            yaml.dump({"Course": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
+        # with open(title, "w", encoding="utf-8") as file:
+        #     path = kwargs.get("filename", "")
+        #     path = path.split(r"/")
+        #     if path[-1] != ".":
+        #         del path[-1]
+        #     path = os.getcwd() + "/" + "/".join(path)
+        #     yaml.dump({"Course": self.dict_info(path=path, copy=kwargs.get("copy", False)) }, file, allow_unicode=True, sort_keys=False)
 
     def dict_info(self, **kwargs) -> dict:
         """ Returns Course in the dictionary view.
