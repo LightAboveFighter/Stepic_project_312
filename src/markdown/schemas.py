@@ -2,7 +2,7 @@ import pyparsing as pp
 
 
 class ParsingModuleSchema():
-    __step_types = ['QUIZ', 'CHOICE', 'TEXT', 'TASKINLINE']
+    __step_types = ['QUIZ', 'CHOICE', 'TEXT', 'STRING', 'NUMBER', 'TASKINLINE']
     __header_addons = ['lesson', 'lang']
     __body_addons = ['ANSWER', 'HINT', 'SHUFFLE']
     __choice_types = ['+', '-']
@@ -63,7 +63,7 @@ class ParsingModuleSchema():
                           as_keyword=True) ('type')
         addon_value = pp.rest_of_line() ('value')
         addon_module = addon + pp.Suppress('=' + pp.White()[...]) + addon_value
-        return addon_module\
+        return addon_module
 
 
     @staticmethod

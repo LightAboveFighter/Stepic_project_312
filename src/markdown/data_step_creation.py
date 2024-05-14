@@ -1,10 +1,13 @@
 from src.API.Step import Step, StepChoice, StepCode, StepText
+
 from src.markdown.steps.data_step_til import DataStepTaskinline
 from src.markdown.steps.data_step_choice import DataStepChoice
+from src.markdown.steps.data_step_number import DataStepNumber
+from src.markdown.steps.data_step_string import DataStepString
 from src.markdown.steps.data_step_quiz import DataStepQuiz
 from src.markdown.steps.data_step_text import DataStepText
 from src.markdown.steps.data_step import DataStep
-from src.markdown.schemas import ParsingModuleSchema
+
 import pyparsing as pp
 
 
@@ -13,7 +16,7 @@ class DataStepCreationSchema():
     def create_step(type: str,
                     name: str,
                     lesson_id: str = None
-    ) -> DataStep:   # пока что не знаю что мне делать с id
+    ) -> DataStep:   # 
         if type == pp.Empty():
             type = 'TEXT'
         match type:
@@ -23,13 +26,17 @@ class DataStepCreationSchema():
                 return DataStepQuiz(name, lesson_id)
             case 'CHOICE':
                 return DataStepChoice(name, lesson_id)
+            case 'STRING':
+                return DataStepString(name, lesson_id)
+            case 'NUMBER':
+                return DataStepNumber(name, lesson_id)
             case 'TASKINLINE':
                 return DataStepTaskinline(name, lesson_id)
             case _:
                 raise Exception('Unexpected step type.')
 
     @staticmethod
-    def convert_step(step: DataStep) -> Step:
+    def convert_step(step: DataStep) -> Step:   # should add STRING and NUMBER DataSteps
         match step:
             case DataStepText():
                 return StepText(title = step.step_name,
