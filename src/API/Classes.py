@@ -353,7 +353,6 @@ class Lesson:
 
         self.id = id
         self.title = content["title"]
-        
         self.sect_ids = content["courses"]
         steps_ids = [ {"id": id} for id in content["steps"] ]
 
