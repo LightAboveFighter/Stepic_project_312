@@ -1,10 +1,12 @@
 from pygiftparser import parser as giftparser
 import pprint
 import json
-import sys
 import logging as log
 
-sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
+if __name__ == "__main__":
+    import sys
+    sys.path.insert(1, '.')       #FIXME PATH CAN BE EASELY BROKEN
+
 from src.API.Classes import Lesson 
 from src.API.Step import create_any_step
 
@@ -15,16 +17,13 @@ True-false DONE
 Short answer DONE 
 Matching DONE
 Missing word interpreted as MultipleChoice
-Numerical questions
-Multiple numerical questions -- Problem stepik cant handle
-Essay
-Description -- not a question
+Numerical questions ~DONE tests and CLASS NEADED
+Multiple numerical questions DONE
+Essay DONE
+Description DONE
 '''
 
 # global vars
-error_msg = "ERROR while processing the gift file: "
-CRED = "\033[91m"  # start red stdout
-CEND = "\033[0m"  # stop CRED
 STEPIK_name_types = {"MultipleChoiceCheckbox()": "choice",
                      "MultipleChoiceRadio()": "choice",
                      "TrueFalse()": "choice",
@@ -34,31 +33,31 @@ STEPIK_name_types = {"MultipleChoiceCheckbox()": "choice",
                      "Essay()":"free-answer",
                      "Description()":"text",
                     }
-STEPIK_sampe_size = 10
 
 
 def __question_validator__(x:dict) -> bool:
     '''returns True if question is valid'''
     pass
 
+
 def __data_multiple_choice__(x: giftparser.gift.Question) -> dict:
     options = {}
     options["options"] = []
     options["is_always_correct"] = False
-    for i in x.answer.options:
+    for op in x.answer.options:
         options["options"].append({})
-        options["options"][-1]["is_correct"] = i.percentage>0.
-        options["options"][-1]["text"] = i.text
-        if i.feedback != None:
-            options["options"][-1]["feedback"] = i.feedback
+        options["options"][-1]["is_correct"] = op.percentage>0.
+        options["options"][-1]["text"] = op.text
+        if op.feedback != None:
+            options["options"][-1]["feedback"] = op.feedback
         else:
             options["options"][-1]["feedback"] = ""
-    options["sample_size"] = min(len(x.answer.options), STEPIK_sampe_size)
     tmp = 0
-    for i in options["options"]:
-        tmp += i["is_correct"]
+    for op in options["options"]:
+        tmp += op["is_correct"]
     options["is_multiple_choice"] = tmp > 1
     return options
+
 
 def __data_true_false__(x: giftparser.gift.Question):
     log.info("True_False will be interpreted as Choice()")
@@ -78,19 +77,24 @@ def __data_true_false__(x: giftparser.gift.Question):
     return options
 
 
-def __function_short_generator__(x : giftparser.gift.Question): #FIXME make a more "smart" check198266
-    checker = ""
-    for i in x.answer.options:
-        if i.percentage > 0.95:
-            a = str(i.text)
-            if "'" in a:
-                checker = checker + "reply == \"" + str(i.text) + "\" or "
-                continue
-            checker = checker + "reply == '" + str(i.text) + "' or "
-    checker = checker[:-3]
-    if '"' in a:
-        return f"def check(reply):\n\treturn {checker}\n#sep\ndef solve():\n\treturn '''{a}'''"
-    return f'def check(reply):\n\treturn {checker}\n#sep\ndef solve():\n\treturn \"{a}\"'
+# FIXME Move to file
+short_generator_checker_text = '''  
+def check(reply):
+    return reply in {good_list}
+#sep
+def solve():
+    return '{good_list[0]}'
+'''
+
+def __function_short_generator__(x : giftparser.gift.Question):
+    good_list = []
+    for option in x.answer.options:
+        if option.percentage > 0.95:
+            # ответ, где кавычки заменены на \кавычки
+            text = str(op.text).replace('\'', r'\'').replace('\"', r'\"')
+            good_list.append(text)
+    return short_generator_checker_text.format(good_list=good_list)
+
 
 def __data_short__(x: giftparser.gift.Question)->dict:
     return {
@@ -102,6 +106,7 @@ def __data_short__(x: giftparser.gift.Question)->dict:
             "pattern": "Hello",
             "use_re": False
             }
+
 
 def __data_matching__(x:giftparser.gift.Question):
     options = {
@@ -119,7 +124,8 @@ def __data_matching__(x:giftparser.gift.Question):
             feedback_wrong+= tmp["first"] + ": " + feedbacktmp + "\n"
         options["source"]["pairs"].append(tmp)
     options["feedback_wrong"] = feedback_wrong
-    return options#{"a":[str(i) for i in x.answer.options]}#{"x":x}
+    return options
+
 
 def __data_numerical__(x:giftparser.gift.Question):
     log.info("Numerical question will be reinterpreted as Short()")
@@ -130,6 +136,7 @@ def __data_numerical__(x:giftparser.gift.Question):
             }
     }
     return options
+
 
 def __data_multiple_numerical__(x:giftparser.gift.Question):
     log.info("Numerical question will be reinterpreted as Short()")
@@ -144,6 +151,7 @@ def __data_multiple_numerical__(x:giftparser.gift.Question):
             options["source"]["options"].append({"answer":number.get_number(),"max_error":number.get_error_margin()})
     return options
 
+
 def __data_essay__(x:giftparser.gift.Question):
     return dict({ 
       "options": None,
@@ -154,8 +162,10 @@ def __data_essay__(x:giftparser.gift.Question):
       },
     })
 
+
 def __data_description__(x:giftparser.gift.Question):
     return dict({"options": None})
+
 
 def __get_question_options__(x: giftparser.gift.Question) -> dict:
     """gets options dict for Stepik json"""
@@ -181,7 +191,6 @@ def __get_question_options__(x: giftparser.gift.Question) -> dict:
     return {"ISBROKEN": True, "type":str(x.answer.__repr__())}  # FIXME
 
 
-
 def __get_question_data__(question: giftparser.gift.Question) -> dict:
     """gets block dict for Stepik json"""
     question_data: dict = {}
@@ -196,14 +205,14 @@ def __get_question_data__(question: giftparser.gift.Question) -> dict:
     title = question.name
     if title in question_data["text"]:  #FIXME add to .md 
         log.info(f'title \"{title}\" title is contained in question, maby title is incorrect!')
-    return create_any_step(question_type, title if title else "", 0, **{"block":question_data},unique ={"options": (question_data["source"]["options"] if "source" in question_data.keys() else dict())})
+    return create_any_step(question_type, title if title else "", 0, **{"block":question_data},unique ={"options": (question_data["source"]["options"] if "source" in question_data.keys() else None)})
 
 
 def get_gift_dicts(filename: str) -> list:
     """returns list if block dicts of question from GIFT file"""
     try:
-        giftfile = open(filename, "r")
-        parse_result = giftparser.parse(giftfile.read())
+        with open(filename, "r") as giftfile:
+            parse_result = giftparser.parse(giftfile.read())
     except FileNotFoundError:
         log.error( 'File "' + str(filename) + '" not found')
         raise FileNotFoundError
@@ -214,8 +223,8 @@ def get_gift_dicts(filename: str) -> list:
         log.error("Can't parse \"" + str(filename) + '"\n'+ str(error))
         raise RuntimeError
     questions = []
-    for i in parse_result.questions:
-        question = __get_question_data__(i)
+    for question_parsed in parse_result.questions:
+        question = __get_question_data__(question_parsed)
         if question is not None:
             questions.append(question)
     giftfile.close()
@@ -235,16 +244,14 @@ def get_gift_dicts_from_text(text: str) -> list:
         )
         raise RuntimeError
     questions = []
-    for i in parse_result.questions:
-        question = __get_question_data__(i)
+    for question_parsed in parse_result.questions:
+        question = __get_question_data__(question_parsed)
         if question is not None:
             questions.append(question)
     print(questions)
     return questions
 
 
-def get_Lesson() -> Lesson:
-    return
 
 if __name__ == "__main__":
     import argparse
@@ -261,8 +268,8 @@ if __name__ == "__main__":
 
     args = parse_input_arguments()
     for i in get_gift_dicts(args.file):  
-        #print("\n\n",type(i))
         if not i:
             continue
         print(json.dumps(i.dict_info(), indent=4))
+
 
