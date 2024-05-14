@@ -289,7 +289,7 @@ HINT: подсказка"""
 
 
 @pytest.mark.markdown
-def test_Quiz3():
+def test_Taskinline1():
     input_text =\
 """## QUIZ sdhgosdrhofslkdf
 Question text?
