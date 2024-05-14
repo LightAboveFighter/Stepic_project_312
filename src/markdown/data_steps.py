@@ -4,15 +4,15 @@ from src.markdown.schemas import *
 from src.API.Step import *
 
 class DataStep(ABC):
-    '''id: int
-    step_name: str'''
+    '''step_name: str
+    lesson_id: int'''
     def __init__(
             self,
             nam: str = None,
             id : int = None
     ) -> None:
         self.step_name = nam
-        self.id = None      # пока не знаю как это заполнять
+        self.lesson_id = None      # добавить сюда id от урока, в котором находится
     
     @abstractmethod
     def add_info(self, lines: list[str]):
@@ -20,14 +20,16 @@ class DataStep(ABC):
 
 
 class DataStepText(DataStep):
-    '''text: list[str]'''
+    '''step_name: str
+    lesson_id: int
+    text: str'''
     def add_info(self, lines: list[str]):
         self.text = ''.join(lines)
     
     def as_dict(self):
         data_dict = {
             "step_name": self.step_name,
-            "id": self.id,
+            "id": self.lesson_id,
             "text": self.text
         }
         return data_dict        
@@ -35,7 +37,7 @@ class DataStepText(DataStep):
 
 class DataStepChoice(DataStep):
     # Text before answer variants
-    '''text: list[str]
+    '''text: str
     variants: list[Variant]
     step_addons: dict'''
 
@@ -75,8 +77,10 @@ class DataStepChoice(DataStep):
                 case 'TEXT':
                     if line.strip() == BEGIN:
                         only_text = True
+                        continue
                     elif line.strip() == END:
                         only_text = False
+                        continue
 
                     if only_text:
                         self.text.append(line)
@@ -117,7 +121,7 @@ class DataStepChoice(DataStep):
     def as_dict(self):
         data_dict = {
             "step_name": self.step_name,
-            "id": self.id,
+            "id": self.lesson_id,
             "text": self.text,
             "variants": self.variants,
             "step_addons": self.step_addons
@@ -127,7 +131,7 @@ class DataStepChoice(DataStep):
 
 class DataStepQuiz(DataStep):
     # text before answer variants
-    '''text: list[str]
+    '''text: str
     variants: list[Variant]
     step_addons: dict'''
 
@@ -206,15 +210,14 @@ class DataStepQuiz(DataStep):
             self.step_addons["ANSWER"].replace(" ", "")
             answer_letters = self.step_addons["ANSWER"].split(",")
             for var in self.variants:
-                if var.label in answer_letters:
-                    var.is_correct = True
+                var.is_correct = var.label in answer_letters
         else:
             raise Exception("Expected ANSWER obligatory addon.")
 
     def as_dict(self):
         data_dict = {
             "step_name": self.step_name,
-            "id": self.id,
+            "id": self.lesson_id,
             "text": self.text,
             "variants": self.variants,
             "step_addons": self.step_addons
@@ -275,7 +278,7 @@ class DataStepTaskinline(DataStep):
     def as_dict(self):
         data_dict = {
             "step_name": self.step_name,
-            "id": self.id,
+            "id": self.lesson_id,
             "text": self.text,
             "code": self.code,
             "inputs": self.inputs,
@@ -288,19 +291,19 @@ class DataStepCreationSchema():
     @staticmethod
     def create_step(type: str,
                     name: str,
-                    id: str = None
+                    lesson_id: str = None
     ) -> DataStep:   # пока что не знаю что мне делать с id
         if type == pp.Empty():
             type = 'TEXT'
         match type:
             case 'TEXT':
-                return DataStepText(name, id)
+                return DataStepText(name, lesson_id)
             case 'QUIZ':
-                return DataStepQuiz(name, id)
+                return DataStepQuiz(name, lesson_id)
             case 'CHOICE':
-                return DataStepChoice(name, id)
+                return DataStepChoice(name, lesson_id)
             case 'TASKINLINE':
-                return DataStepTaskinline(name, id)
+                return DataStepTaskinline(name, lesson_id)
             case _:
                 raise Exception('Unexpected step type.')
 
