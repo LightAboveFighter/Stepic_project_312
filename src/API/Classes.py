@@ -8,8 +8,6 @@ from src.API.Step import StepText, Step, create_any_step, load_any_step
 import pyparsing as pp
 import io
 from dataclasses import dataclass
-from transliterate import translit
-from transliterate.exceptions import LanguageDetectionError
 from src.API.Loading_templates import Step_template, Lesson_template, Section_template, \
     Course_template, Lesson_template_source
 from pathlib import Path, PurePath
