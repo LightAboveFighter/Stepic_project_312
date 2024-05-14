@@ -224,6 +224,37 @@ ANSWER: A"""
 def test_Quiz2():
     input_text =\
 """## QUIZ sdhgosdrhofslkdf
+Do you have giraffe?
+A. `НУ Yes`
+HINT: подсказка
+
+B. `А ху asking`
+
+C. `Thank you for your question`
+
+ANSWER: A, B"""
+    expected = {
+        "step_name": "sdhgosdrhofslkdf",
+        "id": None,
+        "text": "Do you have giraffe?",
+        "variants": [DataStepQuiz.Variant("НУ Yes", "A", True, "подсказка"), \
+                     DataStepQuiz.Variant("А ху asking", "B", True), \
+                     DataStepQuiz.Variant("Thank you for your question", "C", False)],
+        "step_addons": {"SHUFFLE": "true", "ANSWER": "A,B"}
+    }
+    input_text = input_text.split('\n')
+    dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
+    input_text = input_text[1:]
+    dst = DataStepCreationSchema.create_step(dst_inf.type, dst_inf.name)
+    dst.add_info(input_text)
+    assert isinstance(dst, DataStepQuiz)
+    assert dst.as_dict() == expected
+
+
+@pytest.mark.markdown
+def test_Quiz3():
+    input_text =\
+"""## QUIZ sdhgosdrhofslkdf
 Question text?
 A. `s == p`
 HINT: подсказка
@@ -242,7 +273,7 @@ HINT: подсказка"""
         "variants": [DataStepQuiz.Variant("s == p", "A", True, "подсказка"), \
                      DataStepQuiz.Variant("*s == *p", "B", False), \
                      DataStepQuiz.Variant("s[0] == p[0]", "C", True)],
-        "step_addons": {"SHUFFLE": "false", "ANSWER": "A, C", "HINT": "подсказка"}
+        "step_addons": {"SHUFFLE": "false", "ANSWER": "A,C", "HINT": "подсказка"}
     }
     input_text = input_text.split('\n')
     dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
@@ -250,23 +281,37 @@ HINT: подсказка"""
     dst = DataStepCreationSchema.create_step(dst_inf.type, dst_inf.name)
     dst.add_info(input_text)
     assert isinstance(dst, DataStepQuiz)
-    # for i in range(3):
-    #     print(dst.variants[i].text)
-    #     print(dst.as_dict()["variants"][i].text)
-    # for i in range(3):
-    #     print(dst.variants[i].label)
-    #     print(dst.as_dict()["variants"][i].label)
-    # for i in range(3):
-    #     print(dst.variants[i].is_correct)
-    #     print(dst.as_dict()["variants"][i].is_correct)
-    # for i in range(3):
-    #     print(dst.variants[i].feedback)
-    #     print(dst.as_dict()["variants"][i].feedback)
-    print(dst.variants[0].is_correct)
-    print(dst.variants[1].is_correct)
-    print(dst.variants[2].is_correct)
-    print(dst.as_dict()["variants"][0].is_correct)
-    print(dst.as_dict()["variants"][1].is_correct)
-    print(dst.as_dict()["variants"][2].is_correct)
-    print()
+    assert dst.as_dict() == expected
+
+
+@pytest.mark.markdown
+def test_Quiz3():
+    input_text =\
+"""## QUIZ sdhgosdrhofslkdf
+Question text?
+A. `s == p`
+HINT: подсказка
+
+B. `*s == *p`
+
+C. `s[0] == p[0]`
+
+SHUFFLE: false
+ANSWER: A, C
+HINT: подсказка"""
+    expected = {
+        "step_name": "sdhgosdrhofslkdf",
+        "id": None,
+        "text": "Question text?",
+        "variants": [DataStepQuiz.Variant("s == p", "A", True, "подсказка"), \
+                     DataStepQuiz.Variant("*s == *p", "B", False), \
+                     DataStepQuiz.Variant("s[0] == p[0]", "C", True)],
+        "step_addons": {"SHUFFLE": "false", "ANSWER": "A,C", "HINT": "подсказка"}
+    }
+    input_text = input_text.split('\n')
+    dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
+    input_text = input_text[1:]
+    dst = DataStepCreationSchema.create_step(dst_inf.type, dst_inf.name)
+    dst.add_info(input_text)
+    assert isinstance(dst, DataStepQuiz)
     assert dst.as_dict() == expected

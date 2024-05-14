@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from src.markdown.schemas import *
-from src.API.Step import *
+from src.API.Step import Step, StepChoice, StepCode, StepText
 
 class DataStep(ABC):
     '''step_name: str
@@ -207,10 +207,11 @@ class DataStepQuiz(DataStep):
                 case _:
                     raise Exception("Undefined DataStepQuiz.add_info() state.")
         if self.step_addons["ANSWER"]:
-            self.step_addons["ANSWER"].replace(" ", "")
+            self.step_addons["ANSWER"] = self.step_addons["ANSWER"].replace(" ", "")
             answer_letters = self.step_addons["ANSWER"].split(",")
             for var in self.variants:
-                var.is_correct = var.label in answer_letters
+                if var.label in answer_letters:
+                    var.is_correct = True
         else:
             raise Exception("Expected ANSWER obligatory addon.")
 
