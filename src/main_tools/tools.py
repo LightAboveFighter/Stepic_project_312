@@ -42,7 +42,7 @@ def __print_lesson_insides__(lesson: Lesson,  pref: str = ""):
 
 
 def __print_sections_insides__(section: Section, pref: str, show_steps: bool = False):
-    lessons = section.lessons
+    lessons = [unit.lesson for unit in section.units]
     prefix_lesson = pref + prefix_continue_T
     prefix_lesson_end = pref + prefix_end
     for i in range(len(lessons)-1):
@@ -110,4 +110,16 @@ def ask(msg: str, reply_type=str):
     print("Aborting...")
     return False
 
+
+def get_auth(rewrite=False):
+    filename = os.path.dirname(sys.argv[0]) + "/src/API/Client_information.yaml"  # path can be broke FIXME
+    print(filename)
+    if rewrite or not os.access(filename, os.F_OK) or not os.access(filename, os.R_OK):
+        print("Secrets not found or need to be rewrited, you can get them form https://stepik.org/oauth2/applications")
+        print("DO NOT SHOW THIS STRINGS TO OTHER PEAPLE!")
+        auth = OAuthSession(ask("Client id: "),ask("Client secret: "))
+        print(f"file written into {filename}\nyou can change it by \"-A\" flag")
+        return auth
+
+    return OAuthSession()
 

@@ -9,8 +9,9 @@ from src.gift.gift_processing import get_gift_dicts
 from src.API.Classes import Lesson, Course, Section
 from src.API.OAuthSession import OAuthSession
 
-import src.main_tools.tools
+import src.main_tools.tools as tools
 from src.main_tools.subparcers import add, structure, update, load
+
 
 
 
@@ -26,6 +27,13 @@ def main():
         type=str.upper,
         choices=("D", "I", "W", "E", "C"),
         help="Set qtile log level",
+    )
+    parent_parser.add_argument(
+        "-A",
+        "--auth",
+        action='store_true',
+        dest="auth",
+        help="change secrets",
     )
     main_parser = argparse.ArgumentParser(
         prog="Stepik project",
@@ -47,6 +55,8 @@ def main():
     help_.set_defaults(func=print_help)
 
     options = main_parser.parse_args()
+    if options.auth:
+        tools.get_auth(rewrite=True)
     if func := getattr(options, "func", None):
         log_level = options.log_level
         activate_logger(log_level if log_level else "E")

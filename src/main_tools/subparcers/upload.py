@@ -4,16 +4,14 @@ from src.API.OAuthSession import OAuthSession
 import src.main_tools.tools as main_tools
 from src.API.Classes import Course, Lesson
 
-def load(options):
-    course: Course = Course()
+def upload(options):
+    course: Course = main_tools.get_course_from_file(options.course)
+    course.save(filename = options.course)
     course.auth(main_tools.get_auth())
-    course.load_from_net(options.id, source=True)
-    course.save(filename=options.course)
-    
-    pass
+    course.send_all()
 
 def add_subcommand(subparsers, parents):
-    parser = subparsers.add_parser("load", parents=[parents], help="load existing course from Stepik")
+    parser = subparsers.add_parser("upload", parents=[parents], help="upload existing course from Stepik")
     # parser.add_argument(
     #     "-c",
     #     "--config",
@@ -31,14 +29,4 @@ def add_subcommand(subparsers, parents):
         dest="course",
         help="course file",
     )
-    parser.add_argument(
-        "-i",
-        "--id",
-        action="store",
-        required=True,
-        type=int,
-        default=None,
-        dest="id",
-        help="step id to work with",
-    )
-    parser.set_defaults(func=load)
+    parser.set_defaults(func=upload)
