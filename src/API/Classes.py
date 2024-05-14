@@ -353,7 +353,6 @@ class Lesson:
 
         self.id = id
         self.title = content["title"]
-        
         self.sect_ids = content["courses"]
         steps_ids = [ {"id": id} for id in content["steps"] ]
 
@@ -506,7 +505,6 @@ class Section:
         + **kwargs: if copy: delete all ids
         path - path to saving lessons"""
 
-        print()
         copy = kwargs.get("copy", False)
         title = self.title
         id = self.id if not copy else None

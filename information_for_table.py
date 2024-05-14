@@ -67,11 +67,15 @@ class Class:
         """ Returns all information about structure of course(sections/lessons/steps) """
         a = cl.Course()
         yaml_name = f"course_{self.course_id}.yaml"
+        flag = 0
         if os.path.exists(yaml_name):
-            a.load_from_file(yaml_name)
-        else:
-            a.load_from_net(self.course_id, sourse=False, session=self.session)
-            a.save(filename=yaml_name[:-5]) #Саня дописывает ".yaml" сам. Не знаю зачем
+            with open(yaml_name, "r") as f:
+                if f.read():
+                    a.load_from_file(yaml_name)
+                    flag = 1
+        if flag == 0:
+            a.load_from_net(self.course_id, session=self.session)
+            a.save("src\\data")
         d = a.dict_info()
         lessons_ids = []
         for i in d['sections']:
