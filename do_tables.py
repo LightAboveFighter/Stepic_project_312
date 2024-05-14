@@ -16,7 +16,7 @@ def do_a_site_with_tables(your_class_id: int, update: bool, client_id="", client
     if update:
         t.update_info_lessons()
     t.get_table()
-    print(t.class_id, t.course_id)
+    print("class id:", t.class_id, ", course_id:", t.course_id)
 
     with open(f'klass_{t.class_id}.yaml', mode='r', encoding='utf-8') as fh:
         info_klass = yaml.load(fh, Loader=yaml.FullLoader)  #klass grades

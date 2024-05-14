@@ -12,3 +12,4 @@ Seminars
 Course.yaml
 .*
 **/*.log
+args_try.py

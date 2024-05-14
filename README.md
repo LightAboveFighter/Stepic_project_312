@@ -4,6 +4,18 @@ Engineering workshop. 312 group 1st course MIPT. API Stepic project.
 > [!IMPORTANT]
 > Create API application at [Stepic API application](https://stepik.org/oauth2/applications/): `client type - confidential`, `authorization grant type - client credentials` , otherwise you won't be able to work in net. Later, you need to use `client id` and `client secret` from it.
 
+# Tables
+To build tables write to terminal "python start.py {your_class_id} {update}"
+* `your_class_id` --- the class id
+* `update` --- the second argument, indicates the need to update (or write for the first time) data about the class (True if needed else False)
+* `-s` --- optional, write it only if you don'thave file "Client_information.txt" with client_id and client_secret. Then you will be asked to enter them
+Пример:
+```
+python start.py 12345 true -s
+```
+
+You can also read all this information if you write "python start.py -h"
+
 # Usage(демки на момент 06.05)
 На данный момент существует 4 сценария использования
 * **load** --- загружает файлы курса в файлы расширения yaml, для дальнейшей работы с самим курсом
@@ -60,9 +72,6 @@ prog update -C=a.yaml -S=1 -L=0 -s=1 --gift=example.gift
 ```
 prog struc -C=a.yaml  
 ```
-
-To build the table, run the file "start.py". Specify the class number as the first argument. The second argument indicates the need to update (or write for the first time) data about the class (True if needed else False). If you have file "Session_information.txt" with client_id and client_secret, don't write enything else. Otherwise third argument would be client_id and forth - client_secret, both type string
-
 
 # Usage of Classes from src/API/
 
