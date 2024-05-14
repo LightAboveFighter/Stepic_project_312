@@ -1,8 +1,12 @@
-import pytest
 from src.markdown.data_lesson import DataLesson
+from src.markdown.steps.data_step_til import DataStepTaskinline
+from src.markdown.steps.data_step_choice import DataStepChoice
+from src.markdown.steps.data_step_quiz import DataStepQuiz
+from src.markdown.steps.data_step_text import DataStepText
 from src.markdown.schemas import ParsingModuleSchema
-from src.markdown import data_steps
-from src.markdown.data_steps import *
+from src.markdown.data_step_creation import DataStepCreationSchema
+import pyparsing as pp
+import pytest
 
 @pytest.mark.markdown
 def test_Text1():
