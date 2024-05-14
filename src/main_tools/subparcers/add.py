@@ -16,7 +16,7 @@ def add(options):
             raise ValueError("md and gift can't be loaded at same time")
         if options.md is not None:
             main_tools.check_file(options.md)
-            print('Rofls') # скоро оговоримся
+            steps = main_tools.get_md_steps(options.md)
         else:
             main_tools.check_file(options.gift)
             steps = get_gift_dicts(options.gift)
@@ -35,18 +35,18 @@ def add(options):
             if main_tools.ask_Y_N("Continuing?"):
                 if not options.no_load: 
                     if course.send_all().success:
-                        course.save(filename = options.course)
+                        course.save(options.course)
                         print("DONE")
                 else:
-                    course.save(filename = options.course)
+                    course.save(options.course)
                     print("DONE")
         else:
             if not options.no_load: 
                 if course.send_all().success:
-                    course.save(filename = options.course)
+                    course.save(options.course)
                     print("DONE")
             else:
-                course.save(filename = options.course)
+                course.save(options.course)
                 print("DONE")
     except IndexError as err:
         if not 0<=options.section<=len(course.sections):

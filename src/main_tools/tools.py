@@ -8,6 +8,15 @@ from logs.project_logger import activate_logger
 from src.gift.gift_processing import get_gift_dicts
 from src.API.Classes import Lesson, Course, Section
 from src.API.OAuthSession import OAuthSession
+from src.markdown.data_lesson import DataLesson
+from src.markdown.data_steps import DataStepCreationSchema
+md_convertor = DataStepCreationSchema.convert_step
+
+
+def get_md_steps(filename):
+    lesson = DataLesson()
+    lesson.add_info(filename)
+    return [md_convertor(step) for step in lesson.steps]
 
 
 def check_file(filename: str):

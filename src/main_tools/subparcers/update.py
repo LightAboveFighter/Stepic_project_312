@@ -9,7 +9,6 @@ from src.gift.gift_processing import get_gift_dicts
 
 def update(options):
     course: Course = main_tools.get_course_from_file(options.course)
-    course.save(filename = options.course)
     course.auth(main_tools.get_auth())
     try:
         if options.section<0 or options.lesson<0 or options.step<0:
@@ -18,7 +17,8 @@ def update(options):
         if options.md is not None and options.gift is not None:
             raise ValueError("md and gift can't be loaded at same time")
         if options.md is not None:
-            print('Rofls') # скоро оговоримся
+            main_tools.check_file(options.md)
+            steps = main_tools.get_md_steps(options.md)
         elif options.gift is not None:
             steps = get_gift_dicts(options.gift)
         else:
@@ -43,18 +43,18 @@ def update(options):
             if main_tools.ask_Y_N("Continuing?"):
                 if not options.no_load: 
                     if course.send_all().success:
-                        course.save(filename = options.course)
+                        course.save(options.course)
                         print("DONE")
                 else:
-                    course.save(filename = options.course)
+                    course.save(options.course)
                     print("DONE")
         else:
             if not options.no_load: 
                 if course.send_all().success:
-                    course.save(filename = options.course)
+                    course.save(options.course)
                     print("DONE")
             else:
-                course.save(filename = options.course)
+                course.save(options.course)
                 print("DONE")
     except IndexError as err:
         if not 0<=options.section<=len(course.sections):
