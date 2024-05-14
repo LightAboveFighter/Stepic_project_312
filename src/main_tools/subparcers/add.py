@@ -30,7 +30,7 @@ def add(options):
                 main_tools.print_tree(course.sections[options.section])
                 print(f"lesson {options.lesson} in section {options.section} will be changed")
             else:
-                main_tools.print_tree(course)
+                main_tools.print_tree(course.sections[options.section].units[options.lesson].lesson)
                 print(f"step {options.step} in lesson {options.lesson} in section {options.section} will be changed")
             if main_tools.ask_Y_N("Continuing?"):
                 if not options.no_load: 

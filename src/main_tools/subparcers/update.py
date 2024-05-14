@@ -49,9 +49,13 @@ def update(options):
                     course.save(filename = options.course)
                     print("DONE")
         else:
-            if course.send_all().success:
-                print("DONE")
+            if not options.no_load: 
+                if course.send_all().success:
+                    course.save(filename = options.course)
+                    print("DONE")
+            else:
                 course.save(filename = options.course)
+                print("DONE")
     except IndexError as err:
         if not 0<=options.section<=len(course.sections):
             msg = f"course \"{course.title}\" "\
