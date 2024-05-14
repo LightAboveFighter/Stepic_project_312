@@ -382,7 +382,7 @@ class Lesson:
         
         steps = r.json()["step-sources"]
         if not steps:
-            self.steps = ids
+            self.steps = [ {"id": id} for id in ids ]
             return
 
         for i in range(len(steps)):
@@ -506,7 +506,6 @@ class Section:
         + **kwargs: if copy: delete all ids
         path - path to saving lessons"""
 
-        print()
         copy = kwargs.get("copy", False)
         title = self.title
         id = self.id if not copy else None
