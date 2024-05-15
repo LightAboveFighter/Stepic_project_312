@@ -30,14 +30,15 @@ class DataStepString(DataStep):
                 answer = ParsingModuleSchema.body_addon().parseString(line)
                 if answer.type == 'ANSWER':
                     self.step_addons[str(answer.type)] = answer.value.strip()
-                    self.text = ''.join(self.text) 
                 else:
                     raise ValueError("Expected only ANSWER in addons.") 
                 continue
             except pp.ParseException:
-                self.text.append(line)
+                if not self.step_addons["ANSWER"]:
+                    self.text.append(line)
                 continue
         
+        self.text = ''.join(self.text)
         if not self.step_addons["ANSWER"]:
             raise pp.ParseException("ANSWER is an obligatory field.")
 
