@@ -30,14 +30,15 @@ class DataStepNumber(DataStep):
                 answer = ParsingModuleSchema.body_addon().parseString(line)
                 if answer.type == 'ANSWER':
                     self.step_addons[str(answer.type)] = (answer.value.replace(' ', '')).split(',')
-                    self.text = ''.join(self.text)
                 else:
                     raise ValueError("Expected only ANSWER in addons.") 
                 continue
             except pp.ParseException:
-                self.text.append(line)
+                if not self.step_addons["ANSWER"]:
+                    self.text.append(line)
                 continue
         
+        self.text = ''.join(self.text)
         if self.step_addons["ANSWER"]:
             for n in range(len(self.step_addons["ANSWER"])):
                 if "+-" in self.step_addons["ANSWER"][n]:
