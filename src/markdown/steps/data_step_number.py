@@ -30,16 +30,15 @@ class DataStepNumber(DataStep):
                 answer = ParsingModuleSchema.body_addon().parseString(line)
                 if answer.type == 'ANSWER':
                     self.step_addons[str(answer.type)] = (answer.value.replace(' ', '')).split(',')
+                    self.text = ''.join(self.text)
+                    break
                 else:
                     raise ValueError("Expected only ANSWER in addons.") 
-                continue
             except pp.ParseException:
-                if not self.step_addons["ANSWER"]:
-                    self.text.append(line)
+                self.text.append(line)
                 continue
-        
-        self.text = ''.join(self.text)
-        if self.step_addons["ANSWER"]:
+
+        try:
             for n in range(len(self.step_addons["ANSWER"])):
                 if "+-" in self.step_addons["ANSWER"][n]:
                     self.step_addons["ANSWER"][n] = self.step_addons["ANSWER"][n].split("+-")
@@ -50,7 +49,7 @@ class DataStepNumber(DataStep):
                         raise Exception("Answer value can not be converted into float.")
                 else:
                     self.step_addons["ANSWER"][n] = [self.step_addons["ANSWER"][n], str(0.)]
-        else:
+        except KeyError:
             raise pp.ParseException("ANSWER is an obligatory field.")
 
     def as_dict(self):

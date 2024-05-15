@@ -14,6 +14,7 @@ class DataStepString(DataStep):
 
         BEGIN = 'TEXTBEGIN'
         END = 'TEXTEND'
+        state = 'TEXT'
         only_text = False
         for line in lines:
             if line.strip() == BEGIN:
@@ -30,16 +31,18 @@ class DataStepString(DataStep):
                 answer = ParsingModuleSchema.body_addon().parseString(line)
                 if answer.type == 'ANSWER':
                     self.step_addons[str(answer.type)] = answer.value.strip()
+                    self.text = ''.join(self.text)
+                    break
                 else:
                     raise ValueError("Expected only ANSWER in addons.") 
-                continue
             except pp.ParseException:
-                if not self.step_addons["ANSWER"]:
-                    self.text.append(line)
+                self.text.append(line)
                 continue
         
-        self.text = ''.join(self.text)
-        if not self.step_addons["ANSWER"]:
+        try:
+            if self.step_addons["ANSWER"]:
+                pass
+        except KeyError:
             raise pp.ParseException("ANSWER is an obligatory field.")
 
     def as_dict(self):
