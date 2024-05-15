@@ -6,6 +6,8 @@ class DataStepTaskinline(DataStep):
     def add_info(self, lines: list[str]):
         self.text = []
         self.code = []
+        self.header = []
+        self.footer = []
         self.inputs = []
         self.outputs = []
 
@@ -13,7 +15,10 @@ class DataStepTaskinline(DataStep):
         BEGIN = 'TEXTBEGIN'
         END = 'TEXTEND'
         CODE = 'CODE'
+        HEAD = 'HEADER'
+        FOOT = 'FOOTER'
         TEST = 'TEST'
+        STATES = set([CODE, HEAD, FOOT, TEST])
         state = 'TEXT'
         only_text = False
         for line in lines:
@@ -29,21 +34,33 @@ class DataStepTaskinline(DataStep):
                         self.text.append(line)
                         continue
 
-                    elif line.strip() == CODE or line.strip() == TEST:
+                    elif line.strip() in STATES:
                         state = line.strip()
-                        self.text = ''.join(self.text)
                         continue
                     self.text.append(line)
                     continue
 
                 case 'CODE':
-                    if line.strip() == CODE or line.strip() == TEST:
+                    if line.strip() in STATES:
                         state = line.strip()
                         continue
                     self.code.append(line)
                     continue
+                
+                case 'HEADER':
+                    if line.strip() in STATES:
+                        state = line.strip()
+                        continue
+                    self.header.append(line)
+
+                case 'FOOTER':
+                    if line.strip() in STATES:
+                        state = line.strip()
+                        continue
+                    self.footer.append(line)
+
                 case 'TEST':    ## some problems with outputs, need to fix ASAP
-                    if line.strip() == CODE or line.strip() == TEST:
+                    if line.strip() in STATES:
                         state = line.strip()
                         continue
                     elif line.strip() == '----':
@@ -56,9 +73,13 @@ class DataStepTaskinline(DataStep):
                         continue
                     data.append(line)
                     continue
+
                 case _:
                     raise Exception("Undefined DataStepTaskinline.add_info() state.")
+        self.text = ''.join(self.text)
         self.code = ''.join(self.code)
+        self.header = ''.join(self.header)
+        self.footer = ''.join(self.footer)
         
 
     def as_dict(self):

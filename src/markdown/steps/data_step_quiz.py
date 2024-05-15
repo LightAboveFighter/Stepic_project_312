@@ -21,11 +21,6 @@ class DataStepQuiz(DataStep):
                 return True
             return False
 
-    def add_variant(self, value, label):
-        value_begin = value.find('`')
-        value_end = value[value_begin+1:].find('`')
-        self.variants.append(DataStepQuiz.Variant(value[value_begin+1:value_end+1], label))
-
     def add_info(self, lines: list[str]):
         self.text = []
         self.variants = []

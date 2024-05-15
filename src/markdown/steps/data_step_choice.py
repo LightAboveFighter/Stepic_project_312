@@ -24,11 +24,6 @@ class DataStepChoice(DataStep):
                 self.feedback == other.feedback:
                 return True
             return False
-    
-    def add_variant(self, value, type):
-        value_begin = value.find('`')
-        value_end = value[value_begin+1:].find('`')
-        self.variants.append(self.Variant(value[value_begin+1:value_end+1], type))
 
     def add_info(self, lines: list[str]):
         self.text = []
