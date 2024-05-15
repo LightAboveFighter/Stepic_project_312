@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='UTF-8'>
+    <style>
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+    tr:nth-child(even) {
+      background-color: #dddddd;
+    }
+    </style>
+    
+    <title>Таблица результатов класса {{title}}</title>
+</head>
+<body>
+  <h1>Курс: {{course_name}}</h1>
+  <h2>Курс id: {{course_id}}</h2>
+  <h2>Класс id: {{class_id}}</h2>
+  <table>
+    <tr>
+      <th>Id</th>
+      <th>Имя</th>
+      <th>Всего</th>
+{% for section in section_names %}      <th>{{section}}</th>
+{% endfor %}</tr>
+{% for student in student_ids %}    <tr>
+      <td>{{student}}</td>
+      <td>{{student_names[loop.index-1]}}</td>
+      <td>{{course_results[loop.index-1]}}</td>
+{% for score in all_section_results[loop.index-1] %}      <td>{{score}}</td>
+{% endfor %}    </tr>
+{% endfor %}  </table>

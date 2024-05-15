@@ -1,0 +1,219 @@
+https://stepik.org/api/submissions?klass={klass_id}&order=desc&page=1&search=id%3A{student_id}&step={step_id}
+GET
+{
+    "meta": {
+        "page": 1,
+        "has_next": false,
+        "has_previous": false
+    },
+    "submissions": [
+        {
+            "id": 1142768364,
+            "status": "correct",
+            "score": 1.0,
+            "hint": "",
+            "feedback": "",
+            "time": "2024-02-18T19:39:09Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ns=n*(1-k)\ns=int(s)\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141497673,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #3 of 4. \nYou answer was: \n100\nCorrect answer was: \n0\nDiff at line 1: answer=<100>, expected=<0>\n\n",
+            "feedback": "Failed test #3 of 4. \nYou answer was: \n100\nCorrect answer was: \n0\nDiff at line 1: answer=<100>, expected=<0>\n\n",
+            "time": "2024-02-16T20:07:09Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ns=n/(1/k)\ns=int(s)\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141497170,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #2 of 4. \nYou answer was: \n0\nCorrect answer was: \n50\nDiff at line 1: answer=<0>, expected=<50>\n\n",
+            "feedback": "Failed test #2 of 4. \nYou answer was: \n0\nCorrect answer was: \n50\nDiff at line 1: answer=<0>, expected=<50>\n\n",
+            "time": "2024-02-16T20:06:02Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ns=(1/k)/n\ns=int(s)\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141497075,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #2 of 4. \nYou answer was: \n0\nCorrect answer was: \n50\nDiff at line 1: answer=<0>, expected=<50>\n\n",
+            "feedback": "Failed test #2 of 4. \nYou answer was: \n0\nCorrect answer was: \n50\nDiff at line 1: answer=<0>, expected=<50>\n\n",
+            "time": "2024-02-16T20:05:51Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ns=(1/k)/n\ns=int(s)\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141496916,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #2 of 4. \nYou answer was: \n0\nCorrect answer was: \n50\nDiff at line 1: answer=<0>, expected=<50>\n\n",
+            "feedback": "Failed test #2 of 4. \nYou answer was: \n0\nCorrect answer was: \n50\nDiff at line 1: answer=<0>, expected=<50>\n\n",
+            "time": "2024-02-16T20:05:30Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ns=(1//k)/n\ns=int(s)\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141496840,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #2 of 4. \nYou answer was: \n0\nCorrect answer was: \n50\nDiff at line 1: answer=<0>, expected=<50>\n\n",
+            "feedback": "Failed test #2 of 4. \nYou answer was: \n0\nCorrect answer was: \n50\nDiff at line 1: answer=<0>, expected=<50>\n\n",
+            "time": "2024-02-16T20:05:19Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ns=(1//k)/n\ns=int(s)\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141495896,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #1 of 4. Runtime error\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n\n\nError:\nTraceback (most recent call last):\n  File \"/sandbox/main.py\", line 3, in <module>\n    int(s=(1//k)/n)\nTypeError: 's' is an invalid keyword argument for int()\n",
+            "feedback": "Failed test #1 of 4. Runtime error\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n\n\nError:\nTraceback (most recent call last):\n  File \"/sandbox/main.py\", line 3, in <module>\n    int(s=(1//k)/n)\nTypeError: 's' is an invalid keyword argument for int()\n",
+            "time": "2024-02-16T20:03:16Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\nint(s=(1//k)/n)\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141495829,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #1 of 4. Runtime error\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n\n\nError:\nTraceback (most recent call last):\n  File \"/sandbox/main.py\", line 3, in <module>\n    inrt(s=(1//k)/n)\nNameError: name 'inrt' is not defined. Did you mean: 'int'?\n",
+            "feedback": "Failed test #1 of 4. Runtime error\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n\n\nError:\nTraceback (most recent call last):\n  File \"/sandbox/main.py\", line 3, in <module>\n    inrt(s=(1//k)/n)\nNameError: name 'inrt' is not defined. Did you mean: 'int'?\n",
+            "time": "2024-02-16T20:03:08Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ninrt(s=(1//k)/n)\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141495719,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #1 of 4. \nYou answer was: \n1.0\nCorrect answer was: \n1\nDiff at line 1: answer=<1.0>, expected=<1>\n\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n1.0\n",
+            "feedback": "Failed test #1 of 4. \nYou answer was: \n1.0\nCorrect answer was: \n1\nDiff at line 1: answer=<1.0>, expected=<1>\n\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n1.0\n",
+            "time": "2024-02-16T20:02:51Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ns=(1//k)/n\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141495649,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #1 of 4. \nYou answer was: \n1.0\nCorrect answer was: \n1\nDiff at line 1: answer=<1.0>, expected=<1>\n\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n1.0\n",
+            "feedback": "Failed test #1 of 4. \nYou answer was: \n1.0\nCorrect answer was: \n1\nDiff at line 1: answer=<1.0>, expected=<1>\n\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n1.0\n",
+            "time": "2024-02-16T20:02:42Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ns=(1//k)/n\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141495570,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #1 of 4. \nYou answer was: \n0.02\nCorrect answer was: \n1\nDiff at line 1: answer=<0.02>, expected=<1>\n\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n0.02\n",
+            "feedback": "Failed test #1 of 4. \nYou answer was: \n0.02\nCorrect answer was: \n1\nDiff at line 1: answer=<0.02>, expected=<1>\n\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n0.02\n",
+            "time": "2024-02-16T20:02:33Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ns=(1//k)/100\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141495209,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #1 of 4. \nYou answer was: \n2.0\nCorrect answer was: \n1\nDiff at line 1: answer=<2.0>, expected=<1>\n\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n2.0\n",
+            "feedback": "Failed test #1 of 4. \nYou answer was: \n2.0\nCorrect answer was: \n1\nDiff at line 1: answer=<2.0>, expected=<1>\n\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n2.0\n",
+            "time": "2024-02-16T20:01:44Z",
+            "reply": {
+                "code": "n=int(input())\nk=float(input())\ns=1//k\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        },
+        {
+            "id": 1141494815,
+            "status": "wrong",
+            "score": 0.0,
+            "hint": "Failed test #1 of 4. Runtime error\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n\n\nError:\nTraceback (most recent call last):\n  File \"/sandbox/main.py\", line 2, in <module>\n    k=int(input())\nValueError: invalid literal for int() with base 10: '0.5'\n",
+            "feedback": "Failed test #1 of 4. Runtime error\n\nThis is a sample test from the problem statement!\n\nTest input:\n2\n0.5\nCorrect output:\n1\n\nYour code output:\n\n\nError:\nTraceback (most recent call last):\n  File \"/sandbox/main.py\", line 2, in <module>\n    k=int(input())\nValueError: invalid literal for int() with base 10: '0.5'\n",
+            "time": "2024-02-16T20:00:51Z",
+            "reply": {
+                "code": "n=int(input())\nk=int(input())\ns=1//k\nprint(s)",
+                "language": "python3.10"
+            },
+            "reply_url": null,
+            "attempt": 1050168182,
+            "session": null,
+            "eta": 0
+        }
+    ]
+}
