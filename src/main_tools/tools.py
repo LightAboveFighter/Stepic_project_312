@@ -9,7 +9,7 @@ from src.gift.gift_processing import get_gift_dicts
 from src.API.Classes import Lesson, Course, Section
 from src.API.OAuthSession import OAuthSession
 from src.markdown.data_lesson import DataLesson
-from src.markdown.data_steps import DataStepCreationSchema
+from src.markdown.data_step_creation import DataStepCreationSchema
 md_convertor = DataStepCreationSchema.convert_step
 
 
