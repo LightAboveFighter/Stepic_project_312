@@ -43,12 +43,12 @@ class DataStepNumber(DataStep):
                 if "+-" in self.step_addons["ANSWER"][n]:
                     self.step_addons["ANSWER"][n] = self.step_addons["ANSWER"][n].split("+-")
                     try:
-                        self.step_addons["ANSWER"][n][0] = float(self.step_addons["ANSWER"][n][0])
-                        self.step_addons["ANSWER"][n][1] = float(self.step_addons["ANSWER"][n][1])
+                        self.step_addons["ANSWER"][n][0] = self.step_addons["ANSWER"][n][0]
+                        self.step_addons["ANSWER"][n][1] = self.step_addons["ANSWER"][n][1]
                     except ValueError:
                         raise Exception("Answer value can not be converted into float.")
                 else:
-                    self.step_addons["ANSWER"][n] = [float(self.step_addons["ANSWER"][n]), 0.]
+                    self.step_addons["ANSWER"][n] = [self.step_addons["ANSWER"][n], str(0.)]
         else:
             raise pp.ParseException("ANSWER is an obligatory field.")
 

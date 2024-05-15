@@ -81,7 +81,7 @@ class DataStepQuiz(DataStep):
             self.step_addons["ANSWER"] = self.step_addons["ANSWER"].replace(" ", "")
             self.step_addons["ANSWER"] = self.step_addons["ANSWER"].split(",")
             for var in self.variants:
-                var._is_correct = var.label in self.step_addons["ANSWER"]
+                var.is_correct = var.label in self.step_addons["ANSWER"]
             self._correct_variants = len(self.step_addons["ANSWER"])
         else:
             raise Exception("Expected ANSWER obligatory addon.")

@@ -118,6 +118,8 @@ class Step(ABC):
             r = requests.post(api_url, headers=session.headers(), json=data)
 
         change_step_message = "Вы можете изменить условие задания в этом поле и указать настройки ниже"
+        print(data)
+        print(r.text)
         content = r.json()["step-sources"][0]
         id = content["id"]
 
