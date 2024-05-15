@@ -105,7 +105,7 @@ Question text?
         "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Question text?",
-        "variants": [DataStepChoice.Variant("s == p", "+"), DataStepChoice.Variant("*s == *p", "-"), DataStepChoice.Variant("s[0] == p[0]", "-")],
+        "variants": [DataStepChoice.Variant("`s == p`", "+"), DataStepChoice.Variant("`*s == *p`", "-"), DataStepChoice.Variant("`s[0] == p[0]`", "-")],
         "step_addons": {"SHUFFLE": "true"}
     }
     input_text = input_text.split('\n')
@@ -129,7 +129,7 @@ def test_Choice2():
         "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "?",
-        "variants": [DataStepChoice.Variant("s == p", "+"), DataStepChoice.Variant("*s == *p", "-"), DataStepChoice.Variant("s[0] == p[0]", "-")],
+        "variants": [DataStepChoice.Variant("`s == p`", "+"), DataStepChoice.Variant("`*s == *p`", "-"), DataStepChoice.Variant("`s[0] == p[0]`", "-")],
         "step_addons": {"SHUFFLE": "true"}
     }
     input_text = input_text.split('\n')
@@ -154,7 +154,7 @@ HINT: подсказка"""
         "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Question text?",
-        "variants": [DataStepChoice.Variant("s == p", "+"), DataStepChoice.Variant("*s == *p", "-"), DataStepChoice.Variant("s[0] == p[0]", "-", "подсказка")],
+        "variants": [DataStepChoice.Variant("`s == p`", "+"), DataStepChoice.Variant("`*s == *p`", "-"), DataStepChoice.Variant("`s[0] == p[0]`", "-", "подсказка")],
         "step_addons": {"SHUFFLE": "true"}
     }
     input_text = input_text.split('\n')
@@ -178,7 +178,7 @@ HINT: частная подсказка
         "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Question text?",
-        "variants": [DataStepChoice.Variant("s == p", "+", "частная подсказка"), DataStepChoice.Variant("*s == *p", "-"), DataStepChoice.Variant("s[0] == p[0]", "-")],
+        "variants": [DataStepChoice.Variant("`s == p`", "+", "частная подсказка"), DataStepChoice.Variant("`*s == *p`", "-"), DataStepChoice.Variant("`s[0] == p[0]`", "-")],
         "step_addons": {"SHUFFLE": "true"}
     }
     input_text = input_text.split('\n')
@@ -205,7 +205,7 @@ HINT: общая подсказка"""
         "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Question text?",
-        "variants": [DataStepChoice.Variant("s == p", "+"), DataStepChoice.Variant("*s == *p", "-"), DataStepChoice.Variant("s[0] == p[0]", "-")],
+        "variants": [DataStepChoice.Variant("`s == p`", "+"), DataStepChoice.Variant("`*s == *p`", "-"), DataStepChoice.Variant("`s[0] == p[0]`", "-")],
         "step_addons": {"SHUFFLE": "false", "HINT": "общая подсказка"}
     }
     input_text = input_text.split('\n')
@@ -234,9 +234,9 @@ ANSWER: A"""
         "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Do you have giraffe?",
-        "variants": [DataStepQuiz.Variant("НУ Yes", "A", True, "подсказка"), \
-                     DataStepQuiz.Variant("А ху asking", "B", False), \
-                     DataStepQuiz.Variant("Thank you for your question", "C", False)],
+        "variants": [DataStepQuiz.Variant("`НУ Yes`", "A", True, "подсказка"), \
+                     DataStepQuiz.Variant("`А ху asking`", "B", False), \
+                     DataStepQuiz.Variant("`Thank you for your question`", "C", False)],
         "step_addons": {"SHUFFLE": "true", "ANSWER": "A"}
     }
     input_text = input_text.split('\n')
@@ -265,9 +265,9 @@ ANSWER: A, B"""
         "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Do you have giraffe?",
-        "variants": [DataStepQuiz.Variant("НУ Yes", "A", True, "подсказка"), \
-                     DataStepQuiz.Variant("А ху asking", "B", True), \
-                     DataStepQuiz.Variant("Thank you for your question", "C", False)],
+        "variants": [DataStepQuiz.Variant("`НУ Yes`", "A", True, "подсказка"), \
+                     DataStepQuiz.Variant("`А ху asking`", "B", True), \
+                     DataStepQuiz.Variant("`Thank you for your question`", "C", False)],
         "step_addons": {"SHUFFLE": "true", "ANSWER": "A,B"}
     }
     input_text = input_text.split('\n')
@@ -298,9 +298,9 @@ HINT: подсказка"""
         "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Question text?",
-        "variants": [DataStepQuiz.Variant("s == p", "A", True, "подсказка"), \
-                     DataStepQuiz.Variant("*s == *p", "B", False), \
-                     DataStepQuiz.Variant("s[0] == p[0]", "C", True)],
+        "variants": [DataStepQuiz.Variant("`s == p`", "A", True, "подсказка"), \
+                     DataStepQuiz.Variant("`*s == *p`", "B", False), \
+                     DataStepQuiz.Variant("`s[0] == p[0]`", "C", True)],
         "step_addons": {"SHUFFLE": "false", "ANSWER": "A,C", "HINT": "подсказка"}
     }
     input_text = input_text.split('\n')
@@ -331,9 +331,9 @@ HINT: подсказка"""
         "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "Question text?",
-        "variants": [DataStepQuiz.Variant("s == p", "A", True, "подсказка"), \
-                     DataStepQuiz.Variant("*s == *p", "B", False), \
-                     DataStepQuiz.Variant("s[0] == p[0]", "C", True)],
+        "variants": [DataStepQuiz.Variant("`s == p`", "A", True, "подсказка"), \
+                     DataStepQuiz.Variant("`*s == *p`", "B", False), \
+                     DataStepQuiz.Variant("`s[0] == p[0]`", "C", True)],
         "step_addons": {"SHUFFLE": "false", "ANSWER": "A,C", "HINT": "подсказка"}
     }
     input_text = input_text.split('\n')

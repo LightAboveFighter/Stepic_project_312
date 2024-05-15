@@ -14,9 +14,7 @@ class DataStepNumber(DataStep):
 
         BEGIN = 'TEXTBEGIN'
         END = 'TEXTEND'
-        state = 'TEXT'
         only_text = False
-
         for line in lines:
             if line.strip() == BEGIN:
                 only_text = True
@@ -40,13 +38,13 @@ class DataStepNumber(DataStep):
                 self.text.append(line)
                 continue
         
-        if self.step_addons:
+        if self.step_addons["ANSWER"]:
             if "+-" in self.step_addons["ANSWER"]:
                 self.step_addons["ANSWER"] = self.step_addons["ANSWER"].split("+-")
                 try:
                     self.step_addons["ANSWER"][0] = float(self.step_addons["ANSWER"][0])
                     self.step_addons["ANSWER"][1] = float(self.step_addons["ANSWER"][1])
-                except:
+                except ValueError:
                     raise Exception("Answer value can not be converted into float.")
             else:
                 try:

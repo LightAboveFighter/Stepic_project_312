@@ -52,7 +52,7 @@ class DataStepQuiz(DataStep):
 
                     try:
                         variant_data = ParsingModuleSchema.quiz_variant().parseString(line)
-                        self.add_variant(variant_data.value, variant_data.label)
+                        self.variants.append(DataStepQuiz.Variant(variant_data.value.strip(), variant_data.label))  ###
                         state = 'VARIANTS'
                         self.text = ''.join(self.text)
                         continue
@@ -70,7 +70,7 @@ class DataStepQuiz(DataStep):
                     except pp.ParseException:
                         if line != pp.Empty():
                             variant_data = ParsingModuleSchema.quiz_variant().parseString(line)
-                            self.add_variant(variant_data.value, variant_data.label)
+                            self.variants.append(DataStepQuiz.Variant(variant_data.value.strip(), variant_data.label))    ###
                         continue
                 case 'END':
                     try:
