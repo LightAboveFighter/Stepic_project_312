@@ -50,8 +50,10 @@ class DataStepNumber(DataStep):
                     raise Exception("Answer value can not be converted into float.")
             else:
                 try:
+                    self.step_addons["ANSWER"] = self.step_addons["ANSWER"].replace(",", ".")
                     self.step_addons["ANSWER"] = list(float(self.step_addons["ANSWER"]))
-                except:
+                    print("ok")
+                except ValueError:
                     raise Exception("Answer value can not be converted into float.")
         else:
             raise pp.ParseException("ANSWER must be in addons.")

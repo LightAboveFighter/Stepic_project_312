@@ -3,6 +3,8 @@ from src.markdown.steps.data_step_til import DataStepTaskinline
 from src.markdown.steps.data_step_choice import DataStepChoice
 from src.markdown.steps.data_step_quiz import DataStepQuiz
 from src.markdown.steps.data_step_text import DataStepText
+from src.markdown.steps.data_step_number import DataStepNumber
+from src.markdown.steps.data_step_string import DataStepString
 from src.markdown.schemas import ParsingModuleSchema
 from src.markdown.data_step_creation import DataStepCreationSchema
 import pyparsing as pp
@@ -65,6 +67,28 @@ fdgrgerdgfgdg"""
     dst = DataStepCreationSchema.create_step(dst_inf.type, dst_inf.name)
     dst.add_info(input_text)
     assert isinstance(dst, DataStepText)
+    assert dst.as_dict() == expected
+
+@pytest.mark.markdown
+def test_Number1():
+    input_text =\
+"""## NUMBER sdhgosdrhofslkdf
+jdhrgiohdrkfrjsdf
+fdgrgerdgfgdg
+
+ANSWER: 3.14"""
+    expected = {
+        "step_name": "sdhgosdrhofslkdf",
+        "id": None,
+        "text": "jdhrgiohdrkfrjsdffdgrgerdgfgdg",
+        "step_addons": {"ANSWER": [3.14]}
+    }
+    input_text = input_text.split('\n')
+    dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
+    input_text = input_text[1:]
+    dst = DataStepCreationSchema.create_step(dst_inf.type, dst_inf.name)
+    dst.add_info(input_text)
+    assert isinstance(dst, DataStepNumber)
     assert dst.as_dict() == expected
 
 
