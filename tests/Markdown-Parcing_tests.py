@@ -91,6 +91,50 @@ ANSWER: 3.14"""
     assert isinstance(dst, DataStepNumber)
     assert dst.as_dict() == expected
 
+@pytest.mark.markdown
+def test_Number2():
+    input_text =\
+"""## NUMBER sdhgosdrhofslkdf
+jdhrgiohdrkfrjsdf
+fdgrgerdgfgdg
+
+ANSWER: 3.14 +- 0.01"""
+    expected = {
+        "step_name": "sdhgosdrhofslkdf",
+        "id": None,
+        "text": "jdhrgiohdrkfrjsdffdgrgerdgfgdg",
+        "step_addons": {"ANSWER": [3.14, 0.01]}
+    }
+    input_text = input_text.split('\n')
+    dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
+    input_text = input_text[1:]
+    dst = DataStepCreationSchema.create_step(dst_inf.type, dst_inf.name)
+    dst.add_info(input_text)
+    assert isinstance(dst, DataStepNumber)
+    assert dst.as_dict() == expected
+
+
+@pytest.mark.markdown
+def test_String1():
+    input_text =\
+"""## STRING sdhgosdrhofslkdf
+jdhrgiohdrkfrjsdf
+fdgrgerdgfgdg
+
+ANSWER: ans1234wer_text124"""
+    expected = {
+        "step_name": "sdhgosdrhofslkdf",
+        "id": None,
+        "text": "jdhrgiohdrkfrjsdffdgrgerdgfgdg",
+        "step_addons": {"ANSWER": "ans1234wer_text124"}
+    }
+    input_text = input_text.split('\n')
+    dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
+    input_text = input_text[1:]
+    dst = DataStepCreationSchema.create_step(dst_inf.type, dst_inf.name)
+    dst.add_info(input_text)
+    assert isinstance(dst, DataStepString)
+    assert dst.as_dict() == expected
 
 # Нужно будет менять
 @pytest.mark.markdown

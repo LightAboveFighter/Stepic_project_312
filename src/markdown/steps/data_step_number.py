@@ -48,8 +48,9 @@ class DataStepNumber(DataStep):
                     raise Exception("Answer value can not be converted into float.")
             else:
                 try:
-                    self.step_addons["ANSWER"] = self.step_addons["ANSWER"].replace(",", ".")
-                    self.step_addons["ANSWER"] = list(float(self.step_addons["ANSWER"]))
+                    answer = self.step_addons["ANSWER"].replace(",", ".")
+                    answer = float(answer)
+                    self.step_addons["ANSWER"] = [answer]
                     print("ok")
                 except ValueError:
                     raise Exception("Answer value can not be converted into float.")
