@@ -4,6 +4,10 @@ import pyparsing as pp
 
 
 class DataStepTaskinline(DataStep):
+    def __init__(self, nam: str = None, id: int = None, lang: str = 'python3') -> None:
+        super().__init__(nam, id)
+        self.lang = lang
+
     def add_info(self, lines: list[str]):
         self.text = []
         self.code = []

@@ -29,7 +29,7 @@ class DataStepNumber(DataStep):
             try:
                 answer = ParsingModuleSchema.body_addon().parseString(line)
                 if answer.type == 'ANSWER':
-                    self.step_addons[str(answer.type)] = answer.value
+                    self.step_addons[str(answer.type)] = (answer.value.replace(' ', '')).split(',')
                     self.text = ''.join(self.text)
                 else:
                     raise ValueError("Expected only ANSWER in addons.") 
@@ -39,15 +39,16 @@ class DataStepNumber(DataStep):
                 continue
         
         if self.step_addons["ANSWER"]:
-            if "+-" in self.step_addons["ANSWER"]:
-                self.step_addons["ANSWER"] = self.step_addons["ANSWER"].split("+-")
-                try:
-                    self.step_addons["ANSWER"][0] = float(self.step_addons["ANSWER"][0])
-                    self.step_addons["ANSWER"][1] = float(self.step_addons["ANSWER"][1])
-                except ValueError:
-                    raise Exception("Answer value can not be converted into float.")
-            else:
-                self.step_addons["ANSWER"] = [float(self.step_addons["ANSWER"]), 0.]
+            for n in range(len(self.step_addons["ANSWER"])):
+                if "+-" in self.step_addons["ANSWER"][n]:
+                    self.step_addons["ANSWER"][n] = self.step_addons["ANSWER"][n].split("+-")
+                    try:
+                        self.step_addons["ANSWER"][n][0] = float(self.step_addons["ANSWER"][n][0])
+                        self.step_addons["ANSWER"][n][1] = float(self.step_addons["ANSWER"][n][1])
+                    except ValueError:
+                        raise Exception("Answer value can not be converted into float.")
+                else:
+                    self.step_addons["ANSWER"][n] = [float(self.step_addons["ANSWER"][n]), 0.]
         else:
             raise pp.ParseException("ANSWER is an obligatory field.")
 

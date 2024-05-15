@@ -13,7 +13,7 @@ class DataLesson:
         # List of lesson's steps
         self.steps = []
         # All optional header parametrs will be added in 'addons'
-        self.addons = {}
+        self.addons = {'lang': 'python3'}
 
     def add_info(self, lesson_path: str, file_ecoding: str = 'utf-8'):
         with io.open(lesson_path, 'r', encoding=file_ecoding) as f:
@@ -31,7 +31,7 @@ class DataLesson:
                         
             # Writting down steps of the lesson
             step_lines = []
-            self.steps.append(DataStepCreationSchema.create_step(new_step.type, (new_step.name).strip()))
+            self.steps.append(DataStepCreationSchema.create_step(new_step.type, (new_step.name).strip(), self.addons['lang']))
             for line in f:
 
                 try:
@@ -39,7 +39,7 @@ class DataLesson:
                     self.steps[-1].add_info(step_lines)
                     step_lines = []
 
-                    self.steps.append(DataStepCreationSchema.create_step(new_step.type, (new_step.name).strip()))
+                    self.steps.append(DataStepCreationSchema.create_step(new_step.type, (new_step.name).strip(), self.addons['lang']))
                 except pp.ParseException:
 
                     step_lines.append(line)
