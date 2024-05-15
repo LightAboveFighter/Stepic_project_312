@@ -1,4 +1,4 @@
-from src.API.Step import Step, StepChoice, StepCode, StepText
+from src.API.Step import Step, StepChoice, StepCode, StepText, StepNumber, StepString
 
 from src.markdown.steps.data_step_til import DataStepTaskinline
 from src.markdown.steps.data_step_choice import DataStepChoice
@@ -43,18 +43,6 @@ class DataStepCreationSchema():
                                 lesson_id = None,
                                 body = {"text": step.text})
 
-            case DataStepChoice():
-                unique = {
-                    'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'false',
-                    'options' : [{'text': var.text,
-                                  'is_correct': var.is_correct,
-                                  'feedback': var.feedback} for var in step.variants]
-                }
-                return StepChoice(title = step.step_name,
-                                  lesson_id = None,
-                                  body = {"text": step.text, "source": {"is_multiple_choice": False} },
-                                  unique = StepChoice.Unique(**unique))
-
             case DataStepQuiz():
                 unique = {
                     'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'false',
@@ -64,8 +52,39 @@ class DataStepCreationSchema():
                 }
                 return StepChoice(title = step.step_name,
                                   lesson_id = None,
-                                  body = {"text": step.text, "source": {"is_multiple_choice": False}},
+                                  body = {"text": step.text, "source": {"is_multiple_choice": step._correct_variants > 1}},
                                   unique = StepChoice.Unique(**unique))
+
+            case DataStepChoice():
+                unique = {
+                    'preserve_order': str.lower(step.step_addons['SHUFFLE']).strip() == 'false',
+                    'options' : [{'text': var.text,
+                                  'is_correct': var.is_correct,
+                                  'feedback': var.feedback} for var in step.variants]
+                }
+                return StepChoice(title = step.step_name,
+                                  lesson_id = None,
+                                  body = {"text": step.text, "source": {"is_multiple_choice": step._correct_variants > 1}},
+                                  unique = StepChoice.Unique(**unique))
+
+            # case DataStepString():
+            #     unique = {
+            #         'pattern': step.step_addons['ANSWER']
+            #     }
+            #     return StepString(title = step.step_name,
+            #                       lesson_id = None,
+            #                       body = {'text': step.text},
+            #                       unique = StepString.Unique(**unique))
+            
+            # case DataStepNumber():
+            #     unique = {
+            #         'answer': step.step_addons['ANSWER'][0],
+            #         'max_error': step.step_addons['ANSWER'][1]
+            #     }
+            #     return StepNumber(title = step.step_name,
+            #                       lesson_id = None,
+            #                       body = {'text': step.text},
+            #                       unique = StepNumber.Unique(**unique))
 
             case DataStepTaskinline():
                 unique = {

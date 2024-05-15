@@ -9,14 +9,14 @@ class DataStepQuiz(DataStep):
     step_addons: dict'''
 
     class Variant:
-        def __init__(self, text: str, label: str, is_correct: bool=False, feedback: str=''):
+        def __init__(self, text: str, label: str, _is_correct: bool=False, feedback: str=''):
             self.text = text
-            self.is_correct = is_correct
+            self._is_correct = _is_correct
             self.label = label
             self.feedback = feedback
         
         def __eq__(self, other):
-            if self.text == other.text and self.is_correct == other.is_correct and \
+            if self.text == other.text and self._is_correct == other._is_correct and \
                 self.label == other.label and self.feedback == other.feedback:
                 return True
             return False
@@ -25,6 +25,7 @@ class DataStepQuiz(DataStep):
         self.text = []
         self.variants = []
         self.step_addons = {'SHUFFLE' : 'true'}
+        self._correct_variants = 0
 
         BEGIN = 'TEXTBEGIN'
         END = 'TEXTEND'
@@ -78,10 +79,10 @@ class DataStepQuiz(DataStep):
                     raise Exception("Undefined DataStepQuiz.add_info() state.")
         if self.step_addons["ANSWER"]:
             self.step_addons["ANSWER"] = self.step_addons["ANSWER"].replace(" ", "")
-            answer_letters = self.step_addons["ANSWER"].split(",")
+            self.step_addons["ANSWER"] = self.step_addons["ANSWER"].split(",")
             for var in self.variants:
-                if var.label in answer_letters:
-                    var.is_correct = True
+                var._is_correct = var.label in self.step_addons["ANSWER"]
+            self._correct_variants = len(self.step_addons["ANSWER"])
         else:
             raise Exception("Expected ANSWER obligatory addon.")
 

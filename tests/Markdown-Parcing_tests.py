@@ -81,7 +81,7 @@ ANSWER: 3.14"""
         "step_name": "sdhgosdrhofslkdf",
         "id": None,
         "text": "jdhrgiohdrkfrjsdffdgrgerdgfgdg",
-        "step_addons": {"ANSWER": [3.14]}
+        "step_addons": {"ANSWER": [3.14, 0.]}
     }
     input_text = input_text.split('\n')
     dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
@@ -281,7 +281,7 @@ ANSWER: A"""
         "variants": [DataStepQuiz.Variant("`НУ Yes`", "A", True, "подсказка"), \
                      DataStepQuiz.Variant("`А ху asking`", "B", False), \
                      DataStepQuiz.Variant("`Thank you for your question`", "C", False)],
-        "step_addons": {"SHUFFLE": "true", "ANSWER": "A"}
+        "step_addons": {"SHUFFLE": "true", "ANSWER": ["A"]}
     }
     input_text = input_text.split('\n')
     dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
@@ -312,7 +312,7 @@ ANSWER: A, B"""
         "variants": [DataStepQuiz.Variant("`НУ Yes`", "A", True, "подсказка"), \
                      DataStepQuiz.Variant("`А ху asking`", "B", True), \
                      DataStepQuiz.Variant("`Thank you for your question`", "C", False)],
-        "step_addons": {"SHUFFLE": "true", "ANSWER": "A,B"}
+        "step_addons": {"SHUFFLE": "true", "ANSWER": ["A","B"]}
     }
     input_text = input_text.split('\n')
     dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
@@ -345,7 +345,7 @@ HINT: подсказка"""
         "variants": [DataStepQuiz.Variant("`s == p`", "A", True, "подсказка"), \
                      DataStepQuiz.Variant("`*s == *p`", "B", False), \
                      DataStepQuiz.Variant("`s[0] == p[0]`", "C", True)],
-        "step_addons": {"SHUFFLE": "false", "ANSWER": "A,C", "HINT": "подсказка"}
+        "step_addons": {"SHUFFLE": "false", "ANSWER": ["A","C"], "HINT": "подсказка"}
     }
     input_text = input_text.split('\n')
     dst_inf = ParsingModuleSchema.step().parseString(input_text[0])
@@ -378,7 +378,7 @@ HINT: подсказка"""
         "variants": [DataStepQuiz.Variant("`s == p`", "A", True, "подсказка"), \
                      DataStepQuiz.Variant("`*s == *p`", "B", False), \
                      DataStepQuiz.Variant("`s[0] == p[0]`", "C", True)],
-        "step_addons": {"SHUFFLE": "false", "ANSWER": "A,C", "HINT": "подсказка"}
+        "step_addons": {"SHUFFLE": "false", "ANSWER": ["A","C"], "HINT": "подсказка"}
     }
     input_text = input_text.split('\n')
     dst_inf = ParsingModuleSchema.step().parseString(input_text[0])

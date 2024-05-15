@@ -2,6 +2,7 @@ from src.markdown.schemas import ParsingModuleSchema
 from src.markdown.steps.data_step import DataStep
 import pyparsing as pp
 
+
 class DataStepTaskinline(DataStep):
     def add_info(self, lines: list[str]):
         self.text = []
@@ -88,6 +89,8 @@ class DataStepTaskinline(DataStep):
             "id": self.lesson_id,
             "text": self.text,
             "code": self.code,
+            "header": self.header,
+            "footer": self.footer,
             "inputs": self.inputs,
             "outputs": self.outputs
         }

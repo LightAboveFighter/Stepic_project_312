@@ -29,6 +29,7 @@ class DataStepChoice(DataStep):
         self.text = []
         self.variants = []
         self.step_addons = {'SHUFFLE' : 'true'}
+        self._correct_variants = 0
 
         BEGIN = 'TEXTBEGIN'
         END = 'TEXTEND'
@@ -50,7 +51,9 @@ class DataStepChoice(DataStep):
 
                     try:
                         variant_data = ParsingModuleSchema.choice_variant().parseString(line)
-                        self.variants.append(DataStepChoice.Variant(variant_data.value.strip(), variant_data.type))     ###
+                        self.variants.append(DataStepChoice.Variant(variant_data.value.strip(), variant_data.type))
+                        if variant_data.type == '+':
+                            self._correct_variants+=1
                         state = 'VARIANTS'
                         self.text = ''.join(self.text)
                         continue
@@ -68,7 +71,9 @@ class DataStepChoice(DataStep):
                     except pp.ParseException:
                         if line != pp.Empty():
                             variant_data = ParsingModuleSchema.choice_variant().parseString(line)
-                            self.variants.append(DataStepChoice.Variant(variant_data.value.strip(), variant_data.type))    ###
+                            self.variants.append(DataStepChoice.Variant(variant_data.value.strip(), variant_data.type))
+                            if variant_data.type == '+':
+                                self._correct_variants+=1
                         continue
                 case 'END':
                     try:
