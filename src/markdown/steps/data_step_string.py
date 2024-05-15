@@ -14,9 +14,7 @@ class DataStepString(DataStep):
 
         BEGIN = 'TEXTBEGIN'
         END = 'TEXTEND'
-        state = 'TEXT'
         only_text = False
-
         for line in lines:
             if line.strip() == BEGIN:
                 only_text = True
@@ -40,7 +38,7 @@ class DataStepString(DataStep):
                 self.text.append(line)
                 continue
         
-        if not self.step_addons:
+        if not self.step_addons["ANSWER"]:
             raise pp.ParseException("ANSWER must be in addons.")
 
     def as_dict(self):

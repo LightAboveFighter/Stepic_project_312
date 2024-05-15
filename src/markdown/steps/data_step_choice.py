@@ -55,7 +55,7 @@ class DataStepChoice(DataStep):
 
                     try:
                         variant_data = ParsingModuleSchema.choice_variant().parseString(line)
-                        self.add_variant(variant_data.value, variant_data.type)
+                        self.variants.append(DataStepChoice.Variant(variant_data.value.strip(), variant_data.type))     ###
                         state = 'VARIANTS'
                         self.text = ''.join(self.text)
                         continue
@@ -73,7 +73,7 @@ class DataStepChoice(DataStep):
                     except pp.ParseException:
                         if line != pp.Empty():
                             variant_data = ParsingModuleSchema.choice_variant().parseString(line)
-                            self.add_variant(variant_data.value, variant_data.type)
+                            self.variants.append(DataStepChoice.Variant(variant_data.value.strip(), variant_data.type))    ###
                         continue
                 case 'END':
                     try:
